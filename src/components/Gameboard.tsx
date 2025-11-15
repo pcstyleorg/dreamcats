@@ -102,7 +102,7 @@ export const Gameboard: React.FC = () => {
 
   return (
     <div
-      className="w-full min-h-screen text-foreground p-2 sm:p-4 flex flex-col lg:flex-row gap-4 relative bg-cover bg-center"
+      className="w-full h-screen overflow-hidden text-foreground p-0.5 sm:p-1 md:p-2 lg:p-3 flex flex-col lg:flex-row gap-1 sm:gap-2 md:gap-3 relative bg-cover bg-center"
       style={{
         backgroundImage: `url(${backgroundImage})`,
         backgroundAttachment: "fixed",
@@ -112,9 +112,9 @@ export const Gameboard: React.FC = () => {
       <div className="absolute inset-0 bg-black/35 pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/30 pointer-events-none" />
 
-      <main className="flex-grow flex flex-col relative z-10">
+      <main className="flex-grow flex flex-col relative z-10 min-h-0">
         {/* Opponent Area */}
-        <div className="flex justify-center items-start mb-4 min-h-[10rem] md:min-h-[12rem]">
+        <div className="flex justify-center items-start mb-1 sm:mb-1.5 md:mb-2 flex-shrink-0">
           {otherPlayer ? (
             <PlayerHand
               player={otherPlayer}
@@ -133,7 +133,7 @@ export const Gameboard: React.FC = () => {
 
         {/* Center Area */}
         <div
-          className="flex-grow flex items-center justify-center gap-4 md:gap-8 my-4"
+          className="flex-grow flex items-center justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 my-1 sm:my-1.5 md:my-2 min-h-0"
           data-tutorial-id="piles"
         >
           <div
@@ -148,7 +148,7 @@ export const Gameboard: React.FC = () => {
               isGlowing={isPlayerActionable}
               playSound={playSound}
             />
-            <span className="mt-2 text-xs md:text-sm font-medium">
+            <span className="mt-0.5 sm:mt-1 text-[0.65rem] sm:text-xs md:text-sm font-medium">
               Draw ({drawPile.length})
             </span>
           </div>
@@ -186,13 +186,15 @@ export const Gameboard: React.FC = () => {
               isGlowing={isPlayerActionable && discardPile.length > 0}
               playSound={playSound}
             />
-            <span className="mt-2 text-xs md:text-sm font-medium">Discard</span>
+            <span className="mt-0.5 sm:mt-1 text-[0.65rem] sm:text-xs md:text-sm font-medium">
+              Discard
+            </span>
           </div>
         </div>
 
         {/* Current Player Area */}
         {currentPlayer && (
-          <div className="mt-auto">
+          <div className="mt-auto flex-shrink-0">
             <div data-tutorial-id="player-hand">
               <PlayerHand
                 player={currentPlayer}
@@ -201,7 +203,7 @@ export const Gameboard: React.FC = () => {
               />
             </div>
             <div
-              className="flex justify-center mt-4 h-10"
+              className="flex justify-center mt-0.5 sm:mt-1 md:mt-2 h-6 sm:h-8"
               data-tutorial-id="game-actions"
             >
               <GameActions />
@@ -240,7 +242,7 @@ export const Gameboard: React.FC = () => {
       </aside>
 
       {/* Side Panel Trigger - Mobile */}
-      <div className="lg:hidden absolute top-4 right-4 relative z-20">
+      <div className="lg:hidden absolute top-2 right-2 z-20">
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon">
