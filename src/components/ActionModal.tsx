@@ -20,7 +20,7 @@ export const ActionModal: React.FC = () => {
   const renderTake2Content = () => (
     <>
       <DialogHeader>
-        <DialogTitle>Take 2</DialogTitle>
+        <DialogTitle className="font-heading">Take 2</DialogTitle>
         <DialogDescription>You drew two cards. Choose one to keep. The other will be discarded.</DialogDescription>
       </DialogHeader>
       <div className="flex justify-center gap-4 py-4">
@@ -37,7 +37,7 @@ export const ActionModal: React.FC = () => {
   const renderRoundEndContent = () => (
     <>
       <DialogHeader>
-        <DialogTitle>Round Over!</DialogTitle>
+        <DialogTitle className="font-heading">Round Over!</DialogTitle>
         <DialogDescription>{state.actionMessage}</DialogDescription>
       </DialogHeader>
       <div className="py-4">
@@ -62,11 +62,11 @@ export const ActionModal: React.FC = () => {
    const renderGameOverContent = () => (
     <>
       <DialogHeader>
-        <DialogTitle>Game Over!</DialogTitle>
+        <DialogTitle className="font-heading">Game Over!</DialogTitle>
         <DialogDescription>{gameWinnerName} wins the game!</DialogDescription>
       </DialogHeader>
       <div className="py-4">
-        <h4 className="font-bold mb-2">Final Scores:</h4>
+        <h4 className="font-bold mb-2 font-heading">Final Scores:</h4>
         <ul className="space-y-2">
           {players.sort((a,b) => a.score - b.score).map(player => (
               <li key={player.id} className="flex justify-between items-center">
@@ -83,7 +83,7 @@ export const ActionModal: React.FC = () => {
 
   return (
     <Dialog open={isOpen}>
-      <DialogContent>
+      <DialogContent className="bg-card/80 backdrop-blur-lg border-white/20">
         {gamePhase === 'action_take_2' && renderTake2Content()}
         {gamePhase === 'round_end' && renderRoundEndContent()}
         {gamePhase === 'game_over' && renderGameOverContent()}
