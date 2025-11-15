@@ -59,10 +59,10 @@ export const Gameboard: React.FC = () => {
             <p className="text-sm text-secondary-foreground">{actionMessage}</p>
         </div>
         
-        <GameActions />
-
         <Separator className="my-4" />
-        <Scoreboard players={players} />
+        <div data-tutorial-id="scoreboard">
+          <Scoreboard players={players} />
+        </div>
         {gameMode === 'online' && (
             <>
                 <Separator className="my-4" />
@@ -89,8 +89,8 @@ export const Gameboard: React.FC = () => {
         </div>
 
         {/* Center Area */}
-        <div className="flex-grow flex items-center justify-center gap-4 md:gap-8 my-4">
-          <div className="flex flex-col items-center">
+        <div className="flex-grow flex items-center justify-center gap-4 md:gap-8 my-4" data-tutorial-id="piles">
+          <div className="flex flex-col items-center" data-tutorial-id="draw-pile">
             <GameCard card={null} isFaceUp={false} className={isPlayerActionable ? 'cursor-pointer' : ''} onClick={handleDrawFromDeck} isGlowing={isPlayerActionable} playSound={playSound} />
             <span className="mt-2 text-xs md:text-sm font-medium">Draw ({drawPile.length})</span>
           </div>
@@ -110,7 +110,7 @@ export const Gameboard: React.FC = () => {
             )}
           </AnimatePresence>
           
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center" data-tutorial-id="discard-pile">
             <GameCard card={discardPile.length > 0 ? discardPile[discardPile.length - 1] : null} isFaceUp={true} className={isPlayerActionable ? 'cursor-pointer' : ''} onClick={handleDrawFromDiscard} isGlowing={isPlayerActionable && discardPile.length > 0} playSound={playSound} />
             <span className="mt-2 text-xs md:text-sm font-medium">Discard</span>
           </div>
@@ -119,7 +119,12 @@ export const Gameboard: React.FC = () => {
         {/* Current Player Area */}
         {currentPlayer && (
           <div className="mt-auto">
-            <PlayerHand player={currentPlayer} isCurrentPlayer={true} playSound={playSound} />
+            <div data-tutorial-id="player-hand">
+              <PlayerHand player={currentPlayer} isCurrentPlayer={true} playSound={playSound} />
+            </div>
+            <div className="flex justify-center mt-4 h-10" data-tutorial-id="game-actions">
+              <GameActions />
+            </div>
           </div>
         )}
       </main>

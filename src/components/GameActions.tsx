@@ -31,7 +31,7 @@ export const GameActions = () => {
             <Button 
                 onClick={handleFinishPeeking} 
                 disabled={peekingState?.peekedCount !== 2}
-                className="w-full"
+                className="w-auto"
             >
                 Finish Peeking
             </Button>
@@ -40,13 +40,15 @@ export const GameActions = () => {
 
     if (gamePhase === 'playing' && isMyTurn) {
         return (
-            <Button onClick={handlePobudka} className="w-full bg-red-700 hover:bg-red-800 text-white font-bold">POBUDKA!</Button>
+            <div data-tutorial-id="pobudka-button">
+                <Button onClick={handlePobudka} className="w-auto bg-red-700 hover:bg-red-800 text-white font-bold">POBUDKA!</Button>
+            </div>
         );
     }
 
     if (gamePhase === 'holding_card' && isMyTurn) {
         return (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex gap-2">
                 <Button onClick={() => broadcastAction({ type: 'DISCARD_HELD_CARD' })} disabled={mustSwap}>Discard</Button>
                 <Button variant="secondary" onClick={() => broadcastAction({ type: 'USE_SPECIAL_ACTION' })} disabled={!canUseSpecial}><Zap className="mr-2 h-4 w-4" />Action</Button>
             </div>
