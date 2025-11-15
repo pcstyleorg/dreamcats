@@ -1,5 +1,5 @@
-import React, { createContext, useReducer, ReactNode, useContext, useEffect, useState, useCallback } from 'react';
-import { GameState, Player, Card, GamePhase, GameMode, ChatMessage, GameAction } from '@/types';
+import { createContext, useReducer, ReactNode, useContext, useEffect, useState, useCallback } from 'react';
+import { GameState, Player, Card, ChatMessage, GameAction } from '@/types';
 import { createDeck, shuffleDeck } from '@/lib/game-logic';
 import { supabase } from '@/lib/supabaseClient';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -142,19 +142,8 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
                     return p;
                 });
                 
-                const newState = { ...state, players, actionMessage: `${currentPlayer.name} peeked at a card.` };
-                
-                if (action.payload.isLocal) {
-                    setTimeout(() => {
-                        const finalState = advanceTurn(newState);
-                        dispatch({ type: 'SET_STATE', payload: finalState });
-                        if(state.gameMode === 'online' && channel) {
-                            channel.send({type: 'broadcast', event: 'SYNC_STATE', payload: { state: finalState }});
-                        }
-                    }, 2000);
-                }
-
-                return newState;
+                // Note: The card will be hidden after a delay, handled by the component
+                return advanceTurn({ ...state, players, actionMessage: `${currentPlayer.name} peeked at a card.` });
             }
             case 'ACTION_SWAP_2_SELECT': {
                 const { playerId, cardIndex } = gameAction.payload;
@@ -406,7 +395,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         dispatch({type: 'SET_STATE', payload: initialState});
       })
       .subscribe();
-  }, [myPlayerId, state]);
+  }, [myPlayerId, state, playSound]);
 
   // Reconnection logic
   useEffect(() => {

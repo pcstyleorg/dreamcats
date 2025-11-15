@@ -24,7 +24,7 @@ export const LobbyScreen: React.FC = () => {
     setIsLoading(true);
     try {
         await createRoom(playerName);
-    } catch (error) {
+    } catch {
         toast.error("Could not create room. Is Supabase connected?");
         setIsLoading(false);
     }
@@ -42,8 +42,9 @@ export const LobbyScreen: React.FC = () => {
     setIsLoading(true);
     try {
         await joinRoom(roomIdInput.trim(), playerName);
-    } catch (error: any) {
-        toast.error(error.message || "Failed to join room.");
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to join room.";
+        toast.error(errorMessage);
         setIsLoading(false);
     }
   };
