@@ -1,4 +1,3 @@
-import React from 'react';
 import { useGame } from '@/context/GameContext';
 import { Button } from './ui/button';
 import { Zap } from 'lucide-react';
@@ -24,9 +23,9 @@ export const GameActions = () => {
     }
 
     const canUseSpecial = drawnCard?.isSpecial && gamePhase === 'holding_card';
-    const mustSwap = gamePhase === 'holding_card' && drawnCard && !drawnCard.isSpecial;
+    const mustSwap = gamePhase === 'holding_card' && drawnCard ? !drawnCard.isSpecial : false;
 
-    if ((gameMode === 'hotseat' || amICurrentPeeker) && gamePhase === 'peeking' && peekingState?.playerIndex === state.players.findIndex(p => p.id === state.players[peekingState.playerIndex].id)) {
+    if ((gameMode === 'hotseat' || amICurrentPeeker) && gamePhase === 'peeking' && peekingState && peekingState.playerIndex === state.players.findIndex(p => p.id === state.players[peekingState.playerIndex].id)) {
         return (
             <Button 
                 onClick={handleFinishPeeking} 
