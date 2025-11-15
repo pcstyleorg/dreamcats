@@ -1,12 +1,18 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Button } from './ui/button';
+import React from "react";
+import { motion } from "framer-motion";
+import { Button } from "./ui/button";
 
 interface LandingPageProps {
   onEnter: () => void;
 }
 
-const Crow = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
+const Crow = ({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) => (
   <svg
     viewBox="0 0 200 200"
     xmlns="http://www.w3.org/2000/svg"
@@ -38,7 +44,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
       opacity: 1,
       transition: {
         duration: 0.8,
-        ease: "easeOut",
+        ease: "easeOut" as const,
       },
     },
   };
@@ -50,7 +56,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
       opacity: 1,
       transition: {
         duration: 0.8,
-        ease: [0.6, 0.01, 0.05, 0.95],
+        ease: "easeOut" as const,
       },
     },
   };
@@ -64,19 +70,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
         animate={{ opacity: 1 }}
         transition={{ duration: 2 }}
       />
-      <motion.div
-        className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-secondary/10 rounded-full blur-3xl animate-float"
-      />
+      <motion.div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-secondary/10 rounded-full blur-3xl animate-float" />
       <motion.div
         className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 bg-primary/10 rounded-full blur-3xl animate-float"
-        style={{ animationDelay: '-3s' }}
+        style={{ animationDelay: "-3s" }}
       />
-      
-      {/* Flying Crows */}
-      <Crow className="absolute top-[10%] -left-[10%] w-24 h-24 text-foreground/10 animate-fly-across" style={{ animationDelay: '-2s', animationDuration: '25s' }} />
-      <Crow className="absolute top-[50%] -left-[10%] w-16 h-16 text-foreground/5 animate-fly-across" style={{ animationDelay: '0s', animationDuration: '18s' }} />
-      <Crow className="absolute top-[80%] -left-[10%] w-32 h-32 text-foreground/10 animate-fly-across" style={{ animationDelay: '-10s', animationDuration: '30s' }} />
 
+      {/* Flying Crows */}
+      <Crow
+        className="absolute top-[10%] -left-[10%] w-24 h-24 text-foreground/10 animate-fly-across"
+        style={{ animationDelay: "-2s", animationDuration: "25s" }}
+      />
+      <Crow
+        className="absolute top-[50%] -left-[10%] w-16 h-16 text-foreground/5 animate-fly-across"
+        style={{ animationDelay: "0s", animationDuration: "18s" }}
+      />
+      <Crow
+        className="absolute top-[80%] -left-[10%] w-32 h-32 text-foreground/10 animate-fly-across"
+        style={{ animationDelay: "-10s", animationDuration: "30s" }}
+      />
 
       <motion.div
         className="text-center z-10 flex flex-col items-center"
