@@ -26,6 +26,14 @@ export type GamePhase =
   | 'round_end' 
   | 'game_over';
 
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  message: string;
+  timestamp: number;
+}
+
 export interface GameState {
   gameMode: GameMode;
   roomId: string | null;
@@ -39,6 +47,7 @@ export interface GameState {
   roundWinnerName: string | null;
   gameWinnerName: string | null;
   turnCount: number;
+  chatMessages: ChatMessage[];
   peekingState?: {
     playerIndex: number;
     peekedCount: number;
