@@ -6,7 +6,7 @@ import { Button } from './ui/button';
 import { Scoreboard } from './Scoreboard';
 import { Separator } from './ui/separator';
 import { toast } from 'sonner';
-import { Copy, Menu, Users, Wifi } from 'lucide-react';
+import { Copy, Menu, Users, Cloud, ScrollText } from 'lucide-react';
 import { ActionModal } from './ActionModal';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { ChatBox } from './ChatBox';
@@ -55,7 +55,7 @@ export const Gameboard: React.FC = () => {
   const SidePanelContent = () => (
     <>
         <div className="my-4 p-3 bg-black/5 rounded-md min-h-[60px]">
-            <h4 className="font-semibold mb-1 font-heading">Action Log</h4>
+            <h4 className="font-semibold mb-1 font-heading flex items-center gap-2"><ScrollText className="w-4 h-4" />Action Log</h4>
             <p className="text-sm text-muted-foreground">{actionMessage}</p>
         </div>
         
@@ -78,7 +78,7 @@ export const Gameboard: React.FC = () => {
     <div className="w-full min-h-screen text-foreground p-2 sm:p-4 flex flex-col lg:flex-row gap-4 relative">
       <main className="flex-grow flex flex-col">
         {/* Opponent Area */}
-        <div className="flex justify-center items-start mb-4 h-36 md:h-48">
+        <div className="flex justify-center items-start mb-4 min-h-[10rem] md:min-h-[12rem]">
           {otherPlayer ? (
             <PlayerHand player={otherPlayer} isCurrentPlayer={false} isOpponent={true} playSound={playSound} />
           ) : (
@@ -134,7 +134,7 @@ export const Gameboard: React.FC = () => {
         <h2 className="text-2xl font-bold mb-2 text-center font-heading">Sen</h2>
         {gameMode === 'online' && roomId && (
             <div className="flex items-center justify-center gap-2 mb-2 text-sm text-muted-foreground">
-                <Wifi className="w-4 h-4" />
+                <Cloud className="w-4 h-4" />
                 <span>{roomId}</span>
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={copyRoomId}>
                     <Copy className="h-4 w-4" />

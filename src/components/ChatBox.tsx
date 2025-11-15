@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useGame } from '@/context/GameContext';
 import { Input } from './ui/input';
 import { Button } from './ui/button';
-import { Send } from 'lucide-react';
+import { MessagesSquare, Send } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
 
@@ -31,7 +31,10 @@ export const ChatBox = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <h4 className="font-semibold mb-2 font-heading text-center">Chat</h4>
+      <h4 className="font-semibold mb-2 font-heading text-center flex items-center justify-center gap-2">
+        <MessagesSquare className="w-5 h-5" />
+        Chat
+      </h4>
       <ScrollArea className="flex-grow h-48 rounded-md border p-2 mb-2 bg-black/10" ref={scrollAreaRef}>
         {state.chatMessages.map((msg) => (
           <div key={msg.id} className={cn("mb-2 text-sm", msg.senderId === myPlayerId ? "text-right" : "text-left")}>

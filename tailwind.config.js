@@ -70,10 +70,25 @@ export default {
               height: '0',
             },
           },
+          'fly-in': {
+            'from': { transform: 'translateY(1rem)', opacity: '0' },
+            'to': { transform: 'translateY(0)', opacity: '1' },
+          },
+          'float': {
+            '0%, 100%': { transform: 'translateY(0)' },
+            '50%': { transform: 'translateY(-10px)' },
+          },
+          'fly-across': {
+            '0%': { transform: 'translateX(-100%)', opacity: '0.7' },
+            '100%': { transform: 'translateX(100vw)', opacity: '0.7' },
+          }
         },
         animation: {
           'accordion-down': 'accordion-down 0.2s ease-out',
           'accordion-up': 'accordion-up 0.2s ease-out',
+          'fly-in': 'fly-in 0.5s ease-out forwards',
+          'float': 'float 6s ease-in-out infinite',
+          'fly-across': 'fly-across 20s linear infinite',
         },
         boxShadow: {
             'soft': '0 4px 15px -3px rgb(0 0 0 / 0.07), 0 2px 8px -2px rgb(0 0 0 / 0.04)',

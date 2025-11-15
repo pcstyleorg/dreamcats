@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { ArrowLeft, Users, Wifi } from 'lucide-react';
+import { ArrowLeft, Users, Cloud } from 'lucide-react';
 
 export const LobbyScreen: React.FC = () => {
   const { createRoom, joinRoom, startHotseatGame, state } = useGame();
@@ -24,7 +24,7 @@ export const LobbyScreen: React.FC = () => {
     setIsLoading(true);
     try {
         await createRoom(playerName);
-    } catch {
+    } catch (error) {
         toast.error("Could not create room. Is Supabase connected?");
         setIsLoading(false);
     }
@@ -42,9 +42,8 @@ export const LobbyScreen: React.FC = () => {
     setIsLoading(true);
     try {
         await joinRoom(roomIdInput.trim(), playerName);
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Failed to join room.";
-        toast.error(errorMessage);
+    } catch (error: any) {
+        toast.error(error.message || "Failed to join room.");
         setIsLoading(false);
     }
   };
@@ -67,7 +66,7 @@ export const LobbyScreen: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <Button onClick={() => setMode('online')} className="w-full" size="lg">
-            <Wifi className="mr-2 h-5 w-5" /> Online Multiplayer
+            <Cloud className="mr-2 h-5 w-5" /> Online Multiplayer
         </Button>
         <Button onClick={() => setMode('hotseat')} className="w-full" size="lg" variant="secondary">
             <Users className="mr-2 h-5 w-5" /> Local Hot-Seat

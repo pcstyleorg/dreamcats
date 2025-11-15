@@ -59,17 +59,3 @@ export interface GameState {
   };
   lastRoundScores?: { playerId: string; score: number; penalty: number }[];
 }
-
-export type GameAction =
-  | { type: 'PEEK_CARD'; payload: { playerId: string; cardIndex: number } }
-  | { type: 'FINISH_PEEKING' }
-  | { type: 'DRAW_FROM_DECK' }
-  | { type: 'DRAW_FROM_DISCARD' }
-  | { type: 'DISCARD_HELD_CARD' }
-  | { type: 'SWAP_HELD_CARD'; payload: { cardIndex: number } }
-  | { type: 'USE_SPECIAL_ACTION' }
-  | { type: 'ACTION_PEEK_1_SELECT'; payload: { playerId: string; cardIndex: number } }
-  | { type: 'ACTION_SWAP_2_SELECT'; payload: { playerId: string; cardIndex: number } }
-  | { type: 'ACTION_TAKE_2_CHOOSE'; payload: { card: Card } }
-  | { type: 'CALL_POBUDKA' }
-  | { type: 'START_NEW_ROUND' };

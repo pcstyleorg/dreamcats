@@ -1,6 +1,7 @@
 import React from 'react';
 import { Player } from '@/types';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Trophy } from 'lucide-react';
 
 interface ScoreboardProps {
   players: Player[];
@@ -9,7 +10,10 @@ interface ScoreboardProps {
 export const Scoreboard: React.FC<ScoreboardProps> = ({ players }) => {
   return (
     <div>
-      <h3 className="text-xl font-semibold mb-2 text-center font-heading">Scoreboard</h3>
+      <h3 className="text-xl font-semibold mb-2 text-center font-heading flex items-center justify-center gap-2">
+        <Trophy className="w-5 h-5" />
+        Scoreboard
+      </h3>
       <Table>
         <TableHeader>
           <TableRow className="border-white/10">

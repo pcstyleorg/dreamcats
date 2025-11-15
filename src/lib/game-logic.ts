@@ -14,9 +14,9 @@ export const createDeck = (): Card[] => {
   }
 
   // Special cards with correct values from rules
-  cards.push(...Array(4).fill(0).map(() => ({ id: id++, value: 6, isSpecial: true, specialAction: 'peek_1' as const })));
-  cards.push(...Array(4).fill(0).map(() => ({ id: id++, value: 7, isSpecial: true, specialAction: 'take_2' as const })));
-  cards.push(...Array(4).fill(0).map(() => ({ id: id++, value: 8, isSpecial: true, specialAction: 'swap_2' as const })));
+  cards.push(...Array(4).fill(0).map(() => ({ id: id++, value: 6, isSpecial: true, specialAction: 'peek_1' })));
+  cards.push(...Array(4).fill(0).map(() => ({ id: id++, value: 7, isSpecial: true, specialAction: 'take_2' })));
+  cards.push(...Array(4).fill(0).map(() => ({ id: id++, value: 8, isSpecial: true, specialAction: 'swap_2' })));
 
   return cards;
 };

@@ -83,7 +83,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ player, isCurrentPlayer,
             isFaceUp={cardInHand.isFaceUp || gamePhase === 'round_end' || gamePhase === 'game_over'}
             hasBeenPeeked={cardInHand.hasBeenPeeked}
             onClick={() => handleCardClick(index)}
-            className={cn(isOpponent && "w-14 h-20 md:w-20 md:h-28", getCardInteractionClass(index))}
+            className={cn(isOpponent && "w-16 md:w-20", getCardInteractionClass(index))}
             playSound={playSound}
           />
         ))}

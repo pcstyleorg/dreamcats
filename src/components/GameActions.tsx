@@ -1,6 +1,7 @@
+import React from 'react';
 import { useGame } from '@/context/GameContext';
 import { Button } from './ui/button';
-import { Zap } from 'lucide-react';
+import { Wand2 } from 'lucide-react';
 
 export const GameActions = () => {
     const { state, broadcastAction, myPlayerId } = useGame();
@@ -23,9 +24,9 @@ export const GameActions = () => {
     }
 
     const canUseSpecial = drawnCard?.isSpecial && gamePhase === 'holding_card';
-    const mustSwap = gamePhase === 'holding_card' && drawnCard ? !drawnCard.isSpecial : false;
+    const mustSwap = gamePhase === 'holding_card' && drawnCard && !drawnCard.isSpecial;
 
-    if ((gameMode === 'hotseat' || amICurrentPeeker) && gamePhase === 'peeking' && peekingState && peekingState.playerIndex === state.players.findIndex(p => p.id === state.players[peekingState.playerIndex].id)) {
+    if ((gameMode === 'hotseat' || amICurrentPeeker) && gamePhase === 'peeking' && peekingState?.playerIndex === state.players.findIndex(p => p.id === state.players[peekingState.playerIndex].id)) {
         return (
             <Button 
                 onClick={handleFinishPeeking} 
@@ -49,7 +50,7 @@ export const GameActions = () => {
         return (
             <div className="flex gap-2">
                 <Button variant="outline" onClick={() => broadcastAction({ type: 'DISCARD_HELD_CARD' })} disabled={mustSwap}>Discard</Button>
-                <Button onClick={() => broadcastAction({ type: 'USE_SPECIAL_ACTION' })} disabled={!canUseSpecial}><Zap className="mr-2 h-4 w-4" />Action</Button>
+                <Button onClick={() => broadcastAction({ type: 'USE_SPECIAL_ACTION' })} disabled={!canUseSpecial}><Wand2 className="mr-2 h-4 w-4" />Action</Button>
             </div>
         );
     }
