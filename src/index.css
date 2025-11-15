@@ -4,33 +4,33 @@
  
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 300 5% 98%;
+    --background: 45 30% 96%;
+    --foreground: 45 10% 20%;
  
-    --card: 240 5% 10%;
-    --card-foreground: 300 5% 98%;
+    --card: 45 30% 99%;
+    --card-foreground: 45 10% 20%;
  
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 300 5% 98%;
+    --popover: 45 30% 99%;
+    --popover-foreground: 45 10% 20%;
  
-    --primary: 262 84% 60%;
-    --primary-foreground: 300 5% 99%;
+    --primary: 340 40% 40%;
+    --primary-foreground: 340 40% 98%;
  
-    --secondary: 240 4% 16%;
-    --secondary-foreground: 300 5% 98%;
+    --secondary: 190 20% 60%;
+    --secondary-foreground: 190 20% 15%;
  
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 45 20% 88%;
+    --muted-foreground: 45 10% 45%;
  
-    --accent: 240 4% 16%;
-    --accent-foreground: 300 5% 98%;
+    --accent: 45 25% 92%;
+    --accent-foreground: 45 10% 15%;
  
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 300 5% 98%;
+    --destructive: 340 50% 35%;
+    --destructive-foreground: 340 40% 98%;
 
-    --border: 240 4% 18%;
-    --input: 240 4% 18%;
-    --ring: 262 84% 60%;
+    --border: 45 20% 85%;
+    --input: 45 20% 85%;
+    --ring: 340 40% 50%;
  
     --radius: 0.5rem;
   }
@@ -42,11 +42,12 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   .font-heading {
-    font-family: 'Cinzel', serif;
+    font-family: 'Lora', serif;
   }
 }
 

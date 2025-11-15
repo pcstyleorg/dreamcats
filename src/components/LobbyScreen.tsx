@@ -61,7 +61,7 @@ export const LobbyScreen: React.FC = () => {
   const renderSelectMode = () => (
     <>
       <CardHeader>
-        <CardTitle className="text-4xl text-center font-heading">Sen</CardTitle>
+        <CardTitle className="text-5xl text-center font-heading">Sen</CardTitle>
         <CardDescription className="text-center">A game of dreams and crows.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -127,7 +127,7 @@ export const LobbyScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-card/50 backdrop-blur-sm border-white/10 relative">
+      <Card className="w-full max-w-md bg-card/70 backdrop-blur-sm shadow-soft-lg relative">
         {mode === 'select' && renderSelectMode()}
         {mode === 'online' && renderOnlineMode()}
         {mode === 'hotseat' && renderHotseatMode()}

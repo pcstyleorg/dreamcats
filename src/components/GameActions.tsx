@@ -41,7 +41,7 @@ export const GameActions = () => {
     if (gamePhase === 'playing' && isMyTurn) {
         return (
             <div data-tutorial-id="pobudka-button">
-                <Button onClick={handlePobudka} className="w-auto bg-red-700 hover:bg-red-800 text-white font-bold">POBUDKA!</Button>
+                <Button onClick={handlePobudka} variant="destructive" className="w-auto font-bold">POBUDKA!</Button>
             </div>
         );
     }
@@ -49,8 +49,8 @@ export const GameActions = () => {
     if (gamePhase === 'holding_card' && isMyTurn) {
         return (
             <div className="flex gap-2">
-                <Button onClick={() => broadcastAction({ type: 'DISCARD_HELD_CARD' })} disabled={mustSwap}>Discard</Button>
-                <Button variant="secondary" onClick={() => broadcastAction({ type: 'USE_SPECIAL_ACTION' })} disabled={!canUseSpecial}><Zap className="mr-2 h-4 w-4" />Action</Button>
+                <Button variant="outline" onClick={() => broadcastAction({ type: 'DISCARD_HELD_CARD' })} disabled={mustSwap}>Discard</Button>
+                <Button onClick={() => broadcastAction({ type: 'USE_SPECIAL_ACTION' })} disabled={!canUseSpecial}><Zap className="mr-2 h-4 w-4" />Action</Button>
             </div>
         );
     }

@@ -57,10 +57,10 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ player, isCurrentPlayer,
 
     const handCard = player.hand[cardIndex];
 
-    if (gamePhase === 'peeking' && isPeekingTurn && !handCard.isFaceUp && state.peekingState!.peekedCount < 2) return 'cursor-pointer hover:scale-105 hover:shadow-[0_0_25px_theme(colors.primary/50%)]';
-    if (gamePhase === 'holding_card' && isCurrentPlayer) return 'cursor-pointer hover:scale-105 hover:shadow-[0_0_25px_theme(colors.primary/50%)]';
-    if (gamePhase === 'action_peek_1' && isCurrentPlayer) return 'cursor-pointer hover:scale-105 hover:shadow-[0_0_25px_theme(colors.primary/50%)]';
-    if ((gamePhase === 'action_swap_2_select_1' || gamePhase === 'action_swap_2_select_2') && isCurrentPlayer) return 'cursor-pointer hover:scale-105 hover:shadow-[0_0_25px_theme(colors.primary/50%)]';
+    if (gamePhase === 'peeking' && isPeekingTurn && !handCard.isFaceUp && state.peekingState!.peekedCount < 2) return 'cursor-pointer hover:scale-105 hover:shadow-soft-lg';
+    if (gamePhase === 'holding_card' && isCurrentPlayer) return 'cursor-pointer hover:scale-105 hover:shadow-soft-lg';
+    if (gamePhase === 'action_peek_1' && isCurrentPlayer) return 'cursor-pointer hover:scale-105 hover:shadow-soft-lg';
+    if ((gamePhase === 'action_swap_2_select_1' || gamePhase === 'action_swap_2_select_2') && isCurrentPlayer) return 'cursor-pointer hover:scale-105 hover:shadow-soft-lg';
     
     return '';
   }
@@ -70,10 +70,10 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({ player, isCurrentPlayer,
   return (
     <div className={cn(
         "p-2 md:p-4 rounded-lg border-2 transition-all duration-300", 
-        isCurrentPlayer && gamePhase !== 'round_end' && gamePhase !== 'game_over' ? "border-primary bg-primary/10 shadow-[0_0_30px_theme(colors.primary/20%)]" : "border-transparent"
+        isCurrentPlayer && gamePhase !== 'round_end' && gamePhase !== 'game_over' ? "border-primary/30 bg-primary/5 shadow-[0_0_20px_hsl(var(--primary)/0.2)]" : "border-transparent"
     )}>
       <h3 className={cn("font-heading text-base md:text-lg font-semibold mb-2 text-center", isOpponent && "text-sm md:text-base")}>
-        {player.name} {showYouTag && "(You)"}
+        {player.name} {showYouTag && <span className="text-muted-foreground text-sm">(You)</span>}
       </h3>
       <div className={cn("flex gap-2 justify-center")}>
         {player.hand.map((cardInHand, index) => (

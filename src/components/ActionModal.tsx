@@ -83,7 +83,7 @@ export const ActionModal: React.FC = () => {
 
   return (
     <Dialog open={isOpen}>
-      <DialogContent className="bg-card/80 backdrop-blur-lg border-white/20">
+      <DialogContent className="bg-card/80 backdrop-blur-lg">
         {gamePhase === 'action_take_2' && renderTake2Content()}
         {gamePhase === 'round_end' && renderRoundEndContent()}
         {gamePhase === 'game_over' && renderGameOverContent()}

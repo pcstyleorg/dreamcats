@@ -54,9 +54,9 @@ export const Gameboard: React.FC = () => {
 
   const SidePanelContent = () => (
     <>
-        <div className="my-4 p-3 bg-black/20 rounded-md min-h-[60px]">
+        <div className="my-4 p-3 bg-black/5 rounded-md min-h-[60px]">
             <h4 className="font-semibold mb-1 font-heading">Action Log</h4>
-            <p className="text-sm text-secondary-foreground">{actionMessage}</p>
+            <p className="text-sm text-muted-foreground">{actionMessage}</p>
         </div>
         
         <Separator className="my-4" />
@@ -82,7 +82,7 @@ export const Gameboard: React.FC = () => {
           {otherPlayer ? (
             <PlayerHand player={otherPlayer} isCurrentPlayer={false} isOpponent={true} playSound={playSound} />
           ) : (
-            <div className="flex items-center justify-center h-full w-full rounded-lg bg-black/20 border-2 border-dashed border-white/10">
+            <div className="flex items-center justify-center h-full w-full rounded-lg bg-black/5 border-2 border-dashed border-black/10">
                 <p className="text-muted-foreground font-heading">Waiting for opponent...</p>
             </div>
           )}
@@ -130,8 +130,8 @@ export const Gameboard: React.FC = () => {
       </main>
 
       {/* Side Panel - Desktop */}
-      <aside className="hidden lg:flex w-full lg:w-80 lg:max-w-xs flex-shrink-0 bg-card/50 backdrop-blur-sm p-4 rounded-lg border flex-col">
-        <h2 className="text-2xl font-bold mb-2 text-center font-heading">Sen Game</h2>
+      <aside className="hidden lg:flex w-full lg:w-80 lg:max-w-xs flex-shrink-0 bg-card/60 backdrop-blur-sm p-4 rounded-lg border shadow-soft-lg flex-col">
+        <h2 className="text-2xl font-bold mb-2 text-center font-heading">Sen</h2>
         {gameMode === 'online' && roomId && (
             <div className="flex items-center justify-center gap-2 mb-2 text-sm text-muted-foreground">
                 <Wifi className="w-4 h-4" />
@@ -159,7 +159,7 @@ export const Gameboard: React.FC = () => {
                     <Menu />
                 </Button>
             </SheetTrigger>
-            <SheetContent className="bg-card/80 backdrop-blur-lg border-l-white/20">
+            <SheetContent className="bg-background/80 backdrop-blur-lg">
                 <SheetHeader>
                     <SheetTitle className="font-heading text-2xl">Game Menu</SheetTitle>
                 </SheetHeader>

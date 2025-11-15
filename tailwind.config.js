@@ -11,7 +11,7 @@ export default {
       extend: {
         fontFamily: {
           sans: ['"Inter"', 'sans-serif'],
-          heading: ['"Cinzel"', 'serif'],
+          heading: ['"Lora"', 'serif'],
         },
         borderRadius: {
           lg: 'var(--radius)',
@@ -75,6 +75,10 @@ export default {
           'accordion-down': 'accordion-down 0.2s ease-out',
           'accordion-up': 'accordion-up 0.2s ease-out',
         },
+        boxShadow: {
+            'soft': '0 4px 15px -3px rgb(0 0 0 / 0.07), 0 2px 8px -2px rgb(0 0 0 / 0.04)',
+            'soft-lg': '0 10px 25px -5px rgb(0 0 0 / 0.07), 0 4px 10px -4px rgb(0 0 0 / 0.04)',
+        }
       },
     },
     plugins: [require('tailwindcss-animate')],

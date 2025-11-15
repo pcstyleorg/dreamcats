@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Card as CardType } from '@/types';
 import { cn } from '@/lib/utils';
 import { Card as UICard } from '@/components/ui/card';
-import { Eye, GitCommitHorizontal, RefreshCw, Sparkles } from 'lucide-react';
+import { Eye, GitCommitHorizontal, RefreshCw } from 'lucide-react';
 import { SoundType } from '@/hooks/use-sounds';
 
 interface CardProps {
@@ -24,6 +24,15 @@ const SpecialIcon = ({ action }: { action: CardType['specialAction'] }) => {
     default: return null;
   }
 };
+
+const RavenIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 md:w-12 md:h-12 text-foreground/20">
+        <path d="M14.5 7.5c0 2-1.5 3.5-3.5 3.5-2.5 0-4-2-4-4 0-2.5 1.5-4 4-4 2.5 0 3.5 1.5 3.5 3.5z" />
+        <path d="M12 11.5c-3.5 0-7 2.5-7 7h14c0-4.5-3.5-7-7-7z" />
+        <path d="M16.5 13.5c1.5 0 3 1.5 3 3.5" />
+    </svg>
+);
+
 
 export const GameCard: React.FC<CardProps> = ({ card, isFaceUp, onClick, className, hasBeenPeeked, isGlowing, playSound }) => {
   const cardVariants = {
@@ -49,25 +58,25 @@ export const GameCard: React.FC<CardProps> = ({ card, isFaceUp, onClick, classNa
         {/* Card Back */}
         <div className="absolute w-full h-full backface-hidden">
           <UICard className={cn(
-            "w-full h-full flex items-center justify-center border-2 bg-gradient-to-br from-purple-800 to-indigo-800 transition-all duration-300",
-            hasBeenPeeked && "border-primary",
-            isGlowing && "shadow-[0_0_25px_theme(colors.primary/60%)]"
+            "w-full h-full flex items-center justify-center border bg-card transition-all duration-300 shadow-soft",
+            hasBeenPeeked && "ring-2 ring-secondary",
+            isGlowing && "shadow-[0_0_15px_hsl(var(--primary)/0.4)]"
             )}>
-            <Sparkles className="w-10 h-10 md:w-12 md:h-12 text-purple-300/70" />
+            <RavenIcon />
           </UICard>
         </div>
 
         {/* Card Front */}
         <div className="absolute w-full h-full backface-hidden transform-rotate-y-180">
           <UICard className={cn(
-            "w-full h-full flex flex-col items-center justify-center p-1 md:p-2 border-2", 
-            card?.isSpecial ? "bg-purple-950/80 border-primary" : "bg-card",
-            isGlowing && "shadow-[0_0_25px_theme(colors.primary/60%)]"
+            "w-full h-full flex flex-col items-center justify-center p-1 md:p-2 border bg-card shadow-soft", 
+            card?.isSpecial ? "border-primary/50" : "border-border",
+            isGlowing && "shadow-[0_0_15px_hsl(var(--primary)/0.4)]"
             )}>
             {card ? (
               <>
                 <div className="absolute top-2 left-2 text-base md:text-lg font-bold font-heading">{card.isSpecial ? <SpecialIcon action={card.specialAction} /> : card.value}</div>
-                <div className="text-5xl md:text-6xl font-black font-heading">{card.value}</div>
+                <div className="text-5xl md:text-6xl font-black font-heading text-foreground/80">{card.value}</div>
                 <div className="absolute bottom-2 right-2 text-base md:text-lg font-bold font-heading transform -rotate-180">{card.isSpecial ? <SpecialIcon action={card.specialAction} /> : card.value}</div>
               </>
             ) : null}

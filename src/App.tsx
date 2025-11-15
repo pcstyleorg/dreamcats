@@ -10,9 +10,9 @@ function App() {
 
   return (
     <TutorialProvider>
-      <main className="font-sans bg-gradient-to-br from-gray-900 via-purple-950 to-indigo-950 min-h-screen">
+      <main className="font-sans bg-background min-h-screen">
           {state.gamePhase === 'lobby' ? <LobbyScreen /> : <Gameboard />}
-          <Toaster richColors theme="dark" />
+          <Toaster richColors theme="light" />
           <Tutorial />
       </main>
     </TutorialProvider>
