@@ -7,10 +7,10 @@ function App() {
   const { state } = useGame();
 
   return (
-    <>
+    <main className="font-sans bg-gradient-to-br from-gray-900 via-purple-950 to-indigo-950 min-h-screen">
         {state.gamePhase === 'lobby' ? <LobbyScreen /> : <Gameboard />}
-        <Toaster richColors />
-    </>
+        <Toaster richColors theme="dark" />
+    </main>
   );
 }
 

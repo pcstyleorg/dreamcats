@@ -12,6 +12,8 @@ export interface Player {
   score: number;
 }
 
+export type GameMode = 'lobby' | 'online' | 'hotseat';
+
 export type GamePhase = 
   | 'lobby'
   | 'peeking' 
@@ -25,6 +27,7 @@ export type GamePhase =
   | 'game_over';
 
 export interface GameState {
+  gameMode: GameMode;
   roomId: string | null;
   hostId: string | null;
   drawPile: Card[];

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Card as CardType } from '@/types';
 import { cn } from '@/lib/utils';
 import { Card as UICard } from '@/components/ui/card';
-import { Crown, Eye, GitCommitHorizontal, RefreshCw } from 'lucide-react';
+import { Crown, Eye, GitCommitHorizontal, RefreshCw, Sparkles } from 'lucide-react';
 
 interface CardProps {
   card: CardType | null;
@@ -11,6 +11,7 @@ interface CardProps {
   onClick?: () => void;
   className?: string;
   hasBeenPeeked?: boolean;
+  isGlowing?: boolean;
 }
 
 const SpecialIcon = ({ action }: { action: CardType['specialAction'] }) => {
@@ -22,7 +23,7 @@ const SpecialIcon = ({ action }: { action: CardType['specialAction'] }) => {
   }
 };
 
-export const GameCard: React.FC<CardProps> = ({ card, isFaceUp, onClick, className, hasBeenPeeked }) => {
+export const GameCard: React.FC<CardProps> = ({ card, isFaceUp, onClick, className, hasBeenPeeked, isGlowing }) => {
   const cardVariants = {
     faceUp: { rotateY: 180 },
     faceDown: { rotateY: 0 },
@@ -38,19 +39,27 @@ export const GameCard: React.FC<CardProps> = ({ card, isFaceUp, onClick, classNa
       >
         {/* Card Back */}
         <div className="absolute w-full h-full backface-hidden">
-          <UICard className={cn("w-full h-full flex items-center justify-center bg-secondary border-2", hasBeenPeeked && "border-primary")}>
-            <Crown className="w-12 h-12 text-secondary-foreground/50" />
+          <UICard className={cn(
+            "w-full h-full flex items-center justify-center border-2 bg-gradient-to-br from-purple-800 to-indigo-800 transition-all duration-300",
+            hasBeenPeeked && "border-primary",
+            isGlowing && "shadow-[0_0_25px_theme(colors.primary/60%)]"
+            )}>
+            <Sparkles className="w-12 h-12 text-purple-300/70" />
           </UICard>
         </div>
 
         {/* Card Front */}
         <div className="absolute w-full h-full backface-hidden transform-rotate-y-180">
-          <UICard className={cn("w-full h-full flex flex-col items-center justify-center p-2", card?.isSpecial ? "bg-primary/20" : "bg-card")}>
+          <UICard className={cn(
+            "w-full h-full flex flex-col items-center justify-center p-2 border-2", 
+            card?.isSpecial ? "bg-purple-950/80 border-primary" : "bg-card",
+            isGlowing && "shadow-[0_0_25px_theme(colors.primary/60%)]"
+            )}>
             {card ? (
               <>
-                <div className="absolute top-2 left-2 text-lg font-bold">{card.isSpecial ? <SpecialIcon action={card.specialAction} /> : card.value}</div>
-                <div className="text-5xl font-bold">{card.isSpecial ? <SpecialIcon action={card.specialAction} /> : card.value}</div>
-                <div className="absolute bottom-2 right-2 text-lg font-bold transform-rotate-180">{card.isSpecial ? <SpecialIcon action={card.specialAction} /> : card.value}</div>
+                <div className="absolute top-2 left-2 text-lg font-bold font-heading">{card.isSpecial ? <SpecialIcon action={card.specialAction} /> : card.value}</div>
+                <div className="text-6xl font-black font-heading">{card.value}</div>
+                <div className="absolute bottom-2 right-2 text-lg font-bold font-heading transform -rotate-180">{card.isSpecial ? <SpecialIcon action={card.specialAction} /> : card.value}</div>
               </>
             ) : null}
           </UICard>

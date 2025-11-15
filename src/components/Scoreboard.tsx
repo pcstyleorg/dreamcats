@@ -9,19 +9,19 @@ interface ScoreboardProps {
 export const Scoreboard: React.FC<ScoreboardProps> = ({ players }) => {
   return (
     <div>
-      <h3 className="text-xl font-semibold mb-2 text-center">Scoreboard</h3>
+      <h3 className="text-xl font-semibold mb-2 text-center font-heading">Scoreboard</h3>
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="border-white/10">
             <TableHead>Player</TableHead>
             <TableHead className="text-right">Score</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {players.map(player => (
-            <TableRow key={player.id}>
+            <TableRow key={player.id} className="border-white/10">
               <TableCell className="font-medium">{player.name}</TableCell>
-              <TableCell className="text-right">{player.score}</TableCell>
+              <TableCell className="text-right font-mono">{player.score}</TableCell>
             </TableRow>
           ))}
         </TableBody>
