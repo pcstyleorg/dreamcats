@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { Card as CardType } from '@/types';
 import { cn } from '@/lib/utils';
 import { Card as UICard } from '@/components/ui/card';
-import { Crown, Eye, GitCommitHorizontal, RefreshCw, Sparkles } from 'lucide-react';
+import { Eye, GitCommitHorizontal, RefreshCw, Sparkles } from 'lucide-react';
+import { SoundType } from '@/hooks/use-sounds';
 
 interface CardProps {
   card: CardType | null;
@@ -12,6 +13,7 @@ interface CardProps {
   className?: string;
   hasBeenPeeked?: boolean;
   isGlowing?: boolean;
+  playSound?: (sound: SoundType) => void;
 }
 
 const SpecialIcon = ({ action }: { action: CardType['specialAction'] }) => {
@@ -23,14 +25,21 @@ const SpecialIcon = ({ action }: { action: CardType['specialAction'] }) => {
   }
 };
 
-export const GameCard: React.FC<CardProps> = ({ card, isFaceUp, onClick, className, hasBeenPeeked, isGlowing }) => {
+export const GameCard: React.FC<CardProps> = ({ card, isFaceUp, onClick, className, hasBeenPeeked, isGlowing, playSound }) => {
   const cardVariants = {
     faceUp: { rotateY: 180 },
     faceDown: { rotateY: 0 },
   };
 
+  const handleClick = () => {
+    if (onClick) {
+        if (playSound) playSound('flip');
+        onClick();
+    }
+  }
+
   return (
-    <div className={cn("w-24 h-36 md:w-28 md:h-40 perspective-1000", className)} onClick={onClick}>
+    <div className={cn("w-20 h-28 md:w-28 md:h-40 perspective-1000", className)} onClick={handleClick}>
       <motion.div
         className="relative w-full h-full transform-style-3d"
         variants={cardVariants}
@@ -44,22 +53,22 @@ export const GameCard: React.FC<CardProps> = ({ card, isFaceUp, onClick, classNa
             hasBeenPeeked && "border-primary",
             isGlowing && "shadow-[0_0_25px_theme(colors.primary/60%)]"
             )}>
-            <Sparkles className="w-12 h-12 text-purple-300/70" />
+            <Sparkles className="w-10 h-10 md:w-12 md:h-12 text-purple-300/70" />
           </UICard>
         </div>
 
         {/* Card Front */}
         <div className="absolute w-full h-full backface-hidden transform-rotate-y-180">
           <UICard className={cn(
-            "w-full h-full flex flex-col items-center justify-center p-2 border-2", 
+            "w-full h-full flex flex-col items-center justify-center p-1 md:p-2 border-2", 
             card?.isSpecial ? "bg-purple-950/80 border-primary" : "bg-card",
             isGlowing && "shadow-[0_0_25px_theme(colors.primary/60%)]"
             )}>
             {card ? (
               <>
-                <div className="absolute top-2 left-2 text-lg font-bold font-heading">{card.isSpecial ? <SpecialIcon action={card.specialAction} /> : card.value}</div>
-                <div className="text-6xl font-black font-heading">{card.value}</div>
-                <div className="absolute bottom-2 right-2 text-lg font-bold font-heading transform -rotate-180">{card.isSpecial ? <SpecialIcon action={card.specialAction} /> : card.value}</div>
+                <div className="absolute top-2 left-2 text-base md:text-lg font-bold font-heading">{card.isSpecial ? <SpecialIcon action={card.specialAction} /> : card.value}</div>
+                <div className="text-5xl md:text-6xl font-black font-heading">{card.value}</div>
+                <div className="absolute bottom-2 right-2 text-base md:text-lg font-bold font-heading transform -rotate-180">{card.isSpecial ? <SpecialIcon action={card.specialAction} /> : card.value}</div>
               </>
             ) : null}
           </UICard>

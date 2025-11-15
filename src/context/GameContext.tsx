@@ -1,30 +1,15 @@
 import React, { createContext, useReducer, ReactNode, useContext, useEffect, useState, useCallback } from 'react';
-import { GameState, Player, Card, GamePhase, GameMode } from '@/types';
+import { GameState, Player, Card, GamePhase, GameMode, ChatMessage, GameAction } from '@/types';
 import { createDeck, shuffleDeck } from '@/lib/game-logic';
 import { supabase } from '@/lib/supabaseClient';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { useSounds, SoundType } from '@/hooks/use-sounds';
 
-// Actions that players can take, which will be broadcast
-export type GameAction =
-  | { type: 'PEEK_CARD'; payload: { playerId: string; cardIndex: number } }
-  | { type: 'FINISH_PEEKING' }
-  | { type: 'DRAW_FROM_DECK' }
-  | { type: 'DRAW_FROM_DISCARD' }
-  | { type: 'DISCARD_HELD_CARD' }
-  | { type: 'SWAP_HELD_CARD'; payload: { cardIndex: number } }
-  | { type: 'USE_SPECIAL_ACTION' }
-  | { type: 'ACTION_PEEK_1_SELECT'; payload: { playerId: string; cardIndex: number } }
-  | { type: 'ACTION_SWAP_2_SELECT'; payload: { playerId: string; cardIndex: number } }
-  | { type: 'ACTION_TAKE_2_CHOOSE'; payload: { card: Card } }
-  | { type: 'CALL_POBUDKA' }
-  | { type: 'START_NEW_ROUND' };
-
-
-// Actions for the local reducer
 type ReducerAction = 
   | { type: 'SET_STATE'; payload: GameState }
-  | { type: 'PROCESS_ACTION', payload: GameAction };
+  | { type: 'PROCESS_ACTION', payload: { action: GameAction, isLocal?: boolean } }
+  | { type: 'ADD_CHAT_MESSAGE', payload: ChatMessage };
 
 const initialState: GameState = {
   gameMode: 'lobby',
@@ -39,18 +24,22 @@ const initialState: GameState = {
   roundWinnerName: null,
   gameWinnerName: null,
   turnCount: 0,
+  chatMessages: [],
 };
 
 const gameReducer = (state: GameState, action: ReducerAction): GameState => {
   switch (action.type) {
     case 'SET_STATE':
       return action.payload;
-    
+    case 'ADD_CHAT_MESSAGE':
+        return {
+            ...state,
+            chatMessages: [...state.chatMessages, action.payload],
+        };
     case 'PROCESS_ACTION': {
-        const gameAction = action.payload;
+        const gameAction = action.payload.action;
         const currentPlayer = state.players[state.currentPlayerIndex];
 
-        // Helper to advance turn
         const advanceTurn = (s: GameState): GameState => {
             const nextPlayerIndex = (s.currentPlayerIndex + 1) % s.players.length;
             return {
@@ -90,14 +79,14 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
                 if (state.gamePhase !== 'playing') return state;
                 const newDrawPile = [...state.drawPile];
                 const drawnCard = newDrawPile.pop();
-                if (!drawnCard) return state; // Should not happen
+                if (!drawnCard) return state; 
                 return { ...state, drawPile: newDrawPile, drawnCard, gamePhase: 'holding_card', actionMessage: `${currentPlayer.name} drew a card. Use it, swap it, or discard it.` };
             }
             case 'DRAW_FROM_DISCARD': {
                 if (state.gamePhase !== 'playing' || state.discardPile.length === 0) return state;
                 const newDiscardPile = [...state.discardPile];
                 const drawnCard = newDiscardPile.pop()!;
-                if (drawnCard.isSpecial) { // Cannot use special action from discard
+                if (drawnCard.isSpecial) {
                     const tempCard = {...drawnCard, isSpecial: false};
                     return { ...state, discardPile: newDiscardPile, drawnCard: tempCard, gamePhase: 'holding_card', actionMessage: `${currentPlayer.name} took from discard. Must swap.` };
                 }
@@ -155,13 +144,15 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
                 
                 const newState = { ...state, players, actionMessage: `${currentPlayer.name} peeked at a card.` };
                 
-                setTimeout(() => {
-                    const nextState = advanceTurn(newState);
-                     dispatch({ type: 'SET_STATE', payload: nextState });
-                     if(state.gameMode === 'online' && channel) {
-                         channel.send({type: 'broadcast', event: 'SYNC_STATE', payload: { state: nextState }});
-                     }
-                }, 2000);
+                if (action.payload.isLocal) {
+                    setTimeout(() => {
+                        const finalState = advanceTurn(newState);
+                        dispatch({ type: 'SET_STATE', payload: finalState });
+                        if(state.gameMode === 'online' && channel) {
+                            channel.send({type: 'broadcast', event: 'SYNC_STATE', payload: { state: finalState }});
+                        }
+                    }, 2000);
+                }
 
                 return newState;
             }
@@ -177,7 +168,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
                     const player1Index = state.players.findIndex(p => p.id === card1.playerId)!;
                     const player2Index = state.players.findIndex(p => p.id === card2.playerId)!;
                     
-                    const newPlayers = [...state.players];
+                    const newPlayers = JSON.parse(JSON.stringify(state.players));
                     const cardToMove1 = newPlayers[player1Index].hand[card1.cardIndex];
                     const cardToMove2 = newPlayers[player2Index].hand[card2.cardIndex];
 
@@ -282,6 +273,8 @@ interface GameContextType {
   joinRoom: (roomId: string, playerName: string) => Promise<void>;
   startHotseatGame: (player1Name: string, player2Name: string) => void;
   broadcastAction: (action: GameAction) => void;
+  sendChatMessage: (message: string) => void;
+  playSound: (sound: SoundType) => void;
 }
 
 export const GameContext = createContext<GameContextType>({
@@ -291,16 +284,19 @@ export const GameContext = createContext<GameContextType>({
   joinRoom: async () => {},
   startHotseatGame: () => {},
   broadcastAction: () => {},
+  sendChatMessage: () => {},
+  playSound: () => {},
 });
 
 let channel: RealtimeChannel | null = null;
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
-  const [myPlayerId, setMyPlayerId] = useState<string | null>(sessionStorage.getItem('sen-playerId'));
+  const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
+  const { playSound } = useSounds();
 
-  const broadcastAction = useCallback((action: GameAction) => {
-    dispatch({ type: 'PROCESS_ACTION', payload: action });
+  const processAndBroadcastAction = useCallback((action: GameAction) => {
+    dispatch({ type: 'PROCESS_ACTION', payload: { action, isLocal: true } });
     if (state.gameMode === 'online' && channel) {
         channel.send({
             type: 'broadcast',
@@ -308,90 +304,161 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             payload: { action, senderId: myPlayerId },
         });
     }
-  }, [state.gameMode, myPlayerId]);
+    // Play sounds for actions
+    switch(action.type) {
+        case 'PEEK_CARD':
+        case 'SWAP_HELD_CARD':
+        case 'ACTION_PEEK_1_SELECT':
+            playSound('flip');
+            break;
+        case 'DRAW_FROM_DECK':
+        case 'DRAW_FROM_DISCARD':
+            playSound('draw');
+            break;
+        case 'CALL_POBUDKA':
+            playSound('pobudka');
+            break;
+    }
+  }, [state.gameMode, myPlayerId, playSound]);
 
-  useEffect(() => {
-    if (state.gameMode !== 'online' || !channel) return;
+  const sendChatMessage = (message: string) => {
+    if (state.gameMode !== 'online' || !channel || !myPlayerId) return;
+    const me = state.players.find(p => p.id === myPlayerId);
+    if (!me) return;
 
-    const subscription = channel
+    const chatMessage: ChatMessage = {
+      id: `msg-${Date.now()}`,
+      senderId: myPlayerId,
+      senderName: me.name,
+      message,
+      timestamp: Date.now(),
+    };
+    
+    dispatch({ type: 'ADD_CHAT_MESSAGE', payload: chatMessage });
+    playSound('chat');
+
+    channel.send({
+      type: 'broadcast',
+      event: 'CHAT_MESSAGE',
+      payload: { message: chatMessage },
+    });
+  };
+
+  const setupChannel = useCallback((ch: RealtimeChannel) => {
+    if (channel) {
+        supabase.removeChannel(channel);
+    }
+    channel = ch;
+    channel
       .on('broadcast', { event: 'PLAYER_ACTION' }, ({ payload }) => {
         if (payload.senderId !== myPlayerId) {
-            dispatch({ type: 'PROCESS_ACTION', payload: payload.action });
+            dispatch({ type: 'PROCESS_ACTION', payload: { action: payload.action } });
+        }
+      })
+      .on('broadcast', { event: 'CHAT_MESSAGE' }, ({ payload }) => {
+        if (payload.message.senderId !== myPlayerId) {
+            dispatch({ type: 'ADD_CHAT_MESSAGE', payload: payload.message });
+            playSound('chat');
         }
       })
       .on('presence', { event: 'join' }, ({ newPresences }) => {
-        if(state.hostId !== myPlayerId) return;
+        if(state.hostId !== myPlayerId || state.players.length >= 2) return;
         const newPlayerInfo = newPresences[0];
         toast.info(`${newPlayerInfo.name} has joined the room.`);
         
-        if (state.players.length === 1) {
-            const newPlayer: Player = { id: newPlayerInfo.id, name: newPlayerInfo.name, hand: [], score: 0 };
-            const allPlayers = [...state.players, newPlayer];
+        const newPlayer: Player = { id: newPlayerInfo.id, name: newPlayerInfo.name, hand: [], score: 0 };
+        const allPlayers = [...state.players, newPlayer];
 
-            const deck = shuffleDeck(createDeck());
-            const playersWithCards = allPlayers.map(p => ({
-                ...p,
-                hand: deck.splice(0, 4).map(card => ({ card, isFaceUp: false, hasBeenPeeked: false })),
-            }));
-            const discardPile = [deck.pop()!];
+        const deck = shuffleDeck(createDeck());
+        const playersWithCards = allPlayers.map(p => ({
+            ...p,
+            hand: deck.splice(0, 4).map(card => ({ card, isFaceUp: false, hasBeenPeeked: false })),
+        }));
+        const discardPile = [deck.pop()!];
 
-            const startPeekingState: GameState = {
-                ...state,
-                gameMode: 'online',
-                players: playersWithCards,
-                drawPile: deck,
-                discardPile,
-                gamePhase: 'peeking',
-                actionMessage: `${playersWithCards[0].name}, it's your turn to peek at two cards.`,
-                peekingState: { playerIndex: 0, peekedCount: 0 },
-            };
-            if(channel) channel.send({type: 'broadcast', event: 'SYNC_STATE', payload: { state: startPeekingState }});
-            dispatch({type: 'SET_STATE', payload: startPeekingState});
-        }
+        const startPeekingState: GameState = {
+            ...state,
+            gameMode: 'online',
+            players: playersWithCards,
+            drawPile: deck,
+            discardPile,
+            gamePhase: 'peeking',
+            actionMessage: `${playersWithCards[0].name}, it's your turn to peek at two cards.`,
+            peekingState: { playerIndex: 0, peekedCount: 0 },
+        };
+        if(channel) channel.send({type: 'broadcast', event: 'SYNC_STATE', payload: { state: startPeekingState }});
+        dispatch({type: 'SET_STATE', payload: startPeekingState});
       })
       .on('broadcast', { event: 'SYNC_STATE' }, ({ payload }) => {
         dispatch({ type: 'SET_STATE', payload: payload.state });
+      })
+       .on('broadcast', { event: 'REQUEST_SYNC' }, ({ payload }) => {
+        if (payload.senderId !== myPlayerId) {
+            channel?.send({type: 'broadcast', event: 'SYNC_STATE', payload: { state }});
+        }
       })
       .on('presence', { event: 'leave' }, ({ leftPresences }) => {
         toast.warning(`${leftPresences[0].name} has left the room. Game reset.`);
         if(channel) supabase.removeChannel(channel);
         channel = null;
         setMyPlayerId(null);
-        sessionStorage.removeItem('sen-playerId');
+        sessionStorage.clear();
         dispatch({type: 'SET_STATE', payload: initialState});
       })
       .subscribe();
+  }, [myPlayerId, state]);
 
-    return () => {
-      supabase.removeChannel(subscription);
-    };
-  }, [state.gameMode, state.hostId, state.players, myPlayerId]);
+  // Reconnection logic
+  useEffect(() => {
+    const reconnect = async () => {
+        const storedPlayerId = sessionStorage.getItem('sen-playerId');
+        const storedRoomId = sessionStorage.getItem('sen-roomId');
+        const storedPlayerName = sessionStorage.getItem('sen-playerName');
+
+        if (storedPlayerId && storedRoomId && storedPlayerName) {
+            setMyPlayerId(storedPlayerId);
+            const newChannel = supabase.channel(storedRoomId, { config: { presence: { key: storedPlayerId } } });
+            setupChannel(newChannel);
+            await newChannel.track({ id: storedPlayerId, name: storedPlayerName });
+            toast.info(`Reconnected to room ${storedRoomId}. Requesting game state...`);
+            newChannel.send({ type: 'broadcast', event: 'REQUEST_SYNC', payload: { senderId: storedPlayerId } });
+        }
+    }
+    reconnect();
+  }, [setupChannel]);
 
   const createRoom = async (playerName: string) => {
     const roomId = `sen-${Math.random().toString(36).substr(2, 6)}`;
     const playerId = `player-${Math.random().toString(36).substr(2, 9)}`;
     const newPlayer: Player = { id: playerId, name: playerName, hand: [], score: 0 };
     const newState: GameState = { ...initialState, gameMode: 'online', roomId, hostId: playerId, players: [newPlayer], actionMessage: `Room created! ID: ${roomId}. Waiting for opponent...` };
+    
     const newChannel = supabase.channel(roomId, { config: { presence: { key: playerId } } });
-    await newChannel.subscribe();
-    newChannel.track({ id: playerId, name: playerName });
-    channel = newChannel;
+    setupChannel(newChannel);
+    await newChannel.track({ id: playerId, name: playerName });
+
     setMyPlayerId(playerId);
     sessionStorage.setItem('sen-playerId', playerId);
+    sessionStorage.setItem('sen-roomId', roomId);
+    sessionStorage.setItem('sen-playerName', playerName);
+
     dispatch({ type: 'SET_STATE', payload: newState });
     toast.success(`Room created! Your ID is ${roomId}. Share it with a friend.`);
   };
 
-  const joinRoom = async (roomId: string, playerName: string) => {
+  const joinRoom = async (roomId: string, playerName:string) => {
     const playerId = `player-${Math.random().toString(36).substr(2, 9)}`;
-    const newChannel = supabase.channel(roomId, { config: { presence: { key: playerId } } });
-    newChannel.subscribe((status) => {
+    const newChannel = supabase.channel(roomId);
+    
+    newChannel.subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
+            setupChannel(newChannel);
+            await newChannel.track({ id: playerId, name: playerName });
             setMyPlayerId(playerId);
             sessionStorage.setItem('sen-playerId', playerId);
-            channel = newChannel;
-            newChannel.track({ id: playerId, name: playerName });
-            toast.success(`Joined room ${roomId}! Waiting for host to start.`);
+            sessionStorage.setItem('sen-roomId', roomId);
+            sessionStorage.setItem('sen-playerName', playerName);
+            toast.success(`Joined room ${roomId}! Waiting for game to sync.`);
         }
         if (status === 'CHANNEL_ERROR') {
             toast.error("Could not join room. Check the ID.");
@@ -426,7 +493,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <GameContext.Provider value={{ state, myPlayerId, createRoom, joinRoom, startHotseatGame, broadcastAction }}>
+    <GameContext.Provider value={{ state, myPlayerId, createRoom, joinRoom, startHotseatGame, broadcastAction: processAndBroadcastAction, sendChatMessage, playSound }}>
       {children}
     </GameContext.Provider>
   );

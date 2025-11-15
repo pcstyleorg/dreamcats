@@ -56,7 +56,7 @@ export const LobbyScreen: React.FC = () => {
     startHotseatGame(player1Name, player2Name);
   }
 
-  const effectiveLoading = isLoading || (state.roomId !== null && state.players.length < 2);
+  const effectiveLoading = isLoading || (state.gameMode === 'online' && state.roomId !== null && state.players.length < 2);
 
   const renderSelectMode = () => (
     <>

@@ -6,12 +6,17 @@ import { Button } from './ui/button';
 import { Scoreboard } from './Scoreboard';
 import { Separator } from './ui/separator';
 import { toast } from 'sonner';
-import { Copy, Users, Wifi, Zap } from 'lucide-react';
+import { Copy, Menu, Users, Wifi } from 'lucide-react';
 import { ActionModal } from './ActionModal';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
+import { ChatBox } from './ChatBox';
+import { GameActions } from './GameActions';
+import { ScrollArea } from './ui/scroll-area';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export const Gameboard: React.FC = () => {
-  const { state, myPlayerId, broadcastAction } = useGame();
-  const { players, currentPlayerIndex, drawPile, discardPile, gamePhase, actionMessage, peekingState, roomId, drawnCard, gameMode } = state;
+  const { state, myPlayerId, broadcastAction, playSound } = useGame();
+  const { players, currentPlayerIndex, drawPile, discardPile, gamePhase, actionMessage, roomId, drawnCard, gameMode } = state;
 
   if (players.length === 0) {
     return (
@@ -22,17 +27,10 @@ export const Gameboard: React.FC = () => {
   }
 
   const currentPlayer = players[currentPlayerIndex];
-  const otherPlayer = players.length > 1 ? players[(currentPlayerIndex + 1) % players.length] : null;
+  const otherPlayer = players.length > 1 ? players.find(p => p.id !== currentPlayer.id) : null;
 
   const isMyTurn = gameMode === 'online' ? currentPlayer?.id === myPlayerId : true;
-  const amICurrentPeeker = gamePhase === 'peeking' && peekingState?.playerIndex === players.findIndex(p => p.id === myPlayerId);
-
-  const handleFinishPeeking = () => {
-    if (peekingState?.peekedCount === 2) {
-      broadcastAction({ type: 'FINISH_PEEKING' });
-    }
-  };
-
+  
   const handleDrawFromDeck = () => {
     if (isMyTurn && gamePhase === 'playing') {
       broadcastAction({ type: 'DRAW_FROM_DECK' });
@@ -44,12 +42,6 @@ export const Gameboard: React.FC = () => {
       broadcastAction({ type: 'DRAW_FROM_DISCARD' });
     }
   };
-
-  const handlePobudka = () => {
-    if (isMyTurn && gamePhase === 'playing') {
-        broadcastAction({ type: 'CALL_POBUDKA' });
-    }
-  }
   
   const copyRoomId = () => {
     if(roomId) {
@@ -58,17 +50,37 @@ export const Gameboard: React.FC = () => {
     }
   }
 
-  const canUseSpecial = drawnCard?.isSpecial && gamePhase === 'holding_card';
-  const mustSwap = gamePhase === 'holding_card' && drawnCard && !drawnCard.isSpecial;
   const isPlayerActionable = isMyTurn && gamePhase === 'playing';
 
+  const SidePanelContent = () => (
+    <>
+        <div className="my-4 p-3 bg-black/20 rounded-md min-h-[60px]">
+            <h4 className="font-semibold mb-1 font-heading">Action Log</h4>
+            <p className="text-sm text-secondary-foreground">{actionMessage}</p>
+        </div>
+        
+        <GameActions />
+
+        <Separator className="my-4" />
+        <Scoreboard players={players} />
+        {gameMode === 'online' && (
+            <>
+                <Separator className="my-4" />
+                <div className="h-64">
+                    <ChatBox />
+                </div>
+            </>
+        )}
+    </>
+  );
+
   return (
-    <div className="w-full min-h-screen text-foreground p-2 sm:p-4 flex flex-col lg:flex-row gap-4">
+    <div className="w-full min-h-screen text-foreground p-2 sm:p-4 flex flex-col lg:flex-row gap-4 relative">
       <main className="flex-grow flex flex-col">
         {/* Opponent Area */}
-        <div className="flex justify-center items-start mb-4 h-48">
+        <div className="flex justify-center items-start mb-4 h-36 md:h-48">
           {otherPlayer ? (
-            <PlayerHand player={otherPlayer} isCurrentPlayer={false} isOpponent={true} />
+            <PlayerHand player={otherPlayer} isCurrentPlayer={false} isOpponent={true} playSound={playSound} />
           ) : (
             <div className="flex items-center justify-center h-full w-full rounded-lg bg-black/20 border-2 border-dashed border-white/10">
                 <p className="text-muted-foreground font-heading">Waiting for opponent...</p>
@@ -77,37 +89,43 @@ export const Gameboard: React.FC = () => {
         </div>
 
         {/* Center Area */}
-        <div className="flex-grow flex items-center justify-center gap-4 md:gap-8 my-4 md:my-8">
+        <div className="flex-grow flex items-center justify-center gap-4 md:gap-8 my-4">
           <div className="flex flex-col items-center">
-            <GameCard card={null} isFaceUp={false} className={isPlayerActionable ? 'cursor-pointer' : ''} onClick={handleDrawFromDeck} isGlowing={isPlayerActionable} />
-            <span className="mt-2 text-sm font-medium">Draw ({drawPile.length})</span>
+            <GameCard card={null} isFaceUp={false} className={isPlayerActionable ? 'cursor-pointer' : ''} onClick={handleDrawFromDeck} isGlowing={isPlayerActionable} playSound={playSound} />
+            <span className="mt-2 text-xs md:text-sm font-medium">Draw ({drawPile.length})</span>
           </div>
-          {drawnCard && isMyTurn && gamePhase === 'holding_card' && (
-             <div className="flex flex-col items-center animate-in fade-in zoom-in">
-                <p className="mb-2 font-semibold font-heading">Your Card</p>
+          
+          <AnimatePresence>
+            {drawnCard && isMyTurn && gamePhase === 'holding_card' && (
+             <motion.div 
+                className="flex flex-col items-center"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                transition={{ duration: 0.3 }}
+              >
+                <p className="mb-2 text-sm font-semibold font-heading">Your Card</p>
                 <GameCard card={drawnCard} isFaceUp={true} isGlowing />
-                <div className="flex gap-2 mt-2">
-                    <Button size="sm" onClick={() => broadcastAction({ type: 'DISCARD_HELD_CARD' })} disabled={mustSwap}>Discard</Button>
-                    <Button size="sm" variant="secondary" onClick={() => broadcastAction({ type: 'USE_SPECIAL_ACTION' })} disabled={!canUseSpecial}><Zap className="mr-2 h-4 w-4" />Action</Button>
-                </div>
-             </div>
-          )}
+             </motion.div>
+            )}
+          </AnimatePresence>
+          
           <div className="flex flex-col items-center">
-            <GameCard card={discardPile.length > 0 ? discardPile[discardPile.length - 1] : null} isFaceUp={true} className={isPlayerActionable ? 'cursor-pointer' : ''} onClick={handleDrawFromDiscard} isGlowing={isPlayerActionable && discardPile.length > 0} />
-            <span className="mt-2 text-sm font-medium">Discard</span>
+            <GameCard card={discardPile.length > 0 ? discardPile[discardPile.length - 1] : null} isFaceUp={true} className={isPlayerActionable ? 'cursor-pointer' : ''} onClick={handleDrawFromDiscard} isGlowing={isPlayerActionable && discardPile.length > 0} playSound={playSound} />
+            <span className="mt-2 text-xs md:text-sm font-medium">Discard</span>
           </div>
         </div>
 
         {/* Current Player Area */}
         {currentPlayer && (
           <div className="mt-auto">
-            <PlayerHand player={currentPlayer} isCurrentPlayer={true} />
+            <PlayerHand player={currentPlayer} isCurrentPlayer={true} playSound={playSound} />
           </div>
         )}
       </main>
 
-      {/* Side Panel */}
-      <aside className="w-full lg:w-80 lg:max-w-xs flex-shrink-0 bg-card/50 backdrop-blur-sm p-4 rounded-lg border">
+      {/* Side Panel - Desktop */}
+      <aside className="hidden lg:flex w-full lg:w-80 lg:max-w-xs flex-shrink-0 bg-card/50 backdrop-blur-sm p-4 rounded-lg border flex-col">
         <h2 className="text-2xl font-bold mb-2 text-center font-heading">Sen Game</h2>
         {gameMode === 'online' && roomId && (
             <div className="flex items-center justify-center gap-2 mb-2 text-sm text-muted-foreground">
@@ -125,28 +143,28 @@ export const Gameboard: React.FC = () => {
             </div>
         )}
         <Separator />
-        <div className="my-4 p-3 bg-black/20 rounded-md min-h-[60px]">
-            <h4 className="font-semibold mb-1 font-heading">Action Log</h4>
-            <p className="text-sm text-secondary-foreground">{actionMessage}</p>
-        </div>
-        
-        {(gameMode === 'hotseat' || amICurrentPeeker) && gamePhase === 'peeking' && peekingState?.playerIndex === currentPlayerIndex && (
-            <Button 
-                onClick={handleFinishPeeking} 
-                disabled={peekingState?.peekedCount !== 2}
-                className="w-full"
-            >
-                Finish Peeking
-            </Button>
-        )}
-
-        {gamePhase === 'playing' && isMyTurn && (
-            <Button onClick={handlePobudka} className="w-full mt-4 bg-red-700 hover:bg-red-800 text-white font-bold">POBUDKA!</Button>
-        )}
-
-        <Separator className="my-4" />
-        <Scoreboard players={players} />
+        <SidePanelContent />
       </aside>
+
+      {/* Side Panel Trigger - Mobile */}
+      <div className="lg:hidden absolute top-4 right-4">
+        <Sheet>
+            <SheetTrigger asChild>
+                <Button variant="outline" size="icon">
+                    <Menu />
+                </Button>
+            </SheetTrigger>
+            <SheetContent className="bg-card/80 backdrop-blur-lg border-l-white/20">
+                <SheetHeader>
+                    <SheetTitle className="font-heading text-2xl">Game Menu</SheetTitle>
+                </SheetHeader>
+                <ScrollArea className="h-[calc(100%-4rem)] pr-4">
+                    <SidePanelContent />
+                </ScrollArea>
+            </SheetContent>
+        </Sheet>
+      </div>
+
       <ActionModal />
     </div>
   );
