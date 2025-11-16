@@ -20,27 +20,17 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
 }) => {
   const { state, broadcastAction, myPlayerId } = useGame();
   const { gamePhase, gameMode } = state;
+  const currentPlayer = state.players[state.currentPlayerIndex];
+  const isMyTurn =
+    gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
 
   const isPeekingTurn =
     gamePhase === "peeking" &&
     state.peekingState?.playerIndex ===
       state.players.findIndex((p) => p.id === player.id);
 
-  const canThisPlayerAct = () => {
-    if (gameMode === "hotseat") {
-      return isCurrentPlayer || isPeekingTurn;
-    }
-    // For online, ensure the action is for 'me'
-    return (
-      (isCurrentPlayer && player.id === myPlayerId) ||
-      (isPeekingTurn && player.id === myPlayerId)
-    );
-  };
-
   const handleCardClick = (cardIndex: number) => {
-    if (!canThisPlayerAct()) return;
-
-    // Peeking phase
+    // Peeking phase (only the peeking player)
     if (gamePhase === "peeking" && isPeekingTurn) {
       broadcastAction({
         type: "PEEK_CARD",
@@ -49,56 +39,65 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       return;
     }
 
-    // Swapping card from hand after drawing
-    if (gamePhase === "holding_card" && isCurrentPlayer) {
+    // Swapping card from hand after drawing (only the active player's own hand)
+    if (gamePhase === "holding_card" && isCurrentPlayer && isMyTurn) {
       broadcastAction({ type: "SWAP_HELD_CARD", payload: { cardIndex } });
       return;
     }
 
-    // 'Peek 1' special action
-    if (gamePhase === "action_peek_1" && isCurrentPlayer) {
+    // 'Peek 1' special action (can target any hand while it's my turn)
+    if (gamePhase === "action_peek_1" && isMyTurn) {
       broadcastAction({
         type: "ACTION_PEEK_1_SELECT",
         payload: { playerId: player.id, cardIndex },
       });
+      return;
     }
 
-    // 'Swap 2' special action
+    // 'Swap 2' special action (can target any hand while it's my turn)
     if (
       (gamePhase === "action_swap_2_select_1" ||
         gamePhase === "action_swap_2_select_2") &&
-      isCurrentPlayer
+      isMyTurn
     ) {
       broadcastAction({
         type: "ACTION_SWAP_2_SELECT",
         payload: { playerId: player.id, cardIndex },
       });
+      return;
     }
   };
 
   const getCardInteractionClass = (cardIndex: number) => {
-    if (!canThisPlayerAct()) return "";
-
     const handCard = player.hand[cardIndex];
 
+    // Allow hover animation and pointer only for legal interactions.
     if (
       gamePhase === "peeking" &&
       isPeekingTurn &&
       !handCard.isFaceUp &&
       state.peekingState!.peekedCount < 2
-    )
-      return "cursor-pointer hover:scale-105 hover:shadow-soft-lg";
-    if (gamePhase === "holding_card" && isCurrentPlayer)
-      return "cursor-pointer hover:scale-105 hover:shadow-soft-lg";
-    if (gamePhase === "action_peek_1" && isCurrentPlayer)
-      return "cursor-pointer hover:scale-105 hover:shadow-soft-lg";
+    ) {
+      return "cursor-pointer hover:scale-105";
+    }
+
+    if (gamePhase === "holding_card" && isCurrentPlayer && isMyTurn) {
+      return "cursor-pointer hover:scale-105";
+    }
+
+    if (gamePhase === "action_peek_1" && isMyTurn) {
+      return "cursor-pointer hover:scale-105";
+    }
+
     if (
       (gamePhase === "action_swap_2_select_1" ||
         gamePhase === "action_swap_2_select_2") &&
-      isCurrentPlayer
-    )
-      return "cursor-pointer hover:scale-105 hover:shadow-soft-lg";
+      isMyTurn
+    ) {
+      return "cursor-pointer hover:scale-105";
+    }
 
+    // Not a legal move: keep static (overlay on revealed cards is handled in GameCard)
     return "";
   };
 

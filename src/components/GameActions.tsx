@@ -46,7 +46,8 @@ export const GameActions = () => {
       <Button
         onClick={handleFinishPeeking}
         disabled={peekingState?.peekedCount !== 2}
-        className="w-auto"
+        className="w-auto min-w-[140px] sm:min-w-[160px] min-h-[48px] sm:min-h-[52px] text-base sm:text-lg font-semibold"
+        size="lg"
       >
         Finish Peeking
       </Button>
@@ -59,7 +60,8 @@ export const GameActions = () => {
         <Button
           onClick={handlePobudka}
           variant="destructive"
-          className="w-auto font-bold"
+          className="w-auto min-w-[160px] sm:min-w-[180px] min-h-[52px] sm:min-h-[56px] text-lg sm:text-xl font-bold shadow-lg hover:shadow-xl"
+          size="lg"
         >
           POBUDKA!
         </Button>
@@ -69,19 +71,23 @@ export const GameActions = () => {
 
   if (gamePhase === "holding_card" && isMyTurn) {
     return (
-      <div className="flex gap-2">
+      <div className="flex gap-2 sm:gap-3">
         <Button
           variant="outline"
           onClick={() => broadcastAction({ type: "DISCARD_HELD_CARD" })}
           disabled={mustSwap}
+          className="min-w-[100px] sm:min-w-[120px] min-h-[48px] sm:min-h-[52px] text-base sm:text-lg"
+          size="lg"
         >
           Discard
         </Button>
         <Button
           onClick={() => broadcastAction({ type: "USE_SPECIAL_ACTION" })}
           disabled={!canUseSpecial}
+          className="min-w-[100px] sm:min-w-[120px] min-h-[48px] sm:min-h-[52px] text-base sm:text-lg"
+          size="lg"
         >
-          <Wand2 className="mr-2 h-4 w-4" />
+          <Wand2 className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />
           Action
         </Button>
       </div>

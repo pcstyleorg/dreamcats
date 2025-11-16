@@ -62,42 +62,42 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden p-4">
-      {/* Background elements */}
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden p-4 sm:p-6 md:p-8">
+      {/* Background elements - bright, fun gradients */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-b from-background via-accent to-background"
+        className="absolute inset-0 bg-gradient-to-br from-blue-100 via-purple-50 to-cyan-100"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 2 }}
       />
-      <motion.div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-secondary/10 rounded-full blur-3xl animate-float" />
+      <motion.div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-gradient-to-br from-purple-200/60 to-pink-200/60 rounded-full blur-3xl animate-float" />
       <motion.div
-        className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 bg-primary/10 rounded-full blur-3xl animate-float"
+        className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 bg-gradient-to-br from-cyan-200/60 to-blue-200/60 rounded-full blur-3xl animate-float"
         style={{ animationDelay: "-3s" }}
       />
 
-      {/* Flying Crows */}
+      {/* Flying Crows - darker for visibility on light background */}
       <Crow
-        className="absolute top-[10%] -left-[10%] w-24 h-24 text-foreground/10 animate-fly-across"
+        className="absolute top-[10%] -left-[10%] w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 text-purple-900/20 animate-fly-across"
         style={{ animationDelay: "-2s", animationDuration: "25s" }}
       />
       <Crow
-        className="absolute top-[50%] -left-[10%] w-16 h-16 text-foreground/5 animate-fly-across"
+        className="absolute top-[50%] -left-[10%] w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 text-purple-800/15 animate-fly-across"
         style={{ animationDelay: "0s", animationDuration: "18s" }}
       />
       <Crow
-        className="absolute top-[80%] -left-[10%] w-32 h-32 text-foreground/10 animate-fly-across"
+        className="absolute top-[80%] -left-[10%] w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 text-purple-900/20 animate-fly-across"
         style={{ animationDelay: "-10s", animationDuration: "30s" }}
       />
 
       <motion.div
-        className="text-center z-10 flex flex-col items-center"
+        className="text-center z-10 flex flex-col items-center max-w-3xl mx-auto"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         <motion.h1
-          className="font-heading text-8xl md:text-9xl font-bold text-foreground flex overflow-hidden"
+          className="font-heading text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 bg-clip-text text-transparent flex overflow-hidden"
           aria-label={title}
         >
           {title.split("").map((letter, index) => (
@@ -112,17 +112,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
         </motion.h1>
 
         <motion.p
-          className="mt-2 text-lg text-muted-foreground"
+          className="mt-3 sm:mt-4 text-base sm:text-lg md:text-xl text-gray-700 font-medium"
           variants={itemVariants}
         >
           A game of dreams and crows.
         </motion.p>
 
-        <motion.div variants={itemVariants} className="mt-12">
+        <motion.div variants={itemVariants} className="mt-8 sm:mt-10 md:mt-12">
           <Button
             onClick={onEnter}
             size="lg"
-            className="font-semibold text-base shadow-soft-lg"
+            className="font-semibold text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 shadow-soft-lg hover:shadow-dreamy transition-all duration-300 hover:scale-105 active:scale-95"
           >
             Enter the Dream
           </Button>

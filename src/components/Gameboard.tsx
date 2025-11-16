@@ -1,5 +1,6 @@
 import React from "react";
 import { useGame } from "@/context/GameContext";
+import { Player } from "@/types";
 import { PlayerHand } from "./PlayerHand";
 import { GameCard } from "./Card";
 import { Button } from "./ui/button";
@@ -44,8 +45,23 @@ export const Gameboard: React.FC = () => {
   }
 
   const currentPlayer = players[currentPlayerIndex];
-  const otherPlayer =
-    players.length > 1 ? players.find((p) => p.id !== currentPlayer.id) : null;
+
+  // In hotseat mode, keep fixed positions: player[0] at bottom, player[1] at top
+  // In online mode, show current user at bottom and opponent at top
+  let bottomPlayer: Player;
+  let topPlayer: Player | null;
+
+  if (gameMode === "hotseat") {
+    bottomPlayer = players[0];
+    topPlayer = players.length > 1 ? players[1] : null;
+  } else {
+    // Online mode: show my player at bottom
+    bottomPlayer = players.find((p) => p.id === myPlayerId) || currentPlayer;
+    topPlayer =
+      players.length > 1
+        ? players.find((p) => p.id !== bottomPlayer.id) || null
+        : null;
+  }
 
   const isMyTurn =
     gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
@@ -108,23 +124,23 @@ export const Gameboard: React.FC = () => {
         backgroundAttachment: "fixed",
       }}
     >
-      {/* Darkened multi-layer overlays for better readability */}
-      <div className="absolute inset-0 bg-black/35 pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/30 pointer-events-none" />
+      {/* Light overlays for better readability on bright background */}
+      <div className="absolute inset-0 bg-white/40 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white/25 pointer-events-none" />
 
       <main className="flex-grow flex flex-col relative z-10 min-h-0">
-        {/* Opponent Area */}
-        <div className="flex justify-center items-start mb-1 sm:mb-1.5 md:mb-2 flex-shrink-0">
-          {otherPlayer ? (
+        {/* Top Player Area */}
+        <div className="flex justify-center items-start mb-2 sm:mb-3 md:mb-4 flex-shrink-0">
+          {topPlayer ? (
             <PlayerHand
-              player={otherPlayer}
-              isCurrentPlayer={false}
+              player={topPlayer}
+              isCurrentPlayer={currentPlayer.id === topPlayer.id}
               isOpponent={true}
               playSound={playSound}
             />
           ) : (
-            <div className="flex items-center justify-center h-full w-full rounded-lg bg-black/5 border-2 border-dashed border-black/10">
-              <p className="text-muted-foreground font-heading">
+            <div className="flex items-center justify-center h-full w-full rounded-lg bg-purple-50/50 border-2 border-dashed border-purple-200/60">
+              <p className="text-muted-foreground font-heading text-sm sm:text-base">
                 Waiting for opponent...
               </p>
             </div>
@@ -133,7 +149,7 @@ export const Gameboard: React.FC = () => {
 
         {/* Center Area */}
         <div
-          className="flex-grow flex items-center justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 my-1 sm:my-1.5 md:my-2 min-h-0"
+          className="flex-grow flex items-center justify-center gap-3 sm:gap-4 md:gap-6 lg:gap-8 my-2 sm:my-3 md:my-4 min-h-0"
           data-tutorial-id="piles"
         >
           <div
@@ -148,7 +164,7 @@ export const Gameboard: React.FC = () => {
               isGlowing={isPlayerActionable}
               playSound={playSound}
             />
-            <span className="mt-0.5 sm:mt-1 text-[0.65rem] sm:text-xs md:text-sm font-medium">
+            <span className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base font-medium text-gray-700">
               Draw ({drawPile.length})
             </span>
           </div>
@@ -156,13 +172,13 @@ export const Gameboard: React.FC = () => {
           <AnimatePresence>
             {drawnCard && isMyTurn && gamePhase === "holding_card" && (
               <motion.div
-                className="flex flex-col items-center"
+                className="flex flex-col items-center px-2"
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.5 }}
                 transition={{ duration: 0.3 }}
               >
-                <p className="mb-2 text-sm font-semibold font-heading">
+                <p className="mb-2 text-sm sm:text-base font-semibold font-heading text-purple-700">
                   Your Card
                 </p>
                 <GameCard card={drawnCard} isFaceUp={true} isGlowing />
@@ -186,24 +202,24 @@ export const Gameboard: React.FC = () => {
               isGlowing={isPlayerActionable && discardPile.length > 0}
               playSound={playSound}
             />
-            <span className="mt-0.5 sm:mt-1 text-[0.65rem] sm:text-xs md:text-sm font-medium">
+            <span className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base font-medium text-gray-700">
               Discard
             </span>
           </div>
         </div>
 
-        {/* Current Player Area */}
-        {currentPlayer && (
-          <div className="mt-auto flex-shrink-0">
+        {/* Bottom Player Area */}
+        {bottomPlayer && (
+          <div className="mt-auto flex-shrink-0 pb-1 sm:pb-2">
             <div data-tutorial-id="player-hand">
               <PlayerHand
-                player={currentPlayer}
-                isCurrentPlayer={true}
+                player={bottomPlayer}
+                isCurrentPlayer={currentPlayer.id === bottomPlayer.id}
                 playSound={playSound}
               />
             </div>
             <div
-              className="flex justify-center mt-0.5 sm:mt-1 md:mt-2 h-6 sm:h-8"
+              className="flex justify-center mt-1 sm:mt-2 md:mt-3 h-8 sm:h-10 md:h-12"
               data-tutorial-id="game-actions"
             >
               <GameActions />
