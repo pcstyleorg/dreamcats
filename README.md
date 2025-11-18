@@ -73,3 +73,20 @@ You can inspect your Convex deployment using the Convex MCP:
 - `src/context/` - React context providers (GameContext, TutorialContext)
 - `src/lib/` - Game logic and utilities
 - `convex/` - Convex backend functions and schema
+ 
+## Deployment
+ 
+### Vercel
+ 
+To deploy this project to Vercel:
+ 
+1.  **Import Project**: Import your repository into Vercel.
+2.  **Environment Variables**: Add the following environment variables in your Vercel project settings:
+    - `CONVEX_DEPLOYMENT`: Your Convex deployment name (e.g., `dev:your-project-name`).
+    - `CONVEX_URL`: Your Convex deployment URL (e.g., `https://your-project-name.convex.cloud`).
+    - You can find these in your `.env.local` file or the Convex dashboard.
+3.  **Build Command**: The project includes a `vercel.json` file that automatically configures the build command to:
+    ```bash
+    npx convex deploy --cmd 'npm run build'
+    ```
+    This ensures your Convex functions are deployed before the frontend is built.
