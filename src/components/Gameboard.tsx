@@ -46,21 +46,34 @@ export const Gameboard: React.FC = () => {
 
   const currentPlayer = players[currentPlayerIndex];
 
-  // In hotseat mode, keep fixed positions: player[0] at bottom, player[1] at top
-  // In online mode, show current user at bottom and opponent at top
+  // Determine player positions
+  // Bottom player is always "me" (online) or current player (hotseat)
+  // Other players are distributed around the top area
+
   let bottomPlayer: Player;
-  let topPlayer: Player | null;
+  let otherPlayers: Player[] = [];
 
   if (gameMode === "hotseat") {
-    bottomPlayer = players[0];
-    topPlayer = players.length > 1 ? players[1] : null;
+    // In hotseat, the current player is always at the bottom
+    bottomPlayer = currentPlayer;
+    // Other players are everyone else, ordered by turn order relative to current player
+    otherPlayers = [
+      ...players.slice(currentPlayerIndex + 1),
+      ...players.slice(0, currentPlayerIndex),
+    ];
   } else {
     // Online mode: show my player at bottom
     bottomPlayer = players.find((p) => p.id === myPlayerId) || currentPlayer;
-    topPlayer =
-      players.length > 1
-        ? players.find((p) => p.id !== bottomPlayer.id) || null
-        : null;
+    // Other players ordered by turn order relative to me
+    const myIndex = players.findIndex(p => p.id === bottomPlayer.id);
+    if (myIndex !== -1) {
+      otherPlayers = [
+        ...players.slice(myIndex + 1),
+        ...players.slice(0, myIndex),
+      ];
+    } else {
+      otherPlayers = players.filter(p => p.id !== bottomPlayer.id);
+    }
   }
 
   const isMyTurn =
@@ -129,19 +142,25 @@ export const Gameboard: React.FC = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white/25 pointer-events-none" />
 
       <main className="flex-grow flex flex-col relative z-10 min-h-0">
-        {/* Top Player Area */}
-        <div className="flex justify-center items-start mb-2 sm:mb-3 md:mb-4 flex-shrink-0">
-          {topPlayer ? (
-            <PlayerHand
-              player={topPlayer}
-              isCurrentPlayer={currentPlayer.id === topPlayer.id}
-              isOpponent={true}
-              playSound={playSound}
-            />
+        {/* Opponents Area */}
+        <div className="flex justify-center items-start mb-1 sm:mb-2 md:mb-3 flex-shrink-0 w-full px-1 sm:px-2">
+          {otherPlayers.length > 0 ? (
+            <div className="flex gap-1 sm:gap-2 md:gap-4 overflow-x-auto pb-1 sm:pb-2 w-full justify-start sm:justify-center max-w-full">
+              {otherPlayers.map((player) => (
+                <div key={player.id} className="flex-shrink-0 min-w-0">
+                  <PlayerHand
+                    player={player}
+                    isCurrentPlayer={currentPlayer.id === player.id}
+                    isOpponent={true}
+                    playSound={playSound}
+                  />
+                </div>
+              ))}
+            </div>
           ) : (
-            <div className="flex items-center justify-center h-full w-full rounded-lg bg-purple-50/50 border-2 border-dashed border-purple-200/60">
-              <p className="text-muted-foreground font-heading text-sm sm:text-base">
-                Waiting for opponent...
+            <div className="flex items-center justify-center h-20 sm:h-24 w-full max-w-md rounded-lg bg-purple-50/50 border-2 border-dashed border-purple-200/60 mx-auto">
+              <p className="text-muted-foreground font-heading text-xs sm:text-sm md:text-base">
+                Waiting for opponents...
               </p>
             </div>
           )}

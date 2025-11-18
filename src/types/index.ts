@@ -62,6 +62,12 @@ export interface GameState {
     card1: { playerId: string; cardIndex: number };
   };
   lastRoundScores?: { playerId: string; score: number; penalty: number }[];
+  lastMove?: {
+    playerId: string;
+    cardIndex: number;
+    source: "deck" | "discard";
+    timestamp: number;
+  } | null;
 }
 
 export type GameAction =
@@ -73,13 +79,13 @@ export type GameAction =
   | { type: "SWAP_HELD_CARD"; payload: { cardIndex: number } }
   | { type: "USE_SPECIAL_ACTION" }
   | {
-      type: "ACTION_PEEK_1_SELECT";
-      payload: { playerId: string; cardIndex: number };
-    }
+    type: "ACTION_PEEK_1_SELECT";
+    payload: { playerId: string; cardIndex: number };
+  }
   | {
-      type: "ACTION_SWAP_2_SELECT";
-      payload: { playerId: string; cardIndex: number };
-    }
+    type: "ACTION_SWAP_2_SELECT";
+    payload: { playerId: string; cardIndex: number };
+  }
   | { type: "ACTION_TAKE_2_CHOOSE"; payload: { card: Card } }
   | { type: "CALL_POBUDKA" }
   | { type: "START_NEW_ROUND" };

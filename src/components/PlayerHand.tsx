@@ -20,15 +20,47 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   playSound,
 }) => {
   const { state, broadcastAction, myPlayerId } = useGame();
-  const { gamePhase, gameMode } = state;
+  const { gamePhase, gameMode, lastMove } = state;
   const currentPlayer = state.players[state.currentPlayerIndex];
   const isMyTurn =
     gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
 
+  const [tempVisibleIndex, setTempVisibleIndex] = React.useState<number | null>(
+    null,
+  );
+  const [animatingIndex, setAnimatingIndex] = React.useState<number | null>(
+    null,
+  );
+
+  React.useEffect(() => {
+    if (lastMove && lastMove.playerId === player.id) {
+      // Only animate if the move happened recently (within last 3 seconds)
+      if (Date.now() - lastMove.timestamp > 3000) return;
+
+      // Trigger animation
+      setAnimatingIndex(lastMove.cardIndex);
+      const animTimer = setTimeout(() => setAnimatingIndex(null), 500);
+
+      // Handle temporary visibility for discard draws
+      if (lastMove.source === "discard") {
+        setTempVisibleIndex(lastMove.cardIndex);
+        const visibilityTimer = setTimeout(() => {
+          setTempVisibleIndex(null);
+        }, 2000);
+        return () => {
+          clearTimeout(animTimer);
+          clearTimeout(visibilityTimer);
+        };
+      }
+
+      return () => clearTimeout(animTimer);
+    }
+  }, [lastMove, player.id]);
+
   const isPeekingTurn =
     gamePhase === "peeking" &&
     state.peekingState?.playerIndex ===
-      state.players.findIndex((p) => p.id === player.id);
+    state.players.findIndex((p) => p.id === player.id);
 
   const handleCardClick = (cardIndex: number) => {
     // Peeking phase (only the peeking player)
@@ -141,23 +173,38 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       </h3>
       <div className={cn("flex gap-0.5 sm:gap-1 md:gap-2 justify-center")}>
         {player.hand.map((cardInHand, index) => (
-          <GameCard
-            key={index}
-            card={cardInHand.card}
-            isFaceUp={
-              cardInHand.isFaceUp ||
-              gamePhase === "round_end" ||
-              gamePhase === "game_over"
-            }
-            hasBeenPeeked={cardInHand.hasBeenPeeked}
-            onClick={() => handleCardClick(index)}
-            className={cn(
-              isOpponent &&
-                "!w-[12vw] !max-w-16 sm:!w-[10vw] sm:!max-w-20 md:!w-[7vw] md:!max-w-24 lg:!w-[6vw] lg:!max-w-28",
-              getCardInteractionClass(index),
+          <div key={index} className="relative">
+            {/* Animation overlay or wrapper */}
+            {animatingIndex === index && (
+              <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-xs font-bold text-primary animate-bounce z-20 whitespace-nowrap pointer-events-none">
+                Placed!
+              </span>
             )}
-            playSound={playSound}
-          />
+            <div
+              className={cn(
+                "transition-all duration-300",
+                animatingIndex === index && "scale-110 ring-2 ring-primary rounded-md z-10"
+              )}
+            >
+              <GameCard
+                card={cardInHand.card}
+                isFaceUp={
+                  cardInHand.isFaceUp ||
+                  gamePhase === "round_end" ||
+                  gamePhase === "game_over" ||
+                  index === tempVisibleIndex
+                }
+                hasBeenPeeked={cardInHand.hasBeenPeeked}
+                onClick={() => handleCardClick(index)}
+                className={cn(
+                  isOpponent &&
+                  "!w-[9vw] !max-w-12 sm:!w-[8vw] sm:!max-w-16 md:!w-[7vw] md:!max-w-20 lg:!w-[6vw] lg:!max-w-24",
+                  getCardInteractionClass(index),
+                )}
+                playSound={playSound}
+              />
+            </div>
+          </div>
         ))}
       </div>
     </div>

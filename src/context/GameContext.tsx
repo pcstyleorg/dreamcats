@@ -18,9 +18,9 @@ import { api } from "../../convex/_generated/api";
 type ReducerAction =
   | { type: "SET_STATE"; payload: GameState }
   | {
-      type: "PROCESS_ACTION";
-      payload: { action: GameAction; isLocal?: boolean };
-    }
+    type: "PROCESS_ACTION";
+    payload: { action: GameAction; isLocal?: boolean };
+  }
   | { type: "ADD_CHAT_MESSAGE"; payload: ChatMessage }
   | { type: "SET_CHAT_MESSAGES"; payload: ChatMessage[] };
 
@@ -40,6 +40,7 @@ const initialState: GameState = {
   chatMessages: [],
   drawSource: null,
   lastCallerId: null,
+  lastMove: null,
 };
 
 const gameReducer = (state: GameState, action: ReducerAction): GameState => {
@@ -207,12 +208,12 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           const players = state.players.map((p, idx) =>
             idx === playerIndex
               ? {
-                  ...p,
-                  hand: p.hand.map((cardInHand) => ({
-                    ...cardInHand,
-                    isFaceUp: false,
-                  })),
-                }
+                ...p,
+                hand: p.hand.map((cardInHand) => ({
+                  ...cardInHand,
+                  isFaceUp: false,
+                })),
+              }
               : p,
           );
           const nextPlayerIndex = (playerIndex + 1) % state.players.length;
@@ -299,6 +300,10 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           const player = { ...players[state.currentPlayerIndex] };
           const newHand = [...player.hand];
           const cardToDiscard = newHand[cardIndex].card;
+
+          // Capture source before clearing it
+          const source = state.drawSource || "deck";
+
           newHand[cardIndex] = {
             card: state.drawnCard,
             isFaceUp: false,
@@ -307,10 +312,17 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           player.hand = newHand;
           players[state.currentPlayerIndex] = player;
           const newDiscardPile = [...state.discardPile, cardToDiscard];
+
           return advanceTurn({
             ...state,
             players,
             discardPile: newDiscardPile,
+            lastMove: {
+              playerId: currentPlayer.id,
+              cardIndex,
+              source,
+              timestamp: Date.now(),
+            },
             actionMessage: `${currentPlayer.name} swapped a card.`,
           });
         }
@@ -482,6 +494,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
               peekedCount: 0,
               startIndex: nextStartingPlayerIndex,
             },
+            lastMove: null,
             actionMessage: `${playersWithNewHands[nextStartingPlayerIndex].name}, it's your turn to peek at two cards.`,
           };
         }
@@ -499,7 +512,8 @@ interface GameContextType {
   myPlayerId: string | null;
   createRoom: (playerName: string) => Promise<void>;
   joinRoom: (roomId: string, playerName: string) => Promise<void>;
-  startHotseatGame: (player1Name: string, player2Name: string) => void;
+  startHotseatGame: (playerNames: string[]) => void;
+  startGame: () => Promise<void>;
   broadcastAction: (action: GameAction) => void;
   sendChatMessage: (message: string) => void;
   playSound: (sound: SoundType) => void;
@@ -508,12 +522,13 @@ interface GameContextType {
 export const GameContext = createContext<GameContextType>({
   state: initialState,
   myPlayerId: null,
-  createRoom: async () => {},
-  joinRoom: async () => {},
-  startHotseatGame: () => {},
-  broadcastAction: () => {},
-  sendChatMessage: () => {},
-  playSound: () => {},
+  createRoom: async () => { },
+  joinRoom: async () => { },
+  startHotseatGame: () => { },
+  startGame: async () => { },
+  broadcastAction: () => { },
+  sendChatMessage: () => { },
+  playSound: () => { },
 });
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
@@ -523,7 +538,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const lastSyncedStateRef = useRef<GameState | null>(null);
   const gameStartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentStateRef = useRef<GameState>(state);
-  
+
   // Keep ref in sync with state
   useEffect(() => {
     currentStateRef.current = state;
@@ -652,7 +667,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       const longTimeoutPlayers = remotePlayers.filter(
         (p) => Date.now() - p.lastSeenAt < 60000, // 60 second timeout for leaving detection
       );
-      
+
       if (
         state.players.length === 2 &&
         longTimeoutPlayers.length < 2 &&
@@ -667,64 +682,53 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // Check if a new player joined (host only)
-      // Make sure we have exactly 2 players and host is ready
+      // We no longer auto-start the game. Host must click "Start Game".
       if (
         state.hostId === myPlayerId &&
-        state.players.length === 1 &&
-        activePlayers.length === 2 &&
         state.gamePhase === "lobby"
       ) {
-        const newPlayerData = activePlayers.find(
-          (p) => p.playerId !== myPlayerId,
+        const newPlayers = activePlayers.filter(
+          (p) => !state.players.some((existing) => existing.id === p.playerId)
         );
-        if (newPlayerData && !gameStartTimeoutRef.current) {
-          // Small delay to ensure both players are ready
-          gameStartTimeoutRef.current = setTimeout(() => {
-            gameStartTimeoutRef.current = null;
-            toast.info(`${newPlayerData.name} has joined the room.`);
 
-            const newPlayer: Player = {
-              id: newPlayerData.playerId,
-              name: newPlayerData.name,
-              hand: [],
-              score: 0,
-            };
-            const allPlayers = [...state.players, newPlayer];
+        if (newPlayers.length > 0) {
+          const updatedPlayers = [...state.players];
+          let changed = false;
 
-            const deck = shuffleDeck(createDeck());
-            const playersWithCards = allPlayers.map((p) => ({
-              ...p,
-              hand: deck
-                .splice(0, 4)
-                .map((card) => ({
-                  card,
-                  isFaceUp: false,
-                  hasBeenPeeked: false,
-                })),
-            }));
-            const discardPile = [deck.pop()!];
+          newPlayers.forEach((newPlayerData) => {
+            if (!updatedPlayers.some(p => p.id === newPlayerData.playerId)) {
+              toast.info(`${newPlayerData.name} has joined the room.`);
+              updatedPlayers.push({
+                id: newPlayerData.playerId,
+                name: newPlayerData.name,
+                hand: [],
+                score: 0,
+              });
+              changed = true;
+            }
+          });
 
-            const startPeekingState: GameState = {
-              ...state,
-              gameMode: "online",
-              players: playersWithCards,
-              drawPile: deck,
-              discardPile,
-              gamePhase: "peeking",
-              actionMessage: `${playersWithCards[0].name}, it's your turn to peek at two cards.`,
-              peekingState: { playerIndex: 0, peekedCount: 0 },
-            };
+          if (changed) {
+            // Update local state with new players
+            dispatch({
+              type: "SET_STATE",
+              payload: { ...state, players: updatedPlayers }
+            });
 
-            // Save to Convex
+            // Sync to remote to ensure everyone sees the updated player list
+            // Note: This might be redundant if we trust the presence system, 
+            // but it ensures the "players" array in game state is accurate.
+            // However, we should be careful not to overwrite game state if a game is running.
+            // Since we are in "lobby", it's safe.
             setGameStateMutation({
               roomId: state.roomId!,
-              state: startPeekingState,
+              state: { ...state, players: updatedPlayers },
             });
-            dispatch({ type: "SET_STATE", payload: startPeekingState });
-          }, 500); // Small delay to ensure both players are synced
+          }
         }
       }
-      
+
+
       // Cleanup timeout on unmount or when conditions change
       return () => {
         if (gameStartTimeoutRef.current) {
@@ -1014,21 +1018,52 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     [joinRoomMutation],
   );
 
+  const startGame = useCallback(async () => {
+    if (state.players.length < 2) {
+      toast.error("Need at least 2 players to start.");
+      return;
+    }
+
+    const deck = shuffleDeck(createDeck());
+    const playersWithCards = state.players.map((p) => ({
+      ...p,
+      hand: deck
+        .splice(0, 4)
+        .map((card) => ({
+          card,
+          isFaceUp: false,
+          hasBeenPeeked: false,
+        })),
+    }));
+    const discardPile = [deck.pop()!];
+
+    const startPeekingState: GameState = {
+      ...state,
+      gameMode: "online",
+      players: playersWithCards,
+      drawPile: deck,
+      discardPile,
+      gamePhase: "peeking",
+      actionMessage: `${playersWithCards[0].name}, it's your turn to peek at two cards.`,
+      peekingState: { playerIndex: 0, peekedCount: 0 },
+    };
+
+    // Save to Convex
+    await setGameStateMutation({
+      roomId: state.roomId!,
+      state: startPeekingState,
+    });
+    dispatch({ type: "SET_STATE", payload: startPeekingState });
+  }, [state, setGameStateMutation]);
+
   const startHotseatGame = useCallback(
-    (player1Name: string, player2Name: string) => {
-      const p1: Player = {
-        id: "player-1",
-        name: player1Name,
+    (playerNames: string[]) => {
+      const allPlayers = playerNames.map((name, index) => ({
+        id: `player-${index + 1}`,
+        name,
         hand: [],
         score: 0,
-      };
-      const p2: Player = {
-        id: "player-2",
-        name: player2Name,
-        hand: [],
-        score: 0,
-      };
-      const allPlayers = [p1, p2];
+      }));
 
       const deck = shuffleDeck(createDeck());
       const playersWithCards = allPlayers.map((p) => ({
@@ -1062,6 +1097,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         createRoom,
         joinRoom,
         startHotseatGame,
+        startGame,
         broadcastAction: processAndBroadcastAction,
         sendChatMessage,
         playSound,
