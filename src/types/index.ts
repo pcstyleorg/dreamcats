@@ -44,13 +44,16 @@ export interface GameState {
   currentPlayerIndex: number;
   gamePhase: GamePhase;
   actionMessage: string;
+  drawSource?: "deck" | "discard" | null;
   roundWinnerName: string | null;
   gameWinnerName: string | null;
   turnCount: number;
   chatMessages: ChatMessage[];
+  lastCallerId?: string | null;
   peekingState?: {
     playerIndex: number;
     peekedCount: number;
+    startIndex?: number;
   };
   drawnCard?: Card | null; // Card the current player is holding
   tempCards?: Card[]; // For 'take_2' action

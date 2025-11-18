@@ -4,6 +4,7 @@ import { GameCard } from "./Card";
 import { useGame } from "@/context/GameContext";
 import { cn } from "@/lib/utils";
 import { SoundType } from "@/hooks/use-sounds";
+import { toast } from "sonner";
 
 interface PlayerHandProps {
   player: Player;
@@ -47,6 +48,17 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
 
     // 'Peek 1' special action (can target any hand while it's my turn)
     if (gamePhase === "action_peek_1" && isMyTurn) {
+      const card = player.hand[cardIndex]?.card;
+      if (card) {
+        const baseInfo = card.isSpecial
+          ? card.specialAction === "take_2"
+            ? "Take 2 (value 5)"
+            : card.specialAction === "peek_1"
+              ? "Peek 1 (value 6)"
+              : "Swap 2 (value 7)"
+          : `Value ${card.value}`;
+        toast.info(`You peeked at a card: ${baseInfo}.`);
+      }
       broadcastAction({
         type: "ACTION_PEEK_1_SELECT",
         payload: { playerId: player.id, cardIndex },

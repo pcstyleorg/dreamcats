@@ -31,7 +31,7 @@ export const LobbyScreen: React.FC = () => {
     try {
       await createRoom(playerName);
     } catch {
-      toast.error("Could not create room. Is Supabase connected?");
+      toast.error("Could not create room. Please check your connection.");
       setIsLoading(false);
     }
   };

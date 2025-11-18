@@ -200,6 +200,7 @@ export const Gameboard: React.FC = () => {
               className={isPlayerActionable ? "cursor-pointer" : ""}
               onClick={handleDrawFromDiscard}
               isGlowing={isPlayerActionable && discardPile.length > 0}
+              disableSpecialAnimation
               playSound={playSound}
             />
             <span className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base font-medium text-gray-700">

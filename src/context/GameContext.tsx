@@ -6,13 +6,14 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
 } from "react";
 import { GameState, Player, Card, ChatMessage, GameAction } from "@/types";
 import { createDeck, shuffleDeck } from "@/lib/game-logic";
-import { supabase } from "@/lib/supabaseClient";
-import { RealtimeChannel } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { useSounds, SoundType } from "@/hooks/use-sounds";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 type ReducerAction =
   | { type: "SET_STATE"; payload: GameState }
@@ -20,7 +21,8 @@ type ReducerAction =
       type: "PROCESS_ACTION";
       payload: { action: GameAction; isLocal?: boolean };
     }
-  | { type: "ADD_CHAT_MESSAGE"; payload: ChatMessage };
+  | { type: "ADD_CHAT_MESSAGE"; payload: ChatMessage }
+  | { type: "SET_CHAT_MESSAGES"; payload: ChatMessage[] };
 
 const initialState: GameState = {
   gameMode: "lobby",
@@ -36,6 +38,8 @@ const initialState: GameState = {
   gameWinnerName: null,
   turnCount: 0,
   chatMessages: [],
+  drawSource: null,
+  lastCallerId: null,
 };
 
 const gameReducer = (state: GameState, action: ReducerAction): GameState => {
@@ -46,6 +50,11 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
       return {
         ...state,
         chatMessages: [...state.chatMessages, action.payload],
+      };
+    case "SET_CHAT_MESSAGES":
+      return {
+        ...state,
+        chatMessages: action.payload,
       };
     case "PROCESS_ACTION": {
       const gameAction = action.payload.action;
@@ -59,7 +68,103 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           turnCount: s.turnCount + 1,
           actionMessage: `It's ${s.players[nextPlayerIndex].name}'s turn.`,
           drawnCard: null,
+          drawSource: null,
           gamePhase: "playing",
+        };
+      };
+
+      const endRoundWithScores = (
+        s: GameState,
+        options: { reason: "pobudka" | "deck_exhausted"; callerId?: string },
+      ): GameState => {
+        const scores = s.players.map((p) => ({
+          player: p,
+          score: p.hand.reduce((acc, h) => acc + h.card.value, 0),
+        }));
+
+        const minScore = Math.min(...scores.map((entry) => entry.score));
+        const callerScoreEntry = options.callerId
+          ? scores.find((entry) => entry.player.id === options.callerId)
+          : undefined;
+        const callerScore = callerScoreEntry?.score;
+        const callerHasLowest =
+          options.reason === "pobudka" &&
+          callerScore !== undefined &&
+          callerScore <= minScore;
+
+        const lastRoundScores = scores.map((entry) => {
+          let penalty = 0;
+          if (
+            options.reason === "pobudka" &&
+            options.callerId &&
+            entry.player.id === options.callerId &&
+            !callerHasLowest
+          ) {
+            penalty = 5;
+          }
+          return { playerId: entry.player.id, score: entry.score, penalty };
+        });
+
+        const playersWithNewScores = s.players.map((p) => {
+          const roundData = lastRoundScores.find(
+            (lrs) => lrs.playerId === p.id,
+          )!;
+          return {
+            ...p,
+            score: p.score + roundData.score + roundData.penalty,
+          };
+        });
+
+        const roundWinner = scores.reduce((prev, curr) =>
+          prev.score < curr.score ? prev : curr,
+        );
+        const gameOver = playersWithNewScores.some((p) => p.score >= 100);
+
+        if (gameOver) {
+          const gameWinner = playersWithNewScores.reduce((prev, curr) =>
+            prev.score < curr.score ? prev : curr,
+          );
+          return {
+            ...s,
+            lastCallerId: options.callerId ?? null,
+            players: playersWithNewScores.map((p) => ({
+              ...p,
+              hand: p.hand.map((h) => ({ ...h, isFaceUp: true })),
+            })),
+            gamePhase: "game_over",
+            gameWinnerName: gameWinner.name,
+            lastRoundScores,
+            actionMessage: `Game Over! ${gameWinner.name} wins with the lowest score!`,
+          };
+        }
+
+        if (options.reason === "deck_exhausted") {
+          return {
+            ...s,
+            lastCallerId: options.callerId ?? null,
+            players: playersWithNewScores.map((p) => ({
+              ...p,
+              hand: p.hand.map((h) => ({ ...h, isFaceUp: true })),
+            })),
+            gamePhase: "round_end",
+            roundWinnerName: roundWinner.player.name,
+            lastRoundScores,
+            actionMessage: `The deck ran out. ${roundWinner.player.name} won the round.`,
+          };
+        }
+
+        // POBUDKA resolution
+        return {
+          ...s,
+          lastCallerId: options.callerId ?? null,
+          players: playersWithNewScores.map((p) => ({
+            ...p,
+            hand: p.hand.map((h) => ({ ...h, isFaceUp: true })),
+          })),
+          gamePhase: "round_end",
+          roundWinnerName: roundWinner.player.name,
+          lastRoundScores,
+          actionMessage: `${currentPlayer.name} called 'POBUDKA!'. ${roundWinner.player.name} won the round.`,
         };
       };
 
@@ -98,7 +203,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
         case "FINISH_PEEKING": {
           if (state.gamePhase !== "peeking" || !state.peekingState)
             return state;
-          const { playerIndex } = state.peekingState;
+          const { playerIndex, startIndex = 0 } = state.peekingState;
           const players = state.players.map((p, idx) =>
             idx === playerIndex
               ? {
@@ -110,12 +215,26 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
                 }
               : p,
           );
-          const nextPlayerIndex = playerIndex + 1;
+          const nextPlayerIndex = (playerIndex + 1) % state.players.length;
+          // If we've looped back to the starting player, peeking is done
+          if (nextPlayerIndex === startIndex) {
+            return {
+              ...state,
+              players,
+              gamePhase: "playing",
+              peekingState: undefined,
+              actionMessage: `The game begins! ${state.players[state.currentPlayerIndex].name}, your turn.`,
+            };
+          }
           if (nextPlayerIndex < state.players.length) {
             return {
               ...state,
               players,
-              peekingState: { playerIndex: nextPlayerIndex, peekedCount: 0 },
+              peekingState: {
+                ...state.peekingState,
+                playerIndex: nextPlayerIndex,
+                peekedCount: 0,
+              },
               actionMessage: `${state.players[nextPlayerIndex].name}, it's your turn to peek at two cards.`,
             };
           } else {
@@ -132,11 +251,18 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           if (state.gamePhase !== "playing") return state;
           const newDrawPile = [...state.drawPile];
           const drawnCard = newDrawPile.pop();
-          if (!drawnCard) return state;
+          if (!drawnCard) {
+            // Deck is exhausted: end the round immediately (no POBUDKA penalty)
+            return endRoundWithScores(state, {
+              reason: "deck_exhausted",
+              callerId: currentPlayer.id,
+            });
+          }
           return {
             ...state,
             drawPile: newDrawPile,
             drawnCard,
+            drawSource: "deck",
             gamePhase: "holding_card",
             actionMessage: `${currentPlayer.name} drew a card. Use it, swap it, or discard it.`,
           };
@@ -146,20 +272,11 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
             return state;
           const newDiscardPile = [...state.discardPile];
           const drawnCard = newDiscardPile.pop()!;
-          if (drawnCard.isSpecial) {
-            const tempCard = { ...drawnCard, isSpecial: false };
-            return {
-              ...state,
-              discardPile: newDiscardPile,
-              drawnCard: tempCard,
-              gamePhase: "holding_card",
-              actionMessage: `${currentPlayer.name} took from discard. Must swap.`,
-            };
-          }
           return {
             ...state,
             discardPile: newDiscardPile,
             drawnCard,
+            drawSource: "discard",
             gamePhase: "holding_card",
             actionMessage: `${currentPlayer.name} took from discard. Must swap.`,
           };
@@ -198,7 +315,11 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           });
         }
         case "USE_SPECIAL_ACTION": {
-          if (state.gamePhase !== "holding_card" || !state.drawnCard?.isSpecial)
+          if (
+            state.gamePhase !== "holding_card" ||
+            !state.drawnCard?.isSpecial ||
+            state.drawSource !== "deck"
+          )
             return state;
           const { specialAction } = state.drawnCard;
           const newDiscardPile = [...state.discardPile, state.drawnCard];
@@ -210,6 +331,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
                 gamePhase: "action_peek_1",
                 discardPile: newDiscardPile,
                 drawnCard: null,
+                drawSource: null,
                 actionMessage: `${currentPlayer.name} used 'Peek 1'. Select any card to view.`,
               };
             case "swap_2":
@@ -218,6 +340,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
                 gamePhase: "action_swap_2_select_1",
                 discardPile: newDiscardPile,
                 drawnCard: null,
+                drawSource: null,
                 actionMessage: `${currentPlayer.name} used 'Swap 2'. Select the first card.`,
               };
             case "take_2": {
@@ -225,13 +348,21 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
               const card1 = newDrawPile.pop();
               const card2 = newDrawPile.pop();
               const tempCards = [card1, card2].filter((c) => c) as Card[];
-              if (tempCards.length === 0) return advanceTurn(state);
+              if (tempCards.length === 0)
+                return advanceTurn({
+                  ...state,
+                  discardPile: newDiscardPile,
+                  drawPile: newDrawPile,
+                  drawnCard: null,
+                  drawSource: null,
+                });
               return {
                 ...state,
                 gamePhase: "action_take_2",
                 discardPile: newDiscardPile,
                 drawPile: newDrawPile,
                 drawnCard: null,
+                drawSource: null,
                 tempCards,
               };
             }
@@ -245,31 +376,18 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           const players = state.players.map((p) => {
             if (p.id === playerId) {
               const newHand = p.hand.map((c, i) =>
-                i === cardIndex ? { ...c, isFaceUp: true } : c,
+                i === cardIndex ? { ...c, hasBeenPeeked: true } : c,
               );
               return { ...p, hand: newHand };
             }
             return p;
           });
 
-          const newState = {
+          return advanceTurn({
             ...state,
             players,
             actionMessage: `${currentPlayer.name} peeked at a card.`,
-          };
-
-          // TODO: Handle auto-advance after peek delay outside of reducer
-          // if (action.payload.isLocal) {
-          //     setTimeout(() => {
-          //         const finalState = advanceTurn(newState);
-          //         dispatch({ type: 'SET_STATE', payload: finalState });
-          //         if(state.gameMode === 'online' && channel) {
-          //             channel.send({type: 'broadcast', event: 'SYNC_STATE', payload: { state: finalState }});
-          //         }
-          //     }, 2000);
-          // }
-
-          return newState;
+          });
         }
         case "ACTION_SWAP_2_SELECT": {
           const { playerId, cardIndex } = gameAction.payload;
@@ -320,75 +438,17 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
             ...state,
             discardPile: newDiscardPile,
             drawnCard: chosenCard,
+            drawSource: "deck",
             gamePhase: "holding_card",
             tempCards: undefined,
             actionMessage: `${currentPlayer.name} chose a card from 'Take 2'.`,
           };
         }
         case "CALL_POBUDKA": {
-          const caller = currentPlayer;
-          const scores = state.players.map((p) => ({
-            player: p,
-            score: p.hand.reduce((acc, h) => acc + h.card.value, 0),
-          }));
-
-          const minScore = Math.min(...scores.map((s) => s.score));
-          const callerScore = scores.find(
-            (s) => s.player.id === caller.id,
-          )!.score;
-          const callerHasLowest = callerScore <= minScore;
-
-          const lastRoundScores = scores.map((s) => {
-            let penalty = 0;
-            if (s.player.id === caller.id && !callerHasLowest) {
-              penalty = 5;
-            }
-            return { playerId: s.player.id, score: s.score, penalty };
+          return endRoundWithScores(state, {
+            reason: "pobudka",
+            callerId: currentPlayer.id,
           });
-
-          const playersWithNewScores = state.players.map((p) => {
-            const roundData = lastRoundScores.find(
-              (lrs) => lrs.playerId === p.id,
-            )!;
-            return {
-              ...p,
-              score: p.score + roundData.score + roundData.penalty,
-            };
-          });
-
-          const roundWinner = scores.reduce((prev, curr) =>
-            prev.score < curr.score ? prev : curr,
-          );
-          const gameOver = playersWithNewScores.some((p) => p.score >= 100);
-
-          if (gameOver) {
-            const gameWinner = playersWithNewScores.reduce((prev, curr) =>
-              prev.score < curr.score ? prev : curr,
-            );
-            return {
-              ...state,
-              players: playersWithNewScores.map((p) => ({
-                ...p,
-                hand: p.hand.map((h) => ({ ...h, isFaceUp: true })),
-              })),
-              gamePhase: "game_over",
-              gameWinnerName: gameWinner.name,
-              lastRoundScores,
-              actionMessage: `Game Over! ${gameWinner.name} wins with the lowest score!`,
-            };
-          }
-
-          return {
-            ...state,
-            players: playersWithNewScores.map((p) => ({
-              ...p,
-              hand: p.hand.map((h) => ({ ...h, isFaceUp: true })),
-            })),
-            gamePhase: "round_end",
-            roundWinnerName: roundWinner.player.name,
-            lastRoundScores,
-            actionMessage: `${caller.name} called 'POBUDKA!'. ${roundWinner.player.name} won the round.`,
-          };
         }
         case "START_NEW_ROUND": {
           const deck = shuffleDeck(createDeck());
@@ -399,10 +459,13 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
               .map((card) => ({ card, isFaceUp: false, hasBeenPeeked: false })),
           }));
           const discardPile = [deck.pop()!];
+          const callerIndex = state.lastCallerId
+            ? state.players.findIndex((p) => p.id === state.lastCallerId)
+            : state.currentPlayerIndex;
           const nextStartingPlayerIndex =
-            (state.players.findIndex((p) => p.name === state.roundWinnerName) +
-              1) %
-            state.players.length;
+            callerIndex === -1
+              ? 0
+              : (callerIndex + 1) % state.players.length;
 
           return {
             ...initialState,
@@ -414,8 +477,12 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
             discardPile,
             gamePhase: "peeking",
             currentPlayerIndex: nextStartingPlayerIndex,
-            peekingState: { playerIndex: 0, peekedCount: 0 },
-            actionMessage: `${playersWithNewHands[0].name}, it's your turn to peek at two cards.`,
+            peekingState: {
+              playerIndex: nextStartingPlayerIndex,
+              peekedCount: 0,
+              startIndex: nextStartingPlayerIndex,
+            },
+            actionMessage: `${playersWithNewHands[nextStartingPlayerIndex].name}, it's your turn to peek at two cards.`,
           };
         }
         default:
@@ -449,23 +516,263 @@ export const GameContext = createContext<GameContextType>({
   playSound: () => {},
 });
 
-let channel: RealtimeChannel | null = null;
-
 export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
   const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
   const { playSound } = useSounds();
+  const lastSyncedStateRef = useRef<GameState | null>(null);
+  const gameStartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const currentStateRef = useRef<GameState>(state);
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    currentStateRef.current = state;
+  }, [state]);
+
+  // Convex mutations
+  const createRoomMutation = useMutation(api.rooms.createRoom);
+  const joinRoomMutation = useMutation(api.rooms.joinRoom);
+  const setGameStateMutation = useMutation(api.games.setGameState);
+  const sendMessageMutation = useMutation(api.chat.sendMessage);
+  const updatePresenceMutation = useMutation(api.rooms.updatePlayerPresence);
+
+  // Convex queries - subscribe to game state and chat
+  const remoteGameState = useQuery(
+    api.games.getGameState,
+    state.gameMode === "online" && state.roomId
+      ? { roomId: state.roomId }
+      : "skip",
+  );
+
+  const remoteMessages = useQuery(
+    api.chat.getMessages,
+    state.gameMode === "online" && state.roomId
+      ? { roomId: state.roomId }
+      : "skip",
+  );
+
+  const remotePlayers = useQuery(
+    api.rooms.getPlayers,
+    state.gameMode === "online" && state.roomId
+      ? { roomId: state.roomId }
+      : "skip",
+  );
+
+  // Sync remote game state to local state
+  useEffect(() => {
+    if (!remoteGameState || state.gameMode !== "online") {
+      return;
+    }
+
+    // Only update if remote state is different from what we last synced
+    // This prevents loops when we sync our own changes
+    const remoteStateStr = JSON.stringify(remoteGameState);
+    const lastSyncedStr = lastSyncedStateRef.current
+      ? JSON.stringify(lastSyncedStateRef.current)
+      : null;
+
+    // Skip if remote state hasn't changed
+    if (remoteStateStr === lastSyncedStr) {
+      return;
+    }
+
+    // Sanitize remote state to ensure we don't show opponent's peeked cards
+    // But preserve our own local peeked cards
+    const remoteState = remoteGameState as GameState;
+    let finalState = remoteState;
+
+    // During peeking phase, merge our local peeked cards with remote state
+    // Use ref to access current state without adding it to dependencies
+    if (remoteState.gamePhase === "peeking" && myPlayerId) {
+      const currentState = currentStateRef.current;
+      const localPlayer = currentState.players.find((p) => p.id === myPlayerId);
+      const remotePlayer = remoteState.players.find((p) => p.id === myPlayerId);
+
+      if (localPlayer && remotePlayer) {
+        // Check if we actually need to merge (if we have locally peeked cards)
+        const hasLocalPeekedCards = localPlayer.hand.some(
+          (card) => card.hasBeenPeeked && card.isFaceUp,
+        );
+
+        if (hasLocalPeekedCards) {
+          // Preserve our local peeked cards (isFaceUp state)
+          const mergedHand = localPlayer.hand.map((localCard, index) => {
+            const remoteCard = remotePlayer.hand[index];
+            // If we peeked this card locally, keep it face up
+            if (localCard.hasBeenPeeked && localCard.isFaceUp) {
+              return localCard;
+            }
+            // Otherwise use remote state
+            return remoteCard;
+          });
+
+          finalState = {
+            ...remoteState,
+            players: remoteState.players.map((p) =>
+              p.id === myPlayerId
+                ? { ...p, hand: mergedHand }
+                : p, // Opponent's cards are already sanitized from remote
+            ),
+          };
+        }
+      }
+    }
+
+    // Only dispatch if finalState is actually different from what we last synced
+    const finalStateStr = JSON.stringify(finalState);
+    if (finalStateStr !== lastSyncedStr) {
+      dispatch({ type: "SET_STATE", payload: finalState });
+      lastSyncedStateRef.current = finalState;
+    }
+  }, [remoteGameState, state.gameMode, myPlayerId]); // Removed state from deps to prevent loops
+
+  // Sync remote chat messages
+  useEffect(() => {
+    if (remoteMessages && state.gameMode === "online") {
+      const chatMessages: ChatMessage[] = remoteMessages.map((msg) => ({
+        id: msg._id,
+        senderId: msg.senderId,
+        senderName: msg.senderName,
+        message: msg.message,
+        timestamp: msg.timestamp,
+      }));
+      dispatch({ type: "SET_CHAT_MESSAGES", payload: chatMessages });
+    }
+  }, [remoteMessages, state.gameMode]);
+
+  // Handle player presence
+  useEffect(() => {
+    if (remotePlayers && state.gameMode === "online") {
+      const activePlayers = remotePlayers.filter(
+        (p) => Date.now() - p.lastSeenAt < 30000, // 30 second timeout
+      );
+
+      // Check if a player left (only if game has started)
+      // Use a longer timeout to avoid false positives during initial join
+      const longTimeoutPlayers = remotePlayers.filter(
+        (p) => Date.now() - p.lastSeenAt < 60000, // 60 second timeout for leaving detection
+      );
+      
+      if (
+        state.players.length === 2 &&
+        longTimeoutPlayers.length < 2 &&
+        state.gamePhase !== "lobby" &&
+        state.gamePhase !== "peeking" // Don't reset during initial setup
+      ) {
+        toast.warning("Opponent has left. Game reset.");
+        sessionStorage.clear();
+        setMyPlayerId(null);
+        dispatch({ type: "SET_STATE", payload: initialState });
+        return;
+      }
+
+      // Check if a new player joined (host only)
+      // Make sure we have exactly 2 players and host is ready
+      if (
+        state.hostId === myPlayerId &&
+        state.players.length === 1 &&
+        activePlayers.length === 2 &&
+        state.gamePhase === "lobby"
+      ) {
+        const newPlayerData = activePlayers.find(
+          (p) => p.playerId !== myPlayerId,
+        );
+        if (newPlayerData && !gameStartTimeoutRef.current) {
+          // Small delay to ensure both players are ready
+          gameStartTimeoutRef.current = setTimeout(() => {
+            gameStartTimeoutRef.current = null;
+            toast.info(`${newPlayerData.name} has joined the room.`);
+
+            const newPlayer: Player = {
+              id: newPlayerData.playerId,
+              name: newPlayerData.name,
+              hand: [],
+              score: 0,
+            };
+            const allPlayers = [...state.players, newPlayer];
+
+            const deck = shuffleDeck(createDeck());
+            const playersWithCards = allPlayers.map((p) => ({
+              ...p,
+              hand: deck
+                .splice(0, 4)
+                .map((card) => ({
+                  card,
+                  isFaceUp: false,
+                  hasBeenPeeked: false,
+                })),
+            }));
+            const discardPile = [deck.pop()!];
+
+            const startPeekingState: GameState = {
+              ...state,
+              gameMode: "online",
+              players: playersWithCards,
+              drawPile: deck,
+              discardPile,
+              gamePhase: "peeking",
+              actionMessage: `${playersWithCards[0].name}, it's your turn to peek at two cards.`,
+              peekingState: { playerIndex: 0, peekedCount: 0 },
+            };
+
+            // Save to Convex
+            setGameStateMutation({
+              roomId: state.roomId!,
+              state: startPeekingState,
+            });
+            dispatch({ type: "SET_STATE", payload: startPeekingState });
+          }, 500); // Small delay to ensure both players are synced
+        }
+      }
+      
+      // Cleanup timeout on unmount or when conditions change
+      return () => {
+        if (gameStartTimeoutRef.current) {
+          clearTimeout(gameStartTimeoutRef.current);
+          gameStartTimeoutRef.current = null;
+        }
+      };
+    }
+  }, [remotePlayers, state, myPlayerId, setGameStateMutation]);
+
+  // Update presence periodically
+  useEffect(() => {
+    if (state.gameMode === "online" && state.roomId && myPlayerId) {
+      const interval = setInterval(() => {
+        updatePresenceMutation({ roomId: state.roomId!, playerId: myPlayerId });
+      }, 10000); // Every 10 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [state.gameMode, state.roomId, myPlayerId, updatePresenceMutation]);
+
+  // Reconnection logic
+  useEffect(() => {
+    const reconnect = async () => {
+      const storedPlayerId = sessionStorage.getItem("sen-playerId");
+      const storedRoomId = sessionStorage.getItem("sen-roomId");
+      const storedPlayerName = sessionStorage.getItem("sen-playerName");
+
+      if (storedPlayerId && storedRoomId && storedPlayerName) {
+        setMyPlayerId(storedPlayerId);
+        try {
+          await joinRoomMutation({
+            roomId: storedRoomId,
+            playerId: storedPlayerId,
+            name: storedPlayerName,
+          });
+          toast.info(`Reconnected to room ${storedRoomId}.`);
+        } catch (error) {
+          console.error("Reconnection failed:", error);
+          sessionStorage.clear();
+        }
+      }
+    };
+    reconnect();
+  }, [joinRoomMutation]);
 
   const processAndBroadcastAction = useCallback(
-    (action: GameAction) => {
-      dispatch({ type: "PROCESS_ACTION", payload: { action, isLocal: true } });
-      if (state.gameMode === "online" && channel) {
-        channel.send({
-          type: "broadcast",
-          event: "PLAYER_ACTION",
-          payload: { action, senderId: myPlayerId },
-        });
-      }
+    async (action: GameAction) => {
       // Play sounds for actions
       switch (action.type) {
         case "PEEK_CARD":
@@ -481,240 +788,271 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           playSound("pobudka");
           break;
       }
+
+      // Dispatch action locally - state sync will happen via useEffect
+      dispatch({ type: "PROCESS_ACTION", payload: { action, isLocal: true } });
     },
-    [state.gameMode, myPlayerId, playSound],
+    [playSound],
   );
 
-  const sendChatMessage = (message: string) => {
-    if (state.gameMode !== "online" || !channel || !myPlayerId) return;
-    const me = state.players.find((p) => p.id === myPlayerId);
-    if (!me) return;
+  // Sanitize game state for syncing - hide peeked cards from opponents
+  const sanitizeStateForSync = useCallback((gameState: GameState, currentPlayerId: string | null): GameState => {
+    if (gameState.gamePhase !== "peeking" || !currentPlayerId) {
+      return gameState;
+    }
 
-    const chatMessage: ChatMessage = {
-      id: `msg-${Date.now()}`,
-      senderId: myPlayerId,
-      senderName: me.name,
-      message,
-      timestamp: Date.now(),
-    };
-
-    dispatch({ type: "ADD_CHAT_MESSAGE", payload: chatMessage });
-    playSound("chat");
-
-    channel.send({
-      type: "broadcast",
-      event: "CHAT_MESSAGE",
-      payload: { message: chatMessage },
-    });
-  };
-
-  const setupChannel = useCallback(
-    (ch: RealtimeChannel) => {
-      if (channel) {
-        supabase.removeChannel(channel);
+    // During peeking phase, hide each player's peeked cards from other players
+    // Each player should only see their own peeked cards locally
+    const sanitizedPlayers = gameState.players.map((player) => {
+      if (player.id === currentPlayerId) {
+        // For the current player, hide their peeked cards when syncing
+        // (they see them locally, but opponent shouldn't)
+        const sanitizedHand = player.hand.map((cardInHand) => {
+          // If card is peeked (hasBeenPeeked) but not permanently face up, hide it
+          if (cardInHand.hasBeenPeeked && cardInHand.isFaceUp) {
+            // This is a temporarily peeked card - hide it from opponent
+            return { ...cardInHand, isFaceUp: false };
+          }
+          return cardInHand;
+        });
+        return { ...player, hand: sanitizedHand };
+      } else {
+        // For opponents, ensure their peeked cards are hidden
+        const sanitizedHand = player.hand.map((cardInHand) => {
+          // Opponent's cards should never be visible during peeking unless permanently face up
+          if (cardInHand.hasBeenPeeked && cardInHand.isFaceUp) {
+            // Hide opponent's peeked cards
+            return { ...cardInHand, isFaceUp: false };
+          }
+          return cardInHand;
+        });
+        return { ...player, hand: sanitizedHand };
       }
-      channel = ch;
-      channel
-        .on("broadcast", { event: "PLAYER_ACTION" }, ({ payload }) => {
-          if (payload.senderId !== myPlayerId) {
-            dispatch({
-              type: "PROCESS_ACTION",
-              payload: { action: payload.action },
-            });
-          }
-        })
-        .on("broadcast", { event: "CHAT_MESSAGE" }, ({ payload }) => {
-          if (payload.message.senderId !== myPlayerId) {
-            dispatch({ type: "ADD_CHAT_MESSAGE", payload: payload.message });
-            playSound("chat");
-          }
-        })
-        .on("presence", { event: "join" }, ({ newPresences }) => {
-          if (state.hostId !== myPlayerId || state.players.length >= 2) return;
-          const newPlayerInfo = newPresences[0];
-          toast.info(`${newPlayerInfo.name} has joined the room.`);
+    });
 
-          const newPlayer: Player = {
-            id: newPlayerInfo.id,
-            name: newPlayerInfo.name,
-            hand: [],
-            score: 0,
-          };
-          const allPlayers = [...state.players, newPlayer];
+    return {
+      ...gameState,
+      players: sanitizedPlayers,
+    };
+  }, []);
 
-          const deck = shuffleDeck(createDeck());
-          const playersWithCards = allPlayers.map((p) => ({
-            ...p,
-            hand: deck
-              .splice(0, 4)
-              .map((card) => ({ card, isFaceUp: false, hasBeenPeeked: false })),
-          }));
-          const discardPile = [deck.pop()!];
-
-          const startPeekingState: GameState = {
-            ...state,
-            gameMode: "online",
-            players: playersWithCards,
-            drawPile: deck,
-            discardPile,
-            gamePhase: "peeking",
-            actionMessage: `${playersWithCards[0].name}, it's your turn to peek at two cards.`,
-            peekingState: { playerIndex: 0, peekedCount: 0 },
-          };
-          if (channel)
-            channel.send({
-              type: "broadcast",
-              event: "SYNC_STATE",
-              payload: { state: startPeekingState },
-            });
-          dispatch({ type: "SET_STATE", payload: startPeekingState });
-        })
-        .on("broadcast", { event: "SYNC_STATE" }, ({ payload }) => {
-          dispatch({ type: "SET_STATE", payload: payload.state });
-        })
-        .on("broadcast", { event: "REQUEST_SYNC" }, ({ payload }) => {
-          if (payload.senderId !== myPlayerId) {
-            channel?.send({
-              type: "broadcast",
-              event: "SYNC_STATE",
-              payload: { state },
-            });
-          }
-        })
-        .on("presence", { event: "leave" }, ({ leftPresences }) => {
-          toast.warning(
-            `${leftPresences[0].name} has left the room. Game reset.`,
-          );
-          if (channel) supabase.removeChannel(channel);
-          channel = null;
-          setMyPlayerId(null);
-          sessionStorage.clear();
-          dispatch({ type: "SET_STATE", payload: initialState });
-        })
-        .subscribe();
-    },
-    [myPlayerId, state],
-  );
-
-  // Reconnection logic
+  // Sync local state changes to Convex (for online games)
+  // Only sync if state actually changed and it's not from a remote update
   useEffect(() => {
-    const reconnect = async () => {
-      const storedPlayerId = sessionStorage.getItem("sen-playerId");
-      const storedRoomId = sessionStorage.getItem("sen-roomId");
-      const storedPlayerName = sessionStorage.getItem("sen-playerName");
+    if (
+      state.gameMode === "online" &&
+      state.roomId &&
+      remoteGameState // Only sync if we have a remote state to compare
+    ) {
+      // Sanitize state before syncing to hide peeked cards
+      const sanitizedState = sanitizeStateForSync(state, myPlayerId);
+      const currentStateStr = JSON.stringify(sanitizedState);
+      const lastSyncedStr = lastSyncedStateRef.current
+        ? JSON.stringify(lastSyncedStateRef.current)
+        : null;
+      const remoteStateStr = JSON.stringify(remoteGameState);
 
-      if (storedPlayerId && storedRoomId && storedPlayerName) {
-        setMyPlayerId(storedPlayerId);
-        const newChannel = supabase.channel(storedRoomId, {
-          config: { presence: { key: storedPlayerId } },
-        });
-        setupChannel(newChannel);
-        await newChannel.track({ id: storedPlayerId, name: storedPlayerName });
-        toast.info(
-          `Reconnected to room ${storedRoomId}. Requesting game state...`,
-        );
-        newChannel.send({
-          type: "broadcast",
-          event: "REQUEST_SYNC",
-          payload: { senderId: storedPlayerId },
-        });
+      // Only sync if:
+      // 1. Local state differs from what we last synced
+      // 2. Local state differs from remote state (we made a change)
+      if (
+        currentStateStr !== lastSyncedStr &&
+        currentStateStr !== remoteStateStr
+      ) {
+        // Debounce rapid updates
+        const timeoutId = setTimeout(async () => {
+          try {
+            await setGameStateMutation({
+              roomId: state.roomId!,
+              state: sanitizedState,
+            });
+            lastSyncedStateRef.current = sanitizedState;
+          } catch (error) {
+            console.error("Failed to sync game state:", error);
+          }
+        }, 100);
+
+        return () => clearTimeout(timeoutId);
       }
-    };
-    reconnect();
-  }, [setupChannel]);
+    }
+  }, [state, remoteGameState, setGameStateMutation, myPlayerId, sanitizeStateForSync]);
 
-  const createRoom = async (playerName: string) => {
-    const roomId = `sen-${Math.random().toString(36).substr(2, 6)}`;
-    const playerId = `player-${Math.random().toString(36).substr(2, 9)}`;
-    const newPlayer: Player = {
-      id: playerId,
-      name: playerName,
-      hand: [],
-      score: 0,
-    };
-    const newState: GameState = {
-      ...initialState,
-      gameMode: "online",
-      roomId,
-      hostId: playerId,
-      players: [newPlayer],
-      actionMessage: `Room created! ID: ${roomId}. Waiting for opponent...`,
-    };
+  const sendChatMessage = useCallback(
+    async (message: string) => {
+      if (state.gameMode !== "online" || !state.roomId || !myPlayerId) return;
+      const me = state.players.find((p) => p.id === myPlayerId);
+      if (!me) return;
 
-    const newChannel = supabase.channel(roomId, {
-      config: { presence: { key: playerId } },
-    });
-    setupChannel(newChannel);
-    await newChannel.track({ id: playerId, name: playerName });
+      const chatMessage: ChatMessage = {
+        id: `msg-${Date.now()}`,
+        senderId: myPlayerId,
+        senderName: me.name,
+        message,
+        timestamp: Date.now(),
+      };
 
-    setMyPlayerId(playerId);
-    sessionStorage.setItem("sen-playerId", playerId);
-    sessionStorage.setItem("sen-roomId", roomId);
-    sessionStorage.setItem("sen-playerName", playerName);
+      dispatch({ type: "ADD_CHAT_MESSAGE", payload: chatMessage });
+      playSound("chat");
 
-    dispatch({ type: "SET_STATE", payload: newState });
-    toast.success(
-      `Room created! Your ID is ${roomId}. Share it with a friend.`,
-    );
-  };
+      try {
+        await sendMessageMutation({
+          roomId: state.roomId,
+          senderId: myPlayerId,
+          senderName: me.name,
+          message,
+        });
+      } catch (error) {
+        console.error("Failed to send chat message:", error);
+      }
+    },
+    [state, myPlayerId, playSound, sendMessageMutation],
+  );
 
-  const joinRoom = async (roomId: string, playerName: string) => {
-    const playerId = `player-${Math.random().toString(36).substr(2, 9)}`;
-    const newChannel = supabase.channel(roomId);
+  const createRoom = useCallback(
+    async (playerName: string) => {
+      const roomId = `sen-${Math.random().toString(36).substr(2, 6)}`;
+      const playerId = `player-${Math.random().toString(36).substr(2, 9)}`;
+      const newPlayer: Player = {
+        id: playerId,
+        name: playerName,
+        hand: [],
+        score: 0,
+      };
+      const newState: GameState = {
+        ...initialState,
+        gameMode: "online",
+        roomId,
+        hostId: playerId,
+        players: [newPlayer],
+        actionMessage: `Room created! ID: ${roomId}. Waiting for opponent...`,
+      };
 
-    newChannel.subscribe(async (status) => {
-      if (status === "SUBSCRIBED") {
-        setupChannel(newChannel);
-        await newChannel.track({ id: playerId, name: playerName });
+      try {
+        await createRoomMutation({
+          roomId,
+          hostId: playerId,
+          hostName: playerName,
+        });
+
         setMyPlayerId(playerId);
         sessionStorage.setItem("sen-playerId", playerId);
         sessionStorage.setItem("sen-roomId", roomId);
         sessionStorage.setItem("sen-playerName", playerName);
-        toast.success(`Joined room ${roomId}! Waiting for game to sync.`);
+
+        dispatch({ type: "SET_STATE", payload: newState });
+        toast.success(
+          `Room created! Your ID is ${roomId}. Share it with a friend.`,
+        );
+      } catch (error) {
+        console.error("Failed to create room:", error);
+        toast.error("Could not create room. Please try again.");
       }
-      if (status === "CHANNEL_ERROR") {
-        toast.error("Could not join room. Check the ID.");
-        newChannel.unsubscribe();
+    },
+    [createRoomMutation],
+  );
+
+  const joinRoom = useCallback(
+    async (roomId: string, playerName: string) => {
+      const playerId = `player-${Math.random().toString(36).substr(2, 9)}`;
+
+      // Retry logic for joining (in case room isn't created yet)
+      let retries = 5;
+      let lastError: Error | null = null;
+
+      while (retries > 0) {
+        try {
+          await joinRoomMutation({
+            roomId,
+            playerId,
+            name: playerName,
+          });
+
+          // Initialize local state for the joining player
+          const joinState: GameState = {
+            ...initialState,
+            gameMode: "online",
+            roomId,
+            hostId: null, // Will be set when we get remote state
+            players: [
+              {
+                id: playerId,
+                name: playerName,
+                hand: [],
+                score: 0,
+              },
+            ],
+            actionMessage: `Joined room ${roomId}. Waiting for host...`,
+          };
+
+          setMyPlayerId(playerId);
+          sessionStorage.setItem("sen-playerId", playerId);
+          sessionStorage.setItem("sen-roomId", roomId);
+          sessionStorage.setItem("sen-playerName", playerName);
+
+          dispatch({ type: "SET_STATE", payload: joinState });
+          toast.success(`Joined room ${roomId}! Waiting for game to sync.`);
+          return;
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error(String(error));
+          if (lastError.message.includes("Room not found") && retries > 1) {
+            // Wait a bit and retry
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            retries--;
+          } else {
+            break;
+          }
+        }
       }
-    });
-  };
 
-  const startHotseatGame = (player1Name: string, player2Name: string) => {
-    const p1: Player = {
-      id: "player-1",
-      name: player1Name,
-      hand: [],
-      score: 0,
-    };
-    const p2: Player = {
-      id: "player-2",
-      name: player2Name,
-      hand: [],
-      score: 0,
-    };
-    const allPlayers = [p1, p2];
+      console.error("Failed to join room:", lastError);
+      const message =
+        lastError instanceof Error
+          ? lastError.message
+          : "Failed to join room.";
+      toast.error(message);
+    },
+    [joinRoomMutation],
+  );
 
-    const deck = shuffleDeck(createDeck());
-    const playersWithCards = allPlayers.map((p) => ({
-      ...p,
-      hand: deck
-        .splice(0, 4)
-        .map((card) => ({ card, isFaceUp: false, hasBeenPeeked: false })),
-    }));
-    const discardPile = [deck.pop()!];
+  const startHotseatGame = useCallback(
+    (player1Name: string, player2Name: string) => {
+      const p1: Player = {
+        id: "player-1",
+        name: player1Name,
+        hand: [],
+        score: 0,
+      };
+      const p2: Player = {
+        id: "player-2",
+        name: player2Name,
+        hand: [],
+        score: 0,
+      };
+      const allPlayers = [p1, p2];
 
-    const startPeekingState: GameState = {
-      ...initialState,
-      gameMode: "hotseat",
-      players: playersWithCards,
-      drawPile: deck,
-      discardPile,
-      gamePhase: "peeking",
-      actionMessage: `${playersWithCards[0].name}, it's your turn to peek at two cards.`,
-      peekingState: { playerIndex: 0, peekedCount: 0 },
-    };
-    dispatch({ type: "SET_STATE", payload: startPeekingState });
-  };
+      const deck = shuffleDeck(createDeck());
+      const playersWithCards = allPlayers.map((p) => ({
+        ...p,
+        hand: deck
+          .splice(0, 4)
+          .map((card) => ({ card, isFaceUp: false, hasBeenPeeked: false })),
+      }));
+      const discardPile = [deck.pop()!];
+
+      const startPeekingState: GameState = {
+        ...initialState,
+        gameMode: "hotseat",
+        players: playersWithCards,
+        drawPile: deck,
+        discardPile,
+        gamePhase: "peeking",
+        actionMessage: `${playersWithCards[0].name}, it's your turn to peek at two cards.`,
+        peekingState: { playerIndex: 0, peekedCount: 0 },
+      };
+      dispatch({ type: "SET_STATE", payload: startPeekingState });
+    },
+    [],
+  );
 
   return (
     <GameContext.Provider

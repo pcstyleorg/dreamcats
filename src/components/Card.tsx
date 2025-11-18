@@ -13,6 +13,7 @@ interface CardProps {
   hasBeenPeeked?: boolean; // show a tiny, persistent glow to indicate "I have seen this"
   isGlowing?: boolean; // external glow hint (e.g., legal to click)
   playSound?: (sound: SoundType) => void;
+  disableSpecialAnimation?: boolean; // e.g. discard pile, where we want cards static
 }
 
 export const GameCard: React.FC<CardProps> = ({
@@ -23,6 +24,7 @@ export const GameCard: React.FC<CardProps> = ({
   hasBeenPeeked,
   isGlowing,
   playSound,
+  disableSpecialAnimation,
 }) => {
   // Detect "reveal moment" to flash special glow only when a special card turns face-up
   const prevFaceUp = useRef<boolean>(isFaceUp);
@@ -75,6 +77,10 @@ export const GameCard: React.FC<CardProps> = ({
     ? "shadow-[0_0_18px_rgba(147,51,234,0.32)]"
     : "";
 
+  const isSpecialFaceUp = Boolean(
+    card?.isSpecial && isFaceUp && !disableSpecialAnimation,
+  );
+
   // No rings at all. Rounded, image edge-to-edge. Soft depth shadow only.
   const outerClasses = cn(
     "group w-[18vw] max-w-24 sm:w-[15vw] sm:max-w-28 md:w-[10vw] md:max-w-32 lg:w-[8vw] lg:max-w-36 aspect-[2/3] perspective-1000 rounded-xl overflow-hidden",
@@ -86,7 +92,21 @@ export const GameCard: React.FC<CardProps> = ({
   );
 
   return (
-    <motion.div className={outerClasses} onClick={handleClick}>
+    <motion.div
+      className={outerClasses}
+      onClick={handleClick}
+      animate={
+        isSpecialFaceUp
+          ? { scale: [1, 1.04, 1], rotateZ: [0, -1.2, 1.2, 0] }
+          : { scale: 1, rotateZ: 0 }
+      }
+      transition={
+        isSpecialFaceUp
+          ? { duration: 1.4, repeat: Infinity, ease: "easeInOut" }
+          : { duration: 0.2 }
+      }
+      initial={false}
+    >
       <motion.div
         className="relative w-full h-full transform-style-3d"
         variants={cardVariants}

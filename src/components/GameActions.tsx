@@ -4,8 +4,14 @@ import { Wand2 } from "lucide-react";
 
 export const GameActions = () => {
   const { state, broadcastAction, myPlayerId } = useGame();
-  const { gamePhase, peekingState, drawnCard, gameMode, currentPlayerIndex } =
-    state;
+  const {
+    gamePhase,
+    peekingState,
+    drawnCard,
+    drawSource,
+    gameMode,
+    currentPlayerIndex,
+  } = state;
 
   const currentPlayer = state.players[currentPlayerIndex];
   const isMyTurn =
@@ -28,10 +34,12 @@ export const GameActions = () => {
     }
   };
 
-  const canUseSpecial = drawnCard?.isSpecial && gamePhase === "holding_card";
-  const mustSwap = Boolean(
-    gamePhase === "holding_card" && drawnCard && !drawnCard.isSpecial,
-  );
+  const canUseSpecial =
+    drawnCard?.isSpecial &&
+    gamePhase === "holding_card" &&
+    drawSource === "deck";
+  const mustSwap =
+    gamePhase === "holding_card" && !!drawnCard && drawSource === "discard";
 
   if (
     (gameMode === "hotseat" || amICurrentPeeker) &&
