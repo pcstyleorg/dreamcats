@@ -265,6 +265,12 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
             drawnCard,
             drawSource: "deck",
             gamePhase: "holding_card",
+            lastMove: {
+              playerId: currentPlayer.id,
+              action: "draw",
+              source: "deck",
+              timestamp: Date.now(),
+            },
             actionMessage: `${currentPlayer.name} drew a card. Use it, swap it, or discard it.`,
           };
         }
@@ -279,6 +285,12 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
             drawnCard,
             drawSource: "discard",
             gamePhase: "holding_card",
+            lastMove: {
+              playerId: currentPlayer.id,
+              action: "draw",
+              source: "discard",
+              timestamp: Date.now(),
+            },
             actionMessage: `${currentPlayer.name} took from discard. Must swap.`,
           };
         }
@@ -289,6 +301,12 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           return advanceTurn({
             ...state,
             discardPile: newDiscardPile,
+            lastMove: {
+              playerId: currentPlayer.id,
+              action: "discard",
+              source: state.drawSource ?? undefined,
+              timestamp: Date.now(),
+            },
             actionMessage: `${currentPlayer.name} discarded their drawn card.`,
           });
         }
@@ -319,6 +337,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
             discardPile: newDiscardPile,
             lastMove: {
               playerId: currentPlayer.id,
+              action: "swap",
               cardIndex,
               source,
               timestamp: Date.now(),
@@ -398,6 +417,13 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           return advanceTurn({
             ...state,
             players,
+            lastMove: {
+              playerId: currentPlayer.id,
+              action: "peek",
+              targetPlayerId: playerId,
+              cardIndex,
+              timestamp: Date.now(),
+            },
             actionMessage: `${currentPlayer.name} peeked at a card.`,
           });
         }
@@ -433,6 +459,11 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
               ...state,
               players: newPlayers,
               swapState: undefined,
+              lastMove: {
+                playerId: currentPlayer.id,
+                action: "swap_2",
+                timestamp: Date.now(),
+              },
               actionMessage: `${currentPlayer.name} swapped two cards.`,
             });
           }
@@ -453,6 +484,11 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
             drawSource: "deck",
             gamePhase: "holding_card",
             tempCards: undefined,
+            lastMove: {
+              playerId: currentPlayer.id,
+              action: "take_2",
+              timestamp: Date.now(),
+            },
             actionMessage: `${currentPlayer.name} chose a card from 'Take 2'.`,
           };
         }

@@ -7,7 +7,7 @@ import { Button } from "./ui/button";
 import { Scoreboard } from "./Scoreboard";
 import { Separator } from "./ui/separator";
 import { toast } from "sonner";
-import { Copy, Menu, Users, Cloud, ScrollText } from "lucide-react";
+import { Copy, Menu, Users, Cloud, ScrollText, Sparkles } from "lucide-react";
 import { ActionModal } from "./ActionModal";
 import {
   Sheet,
@@ -34,15 +34,8 @@ export const Gameboard: React.FC = () => {
     roomId,
     drawnCard,
     gameMode,
+    lastMove,
   } = state;
-
-  if (players.length === 0) {
-    return (
-      <div className="w-full min-h-screen flex items-center justify-center font-heading">
-        <p>Loading game...</p>
-      </div>
-    );
-  }
 
   const currentPlayer = players[currentPlayerIndex];
 
@@ -129,23 +122,77 @@ export const Gameboard: React.FC = () => {
 
   const backgroundImage = getGameBackgroundAsset();
 
+  const recentMove =
+    lastMove && Date.now() - lastMove.timestamp < 2600 ? lastMove : null;
+  const recentPlayer =
+    recentMove && players.find((p) => p.id === recentMove.playerId);
+  const recentMoveLabel = React.useMemo(() => {
+    if (!recentMove || !recentPlayer) return null;
+    switch (recentMove.action) {
+      case "draw":
+        return `${recentPlayer.name} drew from ${
+          recentMove.source === "discard" ? "discard" : "deck"
+        }`;
+      case "swap":
+        return `${recentPlayer.name} swapped a card`;
+      case "discard":
+        return `${recentPlayer.name} discarded a card`;
+      case "peek":
+        return `${recentPlayer.name} peeked at a card`;
+      case "swap_2":
+        return `${recentPlayer.name} swapped two cards`;
+      case "take_2":
+        return `${recentPlayer.name} kept a card`;
+      default:
+        return null;
+    }
+  }, [recentMove, recentPlayer]);
+
+  if (players.length === 0) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center font-heading">
+        <p>Loading game...</p>
+      </div>
+    );
+  }
+
   return (
     <div
-      className="w-full h-screen overflow-hidden text-foreground p-0.5 sm:p-1 md:p-2 lg:p-3 flex flex-col lg:flex-row gap-1 sm:gap-2 md:gap-3 relative bg-cover bg-center"
+      className="w-full min-h-[100dvh] overflow-hidden text-foreground p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 relative bg-cover bg-center"
       style={{
         backgroundImage: `url(${backgroundImage})`,
         backgroundAttachment: "fixed",
       }}
     >
       {/* Light overlays for better readability on bright background */}
-      <div className="absolute inset-0 bg-white/40 pointer-events-none" />
-      <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white/25 pointer-events-none" />
+      <div className="absolute inset-0 bg-white/35 dark:bg-black/45 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white/25 via-transparent to-white/20 dark:from-black/60 dark:via-transparent dark:to-black/50 pointer-events-none" />
+
+      <AnimatePresence>
+        {recentMoveLabel && (
+          <motion.div
+            key="recent-move"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25 }}
+            className="absolute top-3 left-1/2 -translate-x-1/2 z-30 pointer-events-none"
+          >
+            <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-card/90 dark:bg-background/90 border border-border/60 shadow-soft">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-xs sm:text-sm font-medium whitespace-nowrap">
+                {recentMoveLabel}
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="flex-grow flex flex-col relative z-10 min-h-0">
         {/* Opponents Area */}
-        <div className="flex justify-center items-start mb-1 sm:mb-2 md:mb-3 flex-shrink-0 w-full px-1 sm:px-2">
+        <div className="flex justify-center items-start mb-1.5 sm:mb-3 md:mb-4 flex-shrink-0 w-full px-1 sm:px-2">
           {otherPlayers.length > 0 ? (
-            <div className="flex gap-1 sm:gap-2 md:gap-4 overflow-x-auto pb-1 sm:pb-2 w-full justify-start sm:justify-center max-w-full">
+            <div className="flex gap-1 sm:gap-2 md:gap-4 overflow-x-auto pb-1 sm:pb-2 w-full justify-start sm:justify-center max-w-full bg-card/70 dark:bg-card/20 border border-border/50 rounded-xl shadow-soft backdrop-blur-sm px-2 sm:px-3">
               {otherPlayers.map((player) => (
                 <div key={player.id} className="flex-shrink-0 min-w-0">
                   <PlayerHand

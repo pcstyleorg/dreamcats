@@ -64,8 +64,16 @@ export interface GameState {
   lastRoundScores?: { playerId: string; score: number; penalty: number }[];
   lastMove?: {
     playerId: string;
-    cardIndex: number;
-    source: "deck" | "discard";
+    action:
+      | "draw"
+      | "swap"
+      | "discard"
+      | "peek"
+      | "swap_2"
+      | "take_2";
+    cardIndex?: number;
+    source?: "deck" | "discard";
+    targetPlayerId?: string;
     timestamp: number;
   } | null;
 }
