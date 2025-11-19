@@ -23,8 +23,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import { getGameBackgroundAsset } from "@/lib/cardAssets";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "./ThemeToggle";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
-export const Gameboard: React.FC = () => {
+interface GameboardProps {
+  theme: "light" | "dark";
+  toggleTheme: () => void;
+}
+
+export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   const { t } = useTranslation();
   const { state, myPlayerId, broadcastAction, playSound } = useGame();
   const {
@@ -164,10 +171,9 @@ export const Gameboard: React.FC = () => {
 
   return (
     <div
-      className="w-full min-h-[calc(100dvh-4rem)] text-foreground px-1 sm:px-2 md:px-4 lg:px-6 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 relative bg-cover bg-center"
+      className="fixed inset-0 w-full h-full text-foreground px-1 sm:px-2 md:px-4 lg:px-6 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 bg-cover bg-center overflow-hidden"
       style={{
         backgroundImage: `url(${backgroundImage})`,
-        backgroundAttachment: "fixed",
       }}
     >
       {/* Light overlays for better readability on bright background */}
@@ -198,7 +204,7 @@ export const Gameboard: React.FC = () => {
         {/* Opponents Area */}
         <div className="flex justify-center items-start mb-1.5 sm:mb-3 md:mb-4 flex-shrink-0 w-full px-1 sm:px-2">
           {otherPlayers.length > 0 ? (
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 w-full max-w-5xl mx-auto bg-card/70 dark:bg-card/20 border border-border/50 rounded-xl shadow-soft backdrop-blur-sm px-2 sm:px-3 py-2">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 w-full max-w-5xl mx-auto px-2 sm:px-3 py-2">
               {otherPlayers.map((player) => (
                 <div key={player.id} className="flex-shrink-0 min-w-0">
                   <PlayerHand
@@ -216,7 +222,8 @@ export const Gameboard: React.FC = () => {
                 {t('game.waitingForOpponents')}
               </p>
             </div>
-          )}
+          )
+          }
         </div>
 
         {/* Center Area */}
@@ -342,7 +349,9 @@ export const Gameboard: React.FC = () => {
       </aside>
 
       {/* Side Panel Trigger - Mobile */}
-      <div className="lg:hidden absolute top-2 right-2 z-20">
+      <div className="lg:hidden absolute top-2 right-2 z-20 flex gap-2">
+        <LanguageSwitcher />
+        <ThemeToggle theme={theme} onToggle={toggleTheme} />
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon">

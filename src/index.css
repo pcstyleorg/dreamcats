@@ -75,14 +75,23 @@
         @apply border-border;
     }
 
+    html,
+    body,
+    #root {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        /* Prevent scrolling globally */
+    }
+
     body {
         @apply bg-background text-foreground;
         background-image:
-            linear-gradient(
-                to bottom,
+            linear-gradient(to bottom,
                 rgba(147, 197, 253, 0.1) 0%,
-                rgba(196, 181, 253, 0.1) 100%
-            ),
+                rgba(196, 181, 253, 0.1) 100%),
             url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.015'/%3E%3C/svg%3E");
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
@@ -95,11 +104,9 @@
 
     .dark body {
         background-image:
-            linear-gradient(
-                to bottom,
+            linear-gradient(to bottom,
                 rgba(15, 23, 42, 0.6) 0%,
-                rgba(30, 27, 75, 0.6) 100%
-            ),
+                rgba(30, 27, 75, 0.6) 100%),
             url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 100 100'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
     }
 
@@ -112,12 +119,15 @@
 .perspective-1000 {
     perspective: 1000px;
 }
+
 .transform-style-3d {
     transform-style: preserve-3d;
 }
+
 .backface-hidden {
     backface-visibility: hidden;
 }
+
 .transform-rotate-y-180 {
     transform: rotateY(180deg);
 }
@@ -173,10 +183,12 @@
 
 /* Animation keyframes */
 @keyframes float {
+
     0%,
     100% {
         transform: translateY(0px);
     }
+
     50% {
         transform: translateY(-20px);
     }
@@ -187,12 +199,15 @@
         transform: translateX(0) translateY(0);
         opacity: 0.15;
     }
+
     10% {
         opacity: 0.4;
     }
+
     90% {
         opacity: 0.4;
     }
+
     100% {
         transform: translateX(120vw) translateY(-30vh);
         opacity: 0;
@@ -203,6 +218,7 @@
     0% {
         background-position: -200% center;
     }
+
     100% {
         background-position: 200% center;
     }
@@ -217,12 +233,10 @@
 }
 
 .animate-shimmer {
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.6),
-        transparent
-    );
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.6),
+            transparent);
     background-size: 200% 100%;
     animation: shimmer 2s infinite;
 }
@@ -235,6 +249,7 @@
 
 /* Mobile-friendly touch targets */
 @media (max-width: 640px) {
+
     button,
     [role="button"],
     .clickable {
@@ -272,6 +287,7 @@
 
 /* Ensure interactive elements are easily tappable on mobile */
 @media (hover: none) and (pointer: coarse) {
+
     button:active,
     [role="button"]:active {
         transform: scale(0.97);

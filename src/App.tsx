@@ -45,26 +45,28 @@ function App() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="text-foreground">Loading...</div></div>}>
       <TutorialProvider>
-        <main className="font-sans bg-background text-foreground min-h-screen transition-colors relative pt-16 sm:pt-[4.5rem] pb-6">
+        <main className="font-sans bg-background text-foreground h-[100dvh] overflow-hidden transition-colors relative flex flex-col">
+          {!showGameboard && (
             <div className="fixed top-3 sm:top-4 right-3 sm:right-4 z-50 flex gap-2">
               <LanguageSwitcher />
               <ThemeToggle theme={theme} onToggle={toggleTheme} />
             </div>
+          )}
           <AnimatePresence mode="wait">
             {showLanding && (
-                 <motion.div key="landing" exit={{ opacity: 0, transition: { duration: 0.5 } }}>
-                    <LandingPage onEnter={() => setHasEntered(true)} />
-                </motion.div>
+              <motion.div key="landing" className="flex-1 w-full h-full" exit={{ opacity: 0, transition: { duration: 0.5 } }}>
+                <LandingPage onEnter={() => setHasEntered(true)} />
+              </motion.div>
             )}
             {showLobby && (
-                 <motion.div key="lobby" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-                    <LobbyScreen />
-                </motion.div>
+              <motion.div key="lobby" className="flex-1 w-full h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+                <LobbyScreen />
+              </motion.div>
             )}
             {showGameboard && (
-                 <motion.div key="gameboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-                  <Gameboard />
-                </motion.div>
+              <motion.div key="gameboard" className="flex-1 w-full h-full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+                <Gameboard theme={theme} toggleTheme={toggleTheme} />
+              </motion.div>
             )}
           </AnimatePresence>
 
