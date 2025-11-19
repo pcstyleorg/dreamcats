@@ -1,5 +1,4 @@
 import { internalMutation } from "./_generated/server";
-import { internal } from "./_generated/api";
 
 // Clean up old/abandoned rooms and their associated data
 // Rooms inactive for more than 1 hour will be deleted
