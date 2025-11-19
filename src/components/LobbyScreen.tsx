@@ -13,8 +13,10 @@ import {
 import { toast } from "sonner";
 import { ArrowLeft, Users, Cloud, Copy, Check, Play } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "@/context/LanguageContext";
 
 export const LobbyScreen: React.FC = () => {
+  const { t } = useLanguage();
   const { createRoom, joinRoom, startHotseatGame, startGame, state, myPlayerId } = useGame();
   const [mode, setMode] = useState<"select" | "online" | "hotseat">("select");
   const [roomIdInput, setRoomIdInput] = useState("");
@@ -27,36 +29,36 @@ export const LobbyScreen: React.FC = () => {
   useEffect(() => {
     if (state.gameMode === "online" && state.roomId && state.hostId === myPlayerId && state.gamePhase === 'lobby') {
       navigator.clipboard.writeText(state.roomId).then(() => {
-        toast.success("Room ID copied to clipboard!");
+        toast.success(t("toast.roomIdCopied"));
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }).catch(() => {
         // Fallback or ignore if permission denied
       });
     }
-  }, [state.roomId, state.gameMode, state.hostId, myPlayerId, state.gamePhase]);
+  }, [state.roomId, state.gameMode, state.hostId, myPlayerId, state.gamePhase, t]);
 
   const handleCreateRoom = async () => {
     if (!playerName.trim()) {
-      toast.error("Please enter your name.");
+      toast.error(t("toast.enterName"));
       return;
     }
     setIsLoading(true);
     try {
       await createRoom(playerName);
     } catch {
-      toast.error("Could not create room. Please check your connection.");
+      toast.error(t("toast.createRoomError"));
       setIsLoading(false);
     }
   };
 
   const handleJoinRoom = async () => {
     if (!playerName.trim()) {
-      toast.error("Please enter your name.");
+      toast.error(t("toast.enterName"));
       return;
     }
     if (!roomIdInput.trim()) {
-      toast.error("Please enter a Room ID.");
+      toast.error(t("toast.enterRoomId"));
       return;
     }
     setIsLoading(true);
@@ -72,7 +74,7 @@ export const LobbyScreen: React.FC = () => {
 
   const handleStartHotseat = () => {
     if (hotseatPlayers.some((name) => !name.trim())) {
-      toast.error("Please enter names for all players.");
+      toast.error(t("toast.enterAllPlayerNames"));
       return;
     }
     startHotseatGame(hotseatPlayers);
@@ -136,10 +138,10 @@ export const LobbyScreen: React.FC = () => {
     >
       <CardHeader className="space-y-2 sm:space-y-3">
         <CardTitle className="text-5xl sm:text-6xl md:text-7xl text-center font-heading bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 bg-clip-text text-transparent drop-shadow-sm">
-          Sen
+          {t("lobby.title")}
         </CardTitle>
         <CardDescription className="text-center text-base sm:text-lg font-medium text-slate-600 dark:text-slate-400">
-          A game of dreams and crows.
+          {t("lobby.subtitle")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -148,7 +150,7 @@ export const LobbyScreen: React.FC = () => {
           className="w-full h-16 text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           size="lg"
         >
-          <Cloud className="mr-3 h-6 w-6" /> Online Multiplayer
+          <Cloud className="mr-3 h-6 w-6" /> {t("lobby.onlineMultiplayer")}
         </Button>
         <Button
           onClick={() => setMode("hotseat")}
@@ -156,7 +158,7 @@ export const LobbyScreen: React.FC = () => {
           size="lg"
           variant="ghost"
         >
-          <Users className="mr-3 h-6 w-6" /> Local Hot-Seat
+          <Users className="mr-3 h-6 w-6" /> {t("lobby.localHotSeat")}
         </Button>
       </CardContent>
     </motion.div>
@@ -178,10 +180,10 @@ export const LobbyScreen: React.FC = () => {
           <ArrowLeft className="h-5 w-5 text-muted-foreground" />
         </Button>
         <CardTitle className="text-3xl text-center font-heading text-foreground pt-4">
-          Online Multiplayer
+          {t("online.title")}
         </CardTitle>
         <CardDescription className="text-center text-muted-foreground">
-          Join or Create a 2-Player Game
+          {t("online.subtitle")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
@@ -189,7 +191,7 @@ export const LobbyScreen: React.FC = () => {
           <div className="space-y-6">
             <div className="bg-muted p-6 rounded-xl border border-border text-center space-y-4">
               <div className="space-y-2">
-                <Label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Room ID</Label>
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{t("online.roomId")}</Label>
                 <div className="flex items-center justify-center gap-2">
                   <span className="text-3xl font-mono font-bold text-foreground tracking-wider">{state.roomId}</span>
                   <Button
@@ -201,15 +203,15 @@ export const LobbyScreen: React.FC = () => {
                     {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Share this ID with your friend</p>
+                <p className="text-xs text-muted-foreground">{t("online.shareId")}</p>
               </div>
             </div>
 
             <div className="space-y-3">
               <div className="flex justify-between items-center px-1">
-                <span className="text-sm font-medium text-foreground">Players ({state.players.length}/4)</span>
+                <span className="text-sm font-medium text-foreground">{t("online.players")} ({state.players.length}/4)</span>
                 {state.players.length < 2 && (
-                  <span className="text-xs text-amber-500 dark:text-amber-400 animate-pulse">Waiting for opponent...</span>
+                  <span className="text-xs text-amber-500 dark:text-amber-400 animate-pulse">{t("online.waitingForOpponent")}</span>
                 )}
               </div>
               <div className="grid gap-2">
@@ -219,7 +221,7 @@ export const LobbyScreen: React.FC = () => {
                       {p.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="font-medium text-foreground">{p.name}</span>
-                    {p.id === state.hostId && <span className="ml-auto text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full">HOST</span>}
+                    {p.id === state.hostId && <span className="ml-auto text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full">{t("online.host")}</span>}
                   </div>
                 ))}
                 {Array.from({ length: Math.max(0, 4 - state.players.length) }).map((_, i) => (
@@ -245,16 +247,16 @@ export const LobbyScreen: React.FC = () => {
               >
                 {state.players.length >= 2 ? (
                   <>
-                    <Play className="mr-2 h-5 w-5 fill-current" /> Start Game
+                    <Play className="mr-2 h-5 w-5 fill-current" /> {t("online.startGame")}
                   </>
                 ) : (
-                  "Waiting for Players..."
+                  t("online.waitingForPlayers")
                 )}
               </Button>
             )}
             {state.hostId !== myPlayerId && (
               <div className="text-center p-4 text-muted-foreground italic">
-                Waiting for host to start...
+                {t("online.waitingForHost")}
               </div>
             )}
           </div>
@@ -262,11 +264,11 @@ export const LobbyScreen: React.FC = () => {
           <>
             <div className="space-y-2">
               <Label htmlFor="player-name" className="text-foreground font-medium">
-                Your Name
+                {t("online.yourName")}
               </Label>
               <Input
                 id="player-name"
-                placeholder="Enter your name"
+                placeholder={t("online.enterYourName")}
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
                 disabled={effectiveLoading}
@@ -280,7 +282,7 @@ export const LobbyScreen: React.FC = () => {
                 className="w-full h-12 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all"
                 disabled={effectiveLoading}
               >
-                {effectiveLoading && !state.hostId ? "Creating..." : "Create New Game"}
+                {effectiveLoading && !state.hostId ? t("online.creating") : t("online.createNewGame")}
               </Button>
             </div>
 
@@ -289,18 +291,18 @@ export const LobbyScreen: React.FC = () => {
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground font-medium">Or Join Existing</span>
+                <span className="bg-background px-2 text-muted-foreground font-medium">{t("online.orJoinExisting")}</span>
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="room-id" className="text-foreground font-medium">
-                Room ID
+                {t("online.roomIdLabel")}
               </Label>
               <div className="flex gap-2">
                 <Input
                   id="room-id"
-                  placeholder="Enter Room ID"
+                  placeholder={t("online.enterRoomId")}
                   value={roomIdInput}
                   onChange={(e) => setRoomIdInput(e.target.value)}
                   disabled={effectiveLoading}
@@ -312,7 +314,7 @@ export const LobbyScreen: React.FC = () => {
                   className="h-12 px-6 font-semibold"
                   disabled={effectiveLoading}
                 >
-                  {effectiveLoading && !state.hostId ? "..." : "Join"}
+                  {effectiveLoading && !state.hostId ? "..." : t("online.join")}
                 </Button>
               </div>
             </div>
@@ -338,10 +340,10 @@ export const LobbyScreen: React.FC = () => {
           <ArrowLeft className="h-5 w-5 text-muted-foreground" />
         </Button>
         <CardTitle className="text-3xl text-center font-heading text-foreground pt-4">
-          Local Hot-Seat
+          {t("hotseat.title")}
         </CardTitle>
         <CardDescription className="text-center text-muted-foreground">
-          Play on one device
+          {t("hotseat.subtitle")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 pt-6">
@@ -350,7 +352,7 @@ export const LobbyScreen: React.FC = () => {
             <div key={index} className="space-y-2">
               <div className="flex justify-between items-center">
                 <Label htmlFor={`player-${index}-name`} className="text-sm font-medium text-foreground">
-                  Player {index + 1}
+                  {t("hotseat.player")} {index + 1}
                 </Label>
                 {hotseatPlayers.length > 2 && (
                   <Button
@@ -359,13 +361,13 @@ export const LobbyScreen: React.FC = () => {
                     onClick={() => handleRemoveHotseatPlayer(index)}
                     className="h-6 px-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
                   >
-                    Remove
+                    {t("hotseat.remove")}
                   </Button>
                 )}
               </div>
               <Input
                 id={`player-${index}-name`}
-                placeholder={`Enter Player ${index + 1}'s name`}
+                placeholder={t("hotseat.enterPlayerName", { "0": String(index + 1) })}
                 value={name}
                 onChange={(e) => handleHotseatNameChange(index, e.target.value)}
                 className="h-11"
@@ -380,7 +382,7 @@ export const LobbyScreen: React.FC = () => {
             onClick={handleAddHotseatPlayer}
             className="w-full border-dashed border-2 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950"
           >
-            + Add Player
+            {t("hotseat.addPlayer")}
           </Button>
         )}
 
@@ -389,7 +391,7 @@ export const LobbyScreen: React.FC = () => {
           className="w-full h-14 text-lg font-bold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 mt-4"
           size="lg"
         >
-          Start Game
+          {t("hotseat.startGame")}
         </Button>
       </CardContent>
     </motion.div>

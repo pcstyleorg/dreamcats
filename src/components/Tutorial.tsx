@@ -4,6 +4,7 @@ import { useGame } from '@/context/GameContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
 import { Popover, PopoverContent, PopoverAnchor } from './ui/popover';
 import { Button } from './ui/button';
+import { useLanguage } from '@/context/LanguageContext';
 
 const TutorialPopover: React.FC<{
   targetId: string;
@@ -47,6 +48,7 @@ const TutorialPopover: React.FC<{
 };
 
 export const Tutorial: React.FC = () => {
+  const { t } = useLanguage();
   const { step, startTutorial, nextStep, endTutorial, setStep } = useTutorial();
   const { state } = useGame();
 
@@ -65,12 +67,12 @@ export const Tutorial: React.FC = () => {
       <Dialog open={step === 'welcome'}>
         <DialogContent className="bg-card/80 backdrop-blur-lg border-white/20">
           <DialogHeader>
-            <DialogTitle className="font-heading text-2xl">Welcome to Sen!</DialogTitle>
-            <DialogDescription>It looks like this is your first time. Would you like a quick tutorial?</DialogDescription>
+            <DialogTitle className="font-heading text-2xl">{t("tutorial.welcome")}</DialogTitle>
+            <DialogDescription>{t("tutorial.firstTime")}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={endTutorial}>No, thanks</Button>
-            <Button onClick={startTutorial}>Yes, please!</Button>
+            <Button variant="outline" onClick={endTutorial}>{t("tutorial.noThanks")}</Button>
+            <Button onClick={startTutorial}>{t("tutorial.yesPlease")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

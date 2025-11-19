@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface LandingPageProps {
   onEnter: () => void;
@@ -25,7 +26,8 @@ const Crow = ({
 );
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
-  const title = "Sen";
+  const { t } = useLanguage();
+  const title = t("landing.title");
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -115,7 +117,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
           className="mt-3 sm:mt-4 text-base sm:text-lg md:text-xl text-gray-700 dark:text-gray-300 font-medium"
           variants={itemVariants}
         >
-          A game of dreams and crows.
+          {t("landing.subtitle")}
         </motion.p>
 
         <motion.div variants={itemVariants} className="mt-8 sm:mt-10 md:mt-12">
@@ -124,7 +126,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
             size="lg"
             className="font-semibold text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 shadow-soft-lg hover:shadow-dreamy transition-all duration-300 hover:scale-105 active:scale-95"
           >
-            Enter the Dream
+            {t("landing.enterButton")}
           </Button>
         </motion.div>
       </motion.div>

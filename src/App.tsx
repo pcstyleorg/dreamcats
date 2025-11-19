@@ -8,6 +8,7 @@ import { TutorialProvider } from './context/TutorialContext';
 import { Tutorial } from './components/Tutorial';
 import { LandingPage } from './components/LandingPage';
 import { ThemeToggle } from './components/ThemeToggle';
+import { LanguageToggle } from './components/LanguageToggle';
 
 function App() {
   const { state } = useGame();
@@ -43,7 +44,8 @@ function App() {
   return (
     <TutorialProvider>
       <main className="font-sans bg-background text-foreground min-h-screen transition-colors relative">
-          <div className="fixed top-3 right-3 z-50">
+          <div className="fixed top-3 right-3 z-50 flex gap-2">
+            <LanguageToggle />
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
           </div>
           <AnimatePresence mode="wait">
