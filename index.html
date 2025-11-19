@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
@@ -12,9 +12,25 @@
     <meta property="og:image:alt" content="A preview of the Sen card game board, showing player hands and the central deck.">
     <meta name="twitter:title" content="Sen - The Card Game">
     <meta name="twitter:description" content="A multiplayer card game of 'Sen' (Sleep). Test your memory and strategy to get the lowest score.">
+    <meta name="color-scheme" content="light dark" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+      // Apply initial theme as early as possible to avoid flash
+      (function () {
+        try {
+          const stored = localStorage.getItem('sen-theme');
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          const useDark = stored ? stored === 'dark' : prefersDark;
+          if (useDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (_) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGame } from './context/GameContext';
 import { LobbyScreen } from './components/LobbyScreen';
 import { Gameboard } from './components/Gameboard';
@@ -15,6 +15,15 @@ function App() {
   const showLanding = !hasEntered;
   const showLobby = hasEntered && state.gamePhase === 'lobby';
   const showGameboard = hasEntered && state.gamePhase !== 'lobby';
+
+  // Keep theme in sync with system preference on first load if no user setting
+  useEffect(() => {
+    const stored = localStorage.getItem('sen-theme');
+    if (!stored) {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.toggle('dark', prefersDark);
+    }
+  }, []);
 
   return (
     <TutorialProvider>
@@ -37,7 +46,7 @@ function App() {
             )}
           </AnimatePresence>
           
-          <Toaster richColors theme="light" />
+          <Toaster richColors theme="system" />
           {hasEntered && <Tutorial />}
       </main>
     </TutorialProvider>

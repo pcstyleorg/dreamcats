@@ -82,15 +82,15 @@ export const Tutorial: React.FC = () => {
             targetId="scoreboard"
             step="goal"
             title="The Goal"
-            description="Your objective is simple: have the lowest score (the fewest crows) at the end of each round."
+            description="Have the lowest total ravens (points) in your four-card Dream when the round ends."
             onNext={nextStep}
             side="left"
           />
           <TutorialPopover
             targetId="player-hand"
             step="hand"
-            title="Your Hand"
-            description="These are your four secret cards. You can't look at them freely, so memory is key!"
+            title="Your Dream"
+            description="You have 4 face-down cards. You can't freely look at them—memory matters."
             onNext={nextStep}
             side="top"
           />
@@ -98,8 +98,8 @@ export const Tutorial: React.FC = () => {
             <TutorialPopover
               targetId="player-hand"
               step="peeking"
-              title="First Peek"
-              description="At the start of a round, you get to peek at any two of your cards. Click two to reveal them, then press 'Finish Peeking'."
+              title="Mandatory Initial Peek"
+              description="Before the first turn of the round, you must peek at any two of your four face-down cards, then put them back without changing positions."
               onNext={nextStep}
               side="top"
             />
@@ -108,15 +108,15 @@ export const Tutorial: React.FC = () => {
             targetId="piles"
             step="piles"
             title="The Piles"
-            description="On your turn, draw a card from the face-down Draw Pile or the face-up Discard Pile."
+            description="On your turn, choose: take the top card from the face-up Discard Pile (known), or draw from the face-down Deck (unknown)."
             onNext={nextStep}
             side="top"
           />
           <TutorialPopover
             targetId="game-actions"
             step="actions"
-            title="Taking Action"
-            description="After drawing, you can swap the card with one in your hand, discard it, or use its special action if it has one."
+            title="Turn Options"
+            description="If you take from Discard: you must swap it with one of your face-down cards. If you draw from Deck: choose to swap, discard, or—only if it's a 5/6/7—use its special action."
             onNext={nextStep}
             side="top"
           />
@@ -124,8 +124,8 @@ export const Tutorial: React.FC = () => {
             <TutorialPopover
               targetId="pobudka-button"
               step="pobudka"
-              title="Call 'POBUDKA!'"
-              description="When you think your score is the lowest, press this on your turn instead of drawing a card to end the round. Be careful—if you're wrong, you get a penalty!"
+              title="Call “POBUDKA!” (Wake Up)"
+              description="At the start of your turn, if you think you have the lowest score, call “POBUDKA!” instead of drawing. Everyone reveals and scores. If you're wrong, add a 5-raven penalty."
               onNext={nextStep}
               side="top"
             />
@@ -138,7 +138,7 @@ export const Tutorial: React.FC = () => {
         <DialogContent className="bg-card/80 backdrop-blur-lg border-white/20">
           <DialogHeader>
             <DialogTitle className="font-heading text-2xl">You're Ready!</DialogTitle>
-            <DialogDescription>That's all you need to know. Have fun, and may your dreams be free of crows!</DialogDescription>
+            <DialogDescription>Have fun—and may your dreams be free of ravens.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button onClick={endTutorial}>Let's Play!</Button>
