@@ -25,9 +25,6 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   const isMyTurn =
     gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
 
-  const [tempVisibleIndex, setTempVisibleIndex] = React.useState<number | null>(
-    null,
-  );
   const [animatingIndex, setAnimatingIndex] = React.useState<number | null>(
     null,
   );
@@ -40,18 +37,6 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       // Trigger animation
       setAnimatingIndex(lastMove.cardIndex);
       const animTimer = setTimeout(() => setAnimatingIndex(null), 500);
-
-      // Handle temporary visibility for discard draws
-      if (lastMove.source === "discard") {
-        setTempVisibleIndex(lastMove.cardIndex);
-        const visibilityTimer = setTimeout(() => {
-          setTempVisibleIndex(null);
-        }, 2000);
-        return () => {
-          clearTimeout(animTimer);
-          clearTimeout(visibilityTimer);
-        };
-      }
 
       return () => clearTimeout(animTimer);
     }
@@ -191,8 +176,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                 isFaceUp={
                   cardInHand.isFaceUp ||
                   gamePhase === "round_end" ||
-                  gamePhase === "game_over" ||
-                  index === tempVisibleIndex
+                  gamePhase === "game_over"
                 }
                 hasBeenPeeked={cardInHand.hasBeenPeeked}
                 onClick={() => handleCardClick(index)}
