@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from './context/GameContext';
 import { LobbyScreen } from './components/LobbyScreen';
@@ -8,6 +8,8 @@ import { TutorialProvider } from './context/TutorialContext';
 import { Tutorial } from './components/Tutorial';
 import { LandingPage } from './components/LandingPage';
 import { ThemeToggle } from './components/ThemeToggle';
+import { LanguageSwitcher } from './components/LanguageSwitcher';
+import './i18n/config';
 
 function App() {
   const { state } = useGame();
@@ -41,11 +43,13 @@ function App() {
   const showGameboard = hasEntered && state.gamePhase !== 'lobby';
 
   return (
-    <TutorialProvider>
-      <main className="font-sans bg-background text-foreground min-h-screen transition-colors relative">
-          <div className="fixed top-3 right-3 z-50">
-            <ThemeToggle theme={theme} onToggle={toggleTheme} />
-          </div>
+    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="text-foreground">Loading...</div></div>}>
+      <TutorialProvider>
+        <main className="font-sans bg-background text-foreground min-h-screen transition-colors relative pt-16 sm:pt-[4.5rem] pb-6">
+            <div className="fixed top-3 sm:top-4 right-3 sm:right-4 z-50 flex gap-2">
+              <LanguageSwitcher />
+              <ThemeToggle theme={theme} onToggle={toggleTheme} />
+            </div>
           <AnimatePresence mode="wait">
             {showLanding && (
                  <motion.div key="landing" exit={{ opacity: 0, transition: { duration: 0.5 } }}>
@@ -66,8 +70,9 @@ function App() {
 
           <Toaster richColors theme={theme} />
           {hasEntered && <Tutorial />}
-      </main>
-    </TutorialProvider>
+        </main>
+      </TutorialProvider>
+    </Suspense>
   );
 }
 

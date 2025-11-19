@@ -5,8 +5,10 @@ import { Button } from './ui/button';
 import { MessagesSquare, Send } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 export const ChatBox = () => {
+  const { t } = useTranslation();
   const { state, sendChatMessage, myPlayerId } = useGame();
   const [message, setMessage] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -33,7 +35,7 @@ export const ChatBox = () => {
     <div className="flex flex-col h-full">
       <h4 className="font-semibold mb-2 font-heading text-center flex items-center justify-center gap-2">
         <MessagesSquare className="w-5 h-5" />
-        Chat
+        {t('game.chat')}
       </h4>
       <ScrollArea className="flex-grow h-48 rounded-md border p-2 mb-2 bg-black/10" ref={scrollAreaRef}>
         {state.chatMessages.map((msg) => (
@@ -47,11 +49,11 @@ export const ChatBox = () => {
             </div>
           </div>
         ))}
-         {state.chatMessages.length === 0 && <p className="text-center text-muted-foreground text-sm p-4">No messages yet.</p>}
+         {state.chatMessages.length === 0 && <p className="text-center text-muted-foreground text-sm p-4">{t('game.noMessagesYet')}</p>}
       </ScrollArea>
       <form onSubmit={handleSubmit} className="flex gap-2">
         <Input
-          placeholder="Say something..."
+          placeholder={t('game.chatPlaceholder')}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           autoComplete="off"

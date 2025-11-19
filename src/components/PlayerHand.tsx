@@ -7,6 +7,7 @@ import { useGame } from "@/context/GameContext";
 import { cn } from "@/lib/utils";
 import { SoundType } from "@/hooks/use-sounds";
 import { getCardBackAsset } from "@/lib/cardAssets";
+import { useTranslation } from "react-i18next";
 
 interface PlayerHandProps {
   player: Player;
@@ -21,6 +22,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   isOpponent,
   playSound,
 }) => {
+  const { t } = useTranslation();
   const { state, broadcastAction, myPlayerId } = useGame();
   const { gamePhase, gameMode, lastMove } = state;
   const currentPlayer = state.players[state.currentPlayerIndex];
@@ -52,24 +54,24 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     switch (recentMoveForPlayer.action) {
       case "draw":
         return recentMoveForPlayer.source === "discard"
-          ? "Took from discard"
-          : "Drew a card";
+          ? t('actions.tookFromDiscard')
+          : t('actions.drewACard');
       case "discard":
-        return "Discarded";
+        return t('actions.discarded');
       case "swap":
-        return "Swapped a card";
+        return t('actions.swapped');
       case "peek":
         return recentMoveForPlayer.targetPlayerId === player.id
-          ? "Someone peeked at your card"
-          : "Peeked";
+          ? t('actions.someonePeekedAtYourCard')
+          : t('actions.peeked');
       case "swap_2":
-        return "Swapped two cards";
+        return t('actions.swappedTwo');
       case "take_2":
-        return "Kept a card";
+        return t('actions.keptACard');
       default:
         return null;
     }
-  }, [player.id, recentMoveForPlayer]);
+  }, [player.id, recentMoveForPlayer, t]);
 
   const cardBackAsset = React.useMemo(() => getCardBackAsset(), []);
 
@@ -100,12 +102,12 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       if (card) {
         const baseInfo = card.isSpecial
           ? card.specialAction === "take_2"
-            ? "Take 2 (value 5)"
+            ? t('cardInfo.take2')
             : card.specialAction === "peek_1"
-              ? "Peek 1 (value 6)"
-              : "Swap 2 (value 7)"
-          : `Value ${card.value}`;
-        toast.info(`You peeked at a card: ${baseInfo}.`);
+              ? t('cardInfo.peek1')
+              : t('cardInfo.swap2')
+          : t('cardInfo.value', { value: card.value });
+        toast.info(t('cardInfo.youPeekedAt', { cardInfo: baseInfo }));
       }
       broadcastAction({
         type: "ACTION_PEEK_1_SELECT",
@@ -136,7 +138,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       gamePhase === "peeking" &&
       isPeekingTurn &&
       !handCard.isFaceUp &&
-      state.peekingState!.peekedCount < 2
+      state.peekingState &&
+      state.peekingState.peekedCount < 2
     ) {
       return "cursor-pointer hover:scale-105";
     }
@@ -185,7 +188,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
           {player.name}{" "}
           {showYouTag && (
             <span className="text-muted-foreground text-xs sm:text-sm">
-              (You)
+              ({t('game.you')})
             </span>
           )}
         </h3>
@@ -222,7 +225,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                   className="w-6 h-8 rounded-md shadow-soft"
                   draggable={false}
                 />
-                <span>{recentMoveForPlayer.source === "discard" ? "From discard" : "From deck"}</span>
+                <span>{recentMoveForPlayer.source === "discard" ? t('actions.fromDiscard') : t('actions.fromDeck')}</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -236,7 +239,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
               <div key={index} className="relative">
                 {animatingIndex === index && (
                   <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-xs font-bold text-primary animate-bounce z-20 whitespace-nowrap pointer-events-none">
-                    Placed!
+                    {t('actions.placed')}
                   </span>
                 )}
                 <div
@@ -257,7 +260,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                     onClick={() => handleCardClick(index)}
                     className={cn(
                       isOpponent &&
-                      "!w-[9vw] !max-w-12 sm:!w-[8vw] sm:!max-w-16 md:!w-[7vw] md:!max-w-20 lg:!w-[6vw] lg:!max-w-24",
+                      "!w-[20vw] !max-w-28 sm:!w-[12vw] sm:!max-w-28 md:!w-[9vw] md:!max-w-32 lg:!w-[7vw] lg:!max-w-28",
                       getCardInteractionClass(index),
                     )}
                     playSound={playSound}

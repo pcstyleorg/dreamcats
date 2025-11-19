@@ -1,8 +1,10 @@
 import { useGame } from "@/context/GameContext";
 import { Button } from "./ui/button";
 import { Wand2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export const GameActions = () => {
+  const { t } = useTranslation();
   const { state, broadcastAction, myPlayerId } = useGame();
   const {
     gamePhase,
@@ -57,7 +59,7 @@ export const GameActions = () => {
         className="w-auto min-w-[140px] sm:min-w-[160px] min-h-[48px] sm:min-h-[52px] text-base sm:text-lg font-semibold"
         size="lg"
       >
-        Finish Peeking
+        {t('game.finishPeeking')}
       </Button>
     );
   }
@@ -71,7 +73,7 @@ export const GameActions = () => {
           className="w-auto min-w-[160px] sm:min-w-[180px] min-h-[52px] sm:min-h-[56px] text-lg sm:text-xl font-bold shadow-lg hover:shadow-xl"
           size="lg"
         >
-          POBUDKA!
+          {t('game.pobudka')}
         </Button>
       </div>
     );
@@ -87,7 +89,7 @@ export const GameActions = () => {
           className="min-w-[100px] sm:min-w-[120px] min-h-[48px] sm:min-h-[52px] text-base sm:text-lg"
           size="lg"
         >
-          Discard
+          {t('game.discard')}
         </Button>
         <Button
           onClick={() => broadcastAction({ type: "USE_SPECIAL_ACTION" })}
@@ -96,7 +98,7 @@ export const GameActions = () => {
           size="lg"
         >
           <Wand2 className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-          Action
+          {t('game.action')}
         </Button>
       </div>
     );

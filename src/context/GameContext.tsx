@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useSounds, SoundType } from "@/hooks/use-sounds";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import i18n from "@/i18n/config";
 
 type ReducerAction =
   | { type: "SET_STATE"; payload: GameState }
@@ -33,7 +34,7 @@ const initialState: GameState = {
   discardPile: [],
   currentPlayerIndex: 0,
   gamePhase: "lobby",
-  actionMessage: "Welcome to Sen! Choose your path.",
+  actionMessage: i18n.t('game.welcomeMessage'),
   roundWinnerName: null,
   gameWinnerName: null,
   turnCount: 0,
@@ -67,7 +68,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           ...s,
           currentPlayerIndex: nextPlayerIndex,
           turnCount: s.turnCount + 1,
-          actionMessage: `It's ${s.players[nextPlayerIndex].name}'s turn.`,
+          actionMessage: i18n.t('game.playerTurn', { player: s.players[nextPlayerIndex].name }),
           drawnCard: null,
           drawSource: null,
           gamePhase: "playing",
@@ -135,7 +136,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
             gamePhase: "game_over",
             gameWinnerName: gameWinner.name,
             lastRoundScores,
-            actionMessage: `Game Over! ${gameWinner.name} wins with the lowest score!`,
+            actionMessage: i18n.t('game.gameOver', { player: gameWinner.name }),
           };
         }
 
@@ -150,7 +151,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
             gamePhase: "round_end",
             roundWinnerName: roundWinner.player.name,
             lastRoundScores,
-            actionMessage: `The deck ran out. ${roundWinner.player.name} won the round.`,
+            actionMessage: i18n.t('game.deckRanOut', { player: roundWinner.player.name }),
           };
         }
 
@@ -165,7 +166,10 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           gamePhase: "round_end",
           roundWinnerName: roundWinner.player.name,
           lastRoundScores,
-          actionMessage: `${currentPlayer.name} called 'POBUDKA!'. ${roundWinner.player.name} won the round.`,
+          actionMessage: i18n.t('game.calledPobudka', { 
+            player: currentPlayer.name, 
+            winner: roundWinner.player.name 
+          }),
         };
       };
 
@@ -224,7 +228,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
               players,
               gamePhase: "playing",
               peekingState: undefined,
-              actionMessage: `The game begins! ${state.players[state.currentPlayerIndex].name}, your turn.`,
+              actionMessage: i18n.t('game.gameBegins', { player: state.players[state.currentPlayerIndex].name }),
             };
           }
           if (nextPlayerIndex < state.players.length) {
@@ -236,7 +240,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
                 playerIndex: nextPlayerIndex,
                 peekedCount: 0,
               },
-              actionMessage: `${state.players[nextPlayerIndex].name}, it's your turn to peek at two cards.`,
+              actionMessage: i18n.t('game.peekTwoCards', { player: state.players[nextPlayerIndex].name }),
             };
           } else {
             return {
@@ -244,7 +248,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
               players,
               gamePhase: "playing",
               peekingState: undefined,
-              actionMessage: `The game begins! ${state.players[state.currentPlayerIndex].name}, your turn.`,
+              actionMessage: i18n.t('game.gameBegins', { player: state.players[state.currentPlayerIndex].name }),
             };
           }
         }
@@ -271,7 +275,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
               source: "deck",
               timestamp: Date.now(),
             },
-            actionMessage: `${currentPlayer.name} drew a card. Use it, swap it, or discard it.`,
+            actionMessage: i18n.t('game.drewCard', { player: currentPlayer.name }),
           };
         }
         case "DRAW_FROM_DISCARD": {
@@ -291,7 +295,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
               source: "discard",
               timestamp: Date.now(),
             },
-            actionMessage: `${currentPlayer.name} took from discard. Must swap.`,
+            actionMessage: i18n.t('game.tookFromDiscardMustSwap', { player: currentPlayer.name }),
           };
         }
         case "DISCARD_HELD_CARD": {
@@ -307,7 +311,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
               source: state.drawSource ?? undefined,
               timestamp: Date.now(),
             },
-            actionMessage: `${currentPlayer.name} discarded their drawn card.`,
+            actionMessage: i18n.t('game.discardedDrawnCard', { player: currentPlayer.name }),
           });
         }
         case "SWAP_HELD_CARD": {
@@ -342,7 +346,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
               source,
               timestamp: Date.now(),
             },
-            actionMessage: `${currentPlayer.name} swapped a card.`,
+            actionMessage: i18n.t('game.swappedACard', { player: currentPlayer.name }),
           });
         }
         case "USE_SPECIAL_ACTION": {
@@ -363,7 +367,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
                 discardPile: newDiscardPile,
                 drawnCard: null,
                 drawSource: null,
-                actionMessage: `${currentPlayer.name} used 'Peek 1'. Select any card to view.`,
+                actionMessage: i18n.t('game.usedPeek1', { player: currentPlayer.name }),
               };
             case "swap_2":
               return {
@@ -372,7 +376,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
                 discardPile: newDiscardPile,
                 drawnCard: null,
                 drawSource: null,
-                actionMessage: `${currentPlayer.name} used 'Swap 2'. Select the first card.`,
+                actionMessage: i18n.t('game.usedSwap2SelectFirst', { player: currentPlayer.name }),
               };
             case "take_2": {
               const newDrawPile = [...state.drawPile];
@@ -424,7 +428,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
               cardIndex,
               timestamp: Date.now(),
             },
-            actionMessage: `${currentPlayer.name} peeked at a card.`,
+            actionMessage: i18n.t('game.peekedAtCard', { player: currentPlayer.name }),
           });
         }
         case "ACTION_SWAP_2_SELECT": {
@@ -434,7 +438,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
               ...state,
               gamePhase: "action_swap_2_select_2",
               swapState: { card1: { playerId, cardIndex } },
-              actionMessage: "Select the second card to swap.",
+              actionMessage: i18n.t('game.selectSecondCard'),
             };
           }
           if (state.gamePhase === "action_swap_2_select_2" && state.swapState) {
@@ -464,7 +468,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
                 action: "swap_2",
                 timestamp: Date.now(),
               },
-              actionMessage: `${currentPlayer.name} swapped two cards.`,
+              actionMessage: i18n.t('game.swappedTwoCards', { player: currentPlayer.name }),
             });
           }
           return state;
@@ -489,7 +493,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
               action: "take_2",
               timestamp: Date.now(),
             },
-            actionMessage: `${currentPlayer.name} chose a card from 'Take 2'.`,
+            actionMessage: i18n.t('game.choseCardFromTake2', { player: currentPlayer.name }),
           };
         }
         case "CALL_POBUDKA": {
@@ -531,7 +535,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
               startIndex: nextStartingPlayerIndex,
             },
             lastMove: null,
-            actionMessage: `${playersWithNewHands[nextStartingPlayerIndex].name}, it's your turn to peek at two cards.`,
+            actionMessage: i18n.t('game.peekTwoCards', { player: playersWithNewHands[nextStartingPlayerIndex].name }),
           };
         }
         default:
@@ -964,7 +968,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         roomId,
         hostId: playerId,
         players: [newPlayer],
-        actionMessage: `Room created! ID: ${roomId}. Waiting for opponent...`,
+        actionMessage: i18n.t('game.roomCreated', { roomId }),
       };
 
       try {
@@ -1021,7 +1025,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
                 score: 0,
               },
             ],
-            actionMessage: `Joined room ${roomId}. Waiting for host...`,
+            actionMessage: i18n.t('game.joinedRoom', { roomId }),
           };
 
           setMyPlayerId(playerId);
@@ -1080,7 +1084,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       drawPile: deck,
       discardPile,
       gamePhase: "peeking",
-      actionMessage: `${playersWithCards[0].name}, it's your turn to peek at two cards.`,
+      actionMessage: i18n.t('game.peekTwoCards', { player: playersWithCards[0].name }),
       peekingState: { playerIndex: 0, peekedCount: 0 },
     };
 
@@ -1117,7 +1121,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         drawPile: deck,
         discardPile,
         gamePhase: "peeking",
-        actionMessage: `${playersWithCards[0].name}, it's your turn to peek at two cards.`,
+        actionMessage: i18n.t('game.peekTwoCards', { player: playersWithCards[0].name }),
         peekingState: { playerIndex: 0, peekedCount: 0 },
       };
       dispatch({ type: "SET_STATE", payload: startPeekingState });

@@ -9,26 +9,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Trophy } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ScoreboardProps {
   players: Player[];
 }
 
 export const Scoreboard: React.FC<ScoreboardProps> = ({ players }) => {
+  const { t } = useTranslation();
   return (
     <div className="bg-gradient-to-br from-purple-50/50 to-pink-50/50 rounded-lg p-3 sm:p-4 border border-purple-200/40">
       <h3 className="text-lg sm:text-xl font-semibold mb-3 text-center font-heading flex items-center justify-center gap-2 text-gray-800">
         <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
-        Scoreboard
+        {t('game.scoreboard')}
       </h3>
       <Table>
         <TableHeader>
           <TableRow className="border-purple-200/30 hover:bg-transparent">
             <TableHead className="text-gray-700 font-semibold text-sm sm:text-base">
-              Player
+              {t('game.player')}
             </TableHead>
             <TableHead className="text-right text-gray-700 font-semibold text-sm sm:text-base">
-              Score
+              {t('game.score')}
             </TableHead>
           </TableRow>
         </TableHeader>

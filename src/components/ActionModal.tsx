@@ -10,8 +10,10 @@ import {
 import { Button } from "./ui/button";
 import { GameCard } from "./Card";
 import { Card as CardType } from "@/types";
+import { useTranslation } from "react-i18next";
 
 export const ActionModal: React.FC = () => {
+  const { t } = useTranslation();
   const { state, broadcastAction } = useGame();
   const { gamePhase, tempCards, lastRoundScores, gameWinnerName, players } =
     state;
@@ -28,10 +30,10 @@ export const ActionModal: React.FC = () => {
     <>
       <DialogHeader className="space-y-2 sm:space-y-3">
         <DialogTitle className="font-heading text-xl sm:text-2xl md:text-3xl text-center">
-          Take 2
+          {t('modal.take2Title')}
         </DialogTitle>
         <DialogDescription className="text-sm sm:text-base text-center">
-          You drew two cards. Choose one to keep. The other will be discarded.
+          {t('modal.take2Description')}
         </DialogDescription>
       </DialogHeader>
       <div className="flex justify-center gap-4 sm:gap-6 md:gap-8 py-4 sm:py-6 flex-wrap">
@@ -43,7 +45,7 @@ export const ActionModal: React.FC = () => {
               className="min-w-[100px] min-h-[48px] text-base font-semibold"
               size="lg"
             >
-              Choose
+              {t('modal.choose')}
             </Button>
           </div>
         ))}
@@ -55,7 +57,7 @@ export const ActionModal: React.FC = () => {
     <>
       <DialogHeader className="space-y-2 sm:space-y-3">
         <DialogTitle className="font-heading text-xl sm:text-2xl md:text-3xl text-center">
-          Round Over!
+          {t('modal.roundOverTitle')}
         </DialogTitle>
         <DialogDescription className="text-sm sm:text-base text-center">
           {state.actionMessage}
@@ -90,7 +92,7 @@ export const ActionModal: React.FC = () => {
         className="w-full min-h-[52px] text-base sm:text-lg font-semibold"
         size="lg"
       >
-        Start Next Round
+        {t('modal.startNextRound')}
       </Button>
     </>
   );
@@ -99,15 +101,15 @@ export const ActionModal: React.FC = () => {
     <>
       <DialogHeader className="space-y-2 sm:space-y-3">
         <DialogTitle className="font-heading text-2xl sm:text-3xl md:text-4xl text-center bg-gradient-to-br from-purple-600 to-pink-600 bg-clip-text text-transparent">
-          Game Over!
+          {t('modal.gameOverTitle')}
         </DialogTitle>
         <DialogDescription className="text-base sm:text-lg text-center font-semibold">
-          🎉 {gameWinnerName} wins the game! 🎉
+          {t('modal.winsTheGame', { player: gameWinnerName })}
         </DialogDescription>
       </DialogHeader>
       <div className="py-3 sm:py-4 md:py-6">
         <h4 className="font-bold mb-3 sm:mb-4 font-heading text-base sm:text-lg text-center">
-          Final Scores
+          {t('modal.finalScores')}
         </h4>
         <ul className="space-y-3 sm:space-y-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-3 sm:p-4 border-2 border-purple-200/50">
           {players

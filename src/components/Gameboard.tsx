@@ -21,8 +21,11 @@ import { GameActions } from "./GameActions";
 import { ScrollArea } from "./ui/scroll-area";
 import { AnimatePresence, motion } from "framer-motion";
 import { getGameBackgroundAsset } from "@/lib/cardAssets";
+import { useTranslation } from "react-i18next";
+import { cn } from "@/lib/utils";
 
 export const Gameboard: React.FC = () => {
+  const { t } = useTranslation();
   const { state, myPlayerId, broadcastAction, playSound } = useGame();
   const {
     players,
@@ -87,18 +90,20 @@ export const Gameboard: React.FC = () => {
   const copyRoomId = () => {
     if (roomId) {
       navigator.clipboard.writeText(roomId);
-      toast.success("Room ID copied to clipboard!");
+      toast.success(t('common:success.roomIdCopied'));
     }
   };
 
   const isPlayerActionable = isMyTurn && gamePhase === "playing";
+  const pileCardClass =
+    "!w-[34vw] !max-w-[6.5rem] sm:!w-36 sm:!max-w-[8.5rem] md:!w-40 md:!max-w-[9.5rem] lg:!w-48 lg:!max-w-[10.5rem]";
 
   const SidePanelContent = () => (
     <>
       <div className="my-4 p-4 bg-accent/40 backdrop-blur-sm rounded-lg min-h-[60px] border border-border/30">
         <h4 className="font-semibold mb-2 font-heading flex items-center gap-2 text-foreground">
           <ScrollText className="w-4 h-4 text-primary" />
-          Action Log
+          {t('game.actionLog')}
         </h4>
         <p className="text-sm text-muted-foreground leading-relaxed">
           {actionMessage}
@@ -130,35 +135,36 @@ export const Gameboard: React.FC = () => {
     if (!recentMove || !recentPlayer) return null;
     switch (recentMove.action) {
       case "draw":
-        return `${recentPlayer.name} drew from ${
-          recentMove.source === "discard" ? "discard" : "deck"
-        }`;
+        return t('actions.drewFromDeck', {
+          player: recentPlayer.name,
+          context: recentMove.source === 'discard' ? 'discard' : 'deck'
+        }).replace('deck', recentMove.source === 'discard' ? t('actions.fromDiscard') : t('actions.fromDeck'));
       case "swap":
-        return `${recentPlayer.name} swapped a card`;
+        return t('actions.swappedCard', { player: recentPlayer.name });
       case "discard":
-        return `${recentPlayer.name} discarded a card`;
+        return t('actions.discardedCard', { player: recentPlayer.name });
       case "peek":
-        return `${recentPlayer.name} peeked at a card`;
+        return t('actions.peekedAtCard', { player: recentPlayer.name });
       case "swap_2":
-        return `${recentPlayer.name} swapped two cards`;
+        return t('actions.swappedTwoCards', { player: recentPlayer.name });
       case "take_2":
-        return `${recentPlayer.name} kept a card`;
+        return t('actions.keptCard', { player: recentPlayer.name });
       default:
         return null;
     }
-  }, [recentMove, recentPlayer]);
+  }, [recentMove, recentPlayer, t]);
 
   if (players.length === 0) {
     return (
       <div className="w-full min-h-screen flex items-center justify-center font-heading">
-        <p>Loading game...</p>
+        <p>{t('game.loadingGame')}</p>
       </div>
     );
   }
 
   return (
     <div
-      className="w-full min-h-[100dvh] overflow-hidden text-foreground p-1 sm:p-2 md:p-3 lg:p-4 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 relative bg-cover bg-center"
+      className="w-full min-h-[calc(100dvh-4rem)] text-foreground px-1 sm:px-2 md:px-4 lg:px-6 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 relative bg-cover bg-center"
       style={{
         backgroundImage: `url(${backgroundImage})`,
         backgroundAttachment: "fixed",
@@ -192,7 +198,7 @@ export const Gameboard: React.FC = () => {
         {/* Opponents Area */}
         <div className="flex justify-center items-start mb-1.5 sm:mb-3 md:mb-4 flex-shrink-0 w-full px-1 sm:px-2">
           {otherPlayers.length > 0 ? (
-            <div className="flex gap-1 sm:gap-2 md:gap-4 overflow-x-auto pb-1 sm:pb-2 w-full justify-start sm:justify-center max-w-full bg-card/70 dark:bg-card/20 border border-border/50 rounded-xl shadow-soft backdrop-blur-sm px-2 sm:px-3">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 w-full max-w-5xl mx-auto bg-card/70 dark:bg-card/20 border border-border/50 rounded-xl shadow-soft backdrop-blur-sm px-2 sm:px-3 py-2">
               {otherPlayers.map((player) => (
                 <div key={player.id} className="flex-shrink-0 min-w-0">
                   <PlayerHand
@@ -207,7 +213,7 @@ export const Gameboard: React.FC = () => {
           ) : (
             <div className="flex items-center justify-center h-20 sm:h-24 w-full max-w-md rounded-lg bg-purple-50/50 border-2 border-dashed border-purple-200/60 mx-auto">
               <p className="text-muted-foreground font-heading text-xs sm:text-sm md:text-base">
-                Waiting for opponents...
+                {t('game.waitingForOpponents')}
               </p>
             </div>
           )}
@@ -215,23 +221,26 @@ export const Gameboard: React.FC = () => {
 
         {/* Center Area */}
         <div
-          className="flex-grow flex items-center justify-center gap-3 sm:gap-4 md:gap-6 lg:gap-8 my-2 sm:my-3 md:my-4 min-h-0"
+          className="flex-grow flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 md:gap-6 lg:gap-8 my-2 sm:my-3 md:my-4 min-h-0 w-full"
           data-tutorial-id="piles"
         >
           <div
-            className="flex flex-col items-center"
+            className="flex flex-col items-center w-full sm:w-auto"
             data-tutorial-id="draw-pile"
           >
             <GameCard
               card={null}
               isFaceUp={false}
-              className={isPlayerActionable ? "cursor-pointer" : ""}
+              className={cn(
+                isPlayerActionable ? "cursor-pointer" : "",
+                pileCardClass,
+              )}
               onClick={handleDrawFromDeck}
               isGlowing={isPlayerActionable}
               playSound={playSound}
             />
-            <span className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base font-medium text-gray-700">
-              Draw ({drawPile.length})
+            <span className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base font-medium text-foreground dark:text-gray-200 text-center">
+              {t('game.draw')} ({drawPile.length})
             </span>
           </div>
 
@@ -244,16 +253,21 @@ export const Gameboard: React.FC = () => {
                 exit={{ opacity: 0, scale: 0.5 }}
                 transition={{ duration: 0.3 }}
               >
-                <p className="mb-2 text-sm sm:text-base font-semibold font-heading text-purple-700">
-                  Your Card
+                <p className="mb-2 text-sm sm:text-base font-semibold font-heading text-foreground dark:text-purple-300">
+                  {t('game.yourCard')}
                 </p>
-                <GameCard card={drawnCard} isFaceUp={true} isGlowing />
+                <GameCard
+                  card={drawnCard}
+                  isFaceUp={true}
+                  isGlowing
+                  className={pileCardClass}
+                />
               </motion.div>
             )}
           </AnimatePresence>
 
           <div
-            className="flex flex-col items-center"
+            className="flex flex-col items-center w-full sm:w-auto"
             data-tutorial-id="discard-pile"
           >
             <GameCard
@@ -263,14 +277,17 @@ export const Gameboard: React.FC = () => {
                   : null
               }
               isFaceUp={true}
-              className={isPlayerActionable ? "cursor-pointer" : ""}
+              className={cn(
+                isPlayerActionable ? "cursor-pointer" : "",
+                pileCardClass,
+              )}
               onClick={handleDrawFromDiscard}
               isGlowing={isPlayerActionable && discardPile.length > 0}
               disableSpecialAnimation
               playSound={playSound}
             />
-            <span className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base font-medium text-gray-700">
-              Discard
+            <span className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base font-medium text-foreground dark:text-gray-200 text-center">
+              {t('game.discard')}
             </span>
           </div>
         </div>
@@ -317,7 +334,7 @@ export const Gameboard: React.FC = () => {
         {gameMode === "hotseat" && (
           <div className="flex items-center justify-center gap-2 mb-2 text-sm text-muted-foreground">
             <Users className="w-4 h-4" />
-            <span>Local Game</span>
+            <span>{t('game.localGame')}</span>
           </div>
         )}
         <Separator />
@@ -335,7 +352,7 @@ export const Gameboard: React.FC = () => {
           <SheetContent className="bg-card/95 backdrop-blur-lg border-border/40">
             <SheetHeader>
               <SheetTitle className="font-heading text-2xl">
-                Game Menu
+                {t('game.gameMenu')}
               </SheetTitle>
             </SheetHeader>
             <ScrollArea className="h-[calc(100%-4rem)] pr-4">

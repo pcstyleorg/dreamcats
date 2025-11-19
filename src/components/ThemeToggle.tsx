@@ -2,6 +2,7 @@ import React from "react";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 type ThemeMode = "light" | "dark";
 
@@ -16,12 +17,13 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
   onToggle,
   className,
 }) => {
+  const { t } = useTranslation('common');
   const isDark = theme === "dark";
   return (
     <Button
       variant="outline"
       size="icon"
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={isDark ? t('theme.switchToLight') : t('theme.switchToDark')}
       onClick={onToggle}
       className={cn(
         "rounded-full h-10 w-10 border-border/60 bg-card/80 backdrop-blur-sm shadow-soft",
@@ -41,7 +43,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
           isDark ? "rotate-0 scale-100" : "-rotate-90 scale-0",
         )}
       />
-      <span className="sr-only">{isDark ? "Switch to light" : "Switch to dark"}</span>
+      <span className="sr-only">{isDark ? t('theme.switchToLight') : t('theme.switchToDark')}</span>
     </Button>
   );
 };
