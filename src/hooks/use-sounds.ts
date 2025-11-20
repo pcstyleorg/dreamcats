@@ -1,4 +1,3 @@
-import { Howl } from 'howler';
 import { useCallback } from 'react';
 
 // Disable sounds for now since CDN is blocking requests
@@ -15,13 +14,12 @@ const soundFiles = {
 
 export type SoundType = keyof typeof soundFiles;
 
-// Preload sounds (disabled - CDN blocking requests)
-const sounds: { [key in SoundType]?: Howl } = {};
+// Sounds disabled for now - CDN blocking requests
+// TODO: Add local sound files to /public/sounds/ directory
 
 export const useSounds = () => {
-  const playSound = useCallback((sound: SoundType) => {
+  const playSound = useCallback((_sound: SoundType) => {
     // Sounds disabled - CDN blocking requests
-    // TODO: Add local sound files to /public/sounds/ directory
     return;
   }, []);
 
