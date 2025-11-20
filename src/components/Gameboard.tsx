@@ -103,7 +103,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
   const isPlayerActionable = isMyTurn && gamePhase === "playing";
   const pileCardClass =
-    "!w-[34vw] !max-w-[6.5rem] sm:!w-36 sm:!max-w-[8.5rem] md:!w-40 md:!max-w-[9.5rem] lg:!w-48 lg:!max-w-[10.5rem]";
+    "!w-28 sm:!w-32 md:!w-36 lg:!w-28 xl:!w-32";
 
   const SidePanelContent = () => (
     <>
@@ -202,9 +202,9 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
       <main className="flex-grow flex flex-col relative z-10 min-h-0">
         {/* Opponents Area */}
-        <div className="flex justify-center items-start mt-12 mb-1.5 sm:mb-3 md:mb-4 flex-shrink-0 w-full px-1 sm:px-2">
+        <div className="flex justify-center items-start mt-12 lg:mt-6 xl:mt-8 mb-1.5 sm:mb-3 md:mb-4 flex-shrink-0 w-full px-1 sm:px-2">
           {otherPlayers.length > 0 ? (
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 w-full max-w-5xl mx-auto px-2 sm:px-3 py-2">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-10 w-full max-w-5xl mx-auto px-2 sm:px-3 py-2">
               {otherPlayers.map((player) => (
                 <div key={player.id} className="flex-shrink-0 min-w-0">
                   <PlayerHand
