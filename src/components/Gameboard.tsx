@@ -171,7 +171,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
   return (
     <div
-      className="fixed inset-0 w-full h-full text-foreground px-1 sm:px-2 md:px-4 lg:px-6 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 bg-cover bg-center overflow-hidden"
+      className="fixed inset-0 lg:relative lg:w-full lg:h-full w-full h-full text-foreground px-1 sm:px-2 md:px-4 lg:px-6 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 bg-cover bg-center overflow-hidden"
       style={{
         backgroundImage: `url(${backgroundImage})`,
       }}
@@ -202,7 +202,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
       <main className="flex-grow flex flex-col relative z-10 min-h-0">
         {/* Opponents Area */}
-        <div className="flex justify-center items-start mb-1.5 sm:mb-3 md:mb-4 flex-shrink-0 w-full px-1 sm:px-2">
+        <div className="flex justify-center items-start mt-12 mb-1.5 sm:mb-3 md:mb-4 flex-shrink-0 w-full px-1 sm:px-2">
           {otherPlayers.length > 0 ? (
             <div className="flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 w-full max-w-5xl mx-auto px-2 sm:px-3 py-2">
               {otherPlayers.map((player) => (
@@ -301,7 +301,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
         {/* Bottom Player Area */}
         {bottomPlayer && (
-          <div className="mt-auto flex-shrink-0 pb-1 sm:pb-2">
+          <div className="mt-auto flex-shrink-0 pb-8 sm:pb-2">
             <div data-tutorial-id="player-hand">
               <PlayerHand
                 player={bottomPlayer}
@@ -354,7 +354,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         <ThemeToggle theme={theme} onToggle={toggleTheme} />
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" className="rounded-full h-10 w-10 border-border/60 bg-card/80 backdrop-blur-sm shadow-soft hover:scale-105 transition-transform">
               <Menu />
             </Button>
           </SheetTrigger>
