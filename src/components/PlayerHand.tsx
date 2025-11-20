@@ -35,8 +35,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
 
   const recentMoveForPlayer =
     lastMove &&
-    lastMove.playerId === player.id &&
-    Date.now() - lastMove.timestamp < 3200
+      lastMove.playerId === player.id &&
+      Date.now() - lastMove.timestamp < 3200
       ? lastMove
       : null;
 
@@ -208,7 +208,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
           )}
         </AnimatePresence>
 
-        <div className={cn("flex gap-0.5 sm:gap-1 md:gap-2 justify-center w-full relative")}> 
+        <div className={cn("flex gap-0.5 sm:gap-1 md:gap-2 justify-center w-full relative")}>
           <AnimatePresence>
             {recentMoveForPlayer?.action === "draw" && (
               <motion.div
@@ -246,7 +246,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                   className={cn(
                     "transition-all duration-300",
                     (animatingIndex === index || isTargeted) &&
-                      "scale-105 ring-2 ring-primary/70 rounded-md z-10",
+                    "scale-105 ring-2 ring-primary/70 rounded-md z-10",
                   )}
                 >
                   <GameCard
@@ -260,7 +260,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                     onClick={() => handleCardClick(index)}
                     className={cn(
                       isOpponent &&
-                      "!w-[20vw] !max-w-28 sm:!w-[12vw] sm:!max-w-28 md:!w-[9vw] md:!max-w-32 lg:!w-[7vw] lg:!max-w-28",
+                      "!w-20 sm:!w-24 md:!w-28 lg:!w-16 xl:!w-20",
                       getCardInteractionClass(index),
                     )}
                     playSound={playSound}

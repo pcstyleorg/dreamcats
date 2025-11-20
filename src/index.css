@@ -293,3 +293,20 @@
         transform: scale(0.97);
     }
 }
+
+/* Desktop layout improvements - prevent overlapping */
+@media (min-width: 1024px) {
+
+    /* Ensure center area (piles) has proper spacing */
+    [data-tutorial-id="piles"] {
+        gap: 2.5rem !important;
+    }
+}
+
+@media (min-width: 1280px) {
+
+    /* Even more spacing on larger desktops */
+    [data-tutorial-id="piles"] {
+        gap: 3.5rem !important;
+    }
+}
