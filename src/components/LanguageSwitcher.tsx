@@ -28,11 +28,8 @@ export const LanguageSwitcher: React.FC<{ className?: string }> = ({
       )}
     >
       <Languages className="h-4 w-4" />
-      <span className="sr-only ml-1 text-xs font-semibold">
-        {currentLang.toUpperCase()}
-      </span>
-      <span className="absolute bottom-0 right-0 text-[10px] font-bold opacity-70">
-        {currentLang.toUpperCase()}
+      <span className="sr-only">
+        {currentLang === 'en' ? 'Switch to Polish' : 'Switch to English'}
       </span>
     </Button>
   );
