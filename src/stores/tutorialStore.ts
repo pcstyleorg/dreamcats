@@ -1,15 +1,4 @@
-let create: any;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  create = require('zustand').default;
-} catch {
-  // fallback to our shim to allow local builds without installing Zustand
-  // using require to avoid TypeScript's module resolution failure in the environment
-  create = require('./zustand-shim').create;
-}
-
-
-
+import { create } from 'zustand';
 
 export type TutorialStep =
   | 'inactive'
@@ -32,9 +21,7 @@ export interface TutorialStore {
 
 const TUTORIAL_FLAG = 'sen_tutorial_completed';
 
-const typedCreate: <T>(fn: (set: any, get: any) => T) => any = create;
-export const useTutorialStore = typedCreate<TutorialStore>((set: (value: Partial<TutorialStore>) => void, get: () => TutorialStore) => ({
-
+export const useTutorialStore = create<TutorialStore>((set, get) => ({
   step: 'inactive',
   startTutorial: () => set({ step: 'goal' }),
   nextStep: () => {

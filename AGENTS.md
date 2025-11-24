@@ -6,6 +6,10 @@
 - **Dev**: `npm run dev` (Vite development server)
 - **Preview**: `npm run preview` (preview production build)
 
+## Agent/MCP Notes
+- Subagent MCP server is disabled; do not rely on parallel Claude subagents.
+- Use Context7 for library/framework docs when needed; otherwise work directly in the repo.
+
 ## Code Style Guidelines
 
 ### Imports & Structure

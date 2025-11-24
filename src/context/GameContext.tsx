@@ -1,10 +1,8 @@
 import {
   createContext,
-  useReducer,
   ReactNode,
   useContext,
   useEffect,
-  useState,
   useCallback,
   useRef,
 } from "react";
@@ -15,6 +13,7 @@ import { useSounds, SoundType } from "@/hooks/use-sounds";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import i18n from "@/i18n/config";
+import { useGameStore, initialState } from "@/stores/gameStore";
 
 type ReducerAction =
   | { type: "SET_STATE"; payload: GameState }
@@ -24,25 +23,6 @@ type ReducerAction =
   }
   | { type: "ADD_CHAT_MESSAGE"; payload: ChatMessage }
   | { type: "SET_CHAT_MESSAGES"; payload: ChatMessage[] };
-
-const initialState: GameState = {
-  gameMode: "lobby",
-  roomId: null,
-  hostId: null,
-  players: [],
-  drawPile: [],
-  discardPile: [],
-  currentPlayerIndex: 0,
-  gamePhase: "lobby",
-  actionMessage: i18n.t('game.welcomeMessage'),
-  roundWinnerName: null,
-  gameWinnerName: null,
-  turnCount: 0,
-  chatMessages: [],
-  drawSource: null,
-  lastCallerId: null,
-  lastMove: null,
-};
 
 const gameReducer = (state: GameState, action: ReducerAction): GameState => {
   switch (action.type) {
@@ -572,12 +552,21 @@ export const GameContext = createContext<GameContextType>({
 });
 
 export const GameProvider = ({ children }: { children: ReactNode }) => {
-  const [state, dispatch] = useReducer(gameReducer, initialState);
-  const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
+  const state = useGameStore((s) => s.state);
+  const setState = useGameStore((s) => s.setState);
+  const myPlayerId = useGameStore((s) => s.myPlayerId);
+  const setMyPlayerId = useGameStore((s) => s.setMyPlayerId);
   const { playSound } = useSounds();
   const lastSyncedStateRef = useRef<GameState | null>(null);
   const gameStartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentStateRef = useRef<GameState>(state);
+
+  const dispatch = useCallback(
+    (action: ReducerAction) => {
+      setState((current) => gameReducer(current, action));
+    },
+    [setState],
+  );
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -679,7 +668,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       dispatch({ type: "SET_STATE", payload: finalState });
       lastSyncedStateRef.current = finalState;
     }
-  }, [remoteGameState, state.gameMode, myPlayerId]); // Removed state from deps to prevent loops
+  }, [remoteGameState, state.gameMode, myPlayerId, dispatch]); // Removed state from deps to prevent loops
 
   // Sync remote chat messages
   useEffect(() => {
@@ -693,7 +682,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       }));
       dispatch({ type: "SET_CHAT_MESSAGES", payload: chatMessages });
     }
-  }, [remoteMessages, state.gameMode]);
+  }, [remoteMessages, state.gameMode, dispatch]);
 
   // Handle player presence
   useEffect(() => {
@@ -777,7 +766,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         }
       };
     }
-  }, [remotePlayers, state, myPlayerId, setGameStateMutation]);
+  }, [remotePlayers, state, myPlayerId, setGameStateMutation, dispatch]);
 
   // Update presence periodically
   useEffect(() => {
@@ -813,7 +802,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       }
     };
     reconnect();
-  }, [joinRoomMutation]);
+  }, [joinRoomMutation, setMyPlayerId]);
 
   const processAndBroadcastAction = useCallback(
     async (action: GameAction) => {
@@ -836,7 +825,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       // Dispatch action locally - state sync will happen via useEffect
       dispatch({ type: "PROCESS_ACTION", payload: { action, isLocal: true } });
     },
-    [playSound],
+    [dispatch, playSound],
   );
 
   // Sanitize game state for syncing - hide peeked cards from opponents
@@ -949,7 +938,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         console.error("Failed to send chat message:", error);
       }
     },
-    [state, myPlayerId, playSound, sendMessageMutation],
+    [dispatch, myPlayerId, playSound, sendMessageMutation, state],
   );
 
   const createRoom = useCallback(
@@ -992,7 +981,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         toast.error("Could not create room. Please try again.");
       }
     },
-    [createRoomMutation],
+    [createRoomMutation, dispatch, setMyPlayerId],
   );
 
   const joinRoom = useCallback(
@@ -1055,7 +1044,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           : "Failed to join room.";
       toast.error(message);
     },
-    [joinRoomMutation],
+    [dispatch, joinRoomMutation, setMyPlayerId],
   );
 
   const startGame = useCallback(async () => {
@@ -1094,7 +1083,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       state: startPeekingState,
     });
     dispatch({ type: "SET_STATE", payload: startPeekingState });
-  }, [state, setGameStateMutation]);
+  }, [dispatch, setGameStateMutation, state]);
 
   const startHotseatGame = useCallback(
     (playerNames: string[]) => {
@@ -1126,7 +1115,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       };
       dispatch({ type: "SET_STATE", payload: startPeekingState });
     },
-    [],
+    [dispatch],
   );
 
   return (

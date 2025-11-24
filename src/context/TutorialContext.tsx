@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode, useEffect } from "react";
-import { useTutorialStore, TutorialStep } from "@/stores/tutorialStore";
+import { useTutorialStore, TutorialStep, TutorialStore } from "@/stores/tutorialStore";
 
 // Small local interface to avoid importing store types all over the app
 interface LocalTutorialContextType {
@@ -20,11 +20,11 @@ export type { TutorialStep } from '@/stores/tutorialStore';
 export const useTutorialLegacy = useTutorialStore as unknown as (selector?: (s: any) => any) => any;
 
 export const TutorialProvider = ({ children }: { children: ReactNode }) => {
-  const step = useTutorialStore((s: import('@/stores/tutorialStore').TutorialStore) => s.step);
-  const startTutorial = useTutorialStore((s: import('@/stores/tutorialStore').TutorialStore) => s.startTutorial);
-  const nextStep = useTutorialStore((s: import('@/stores/tutorialStore').TutorialStore) => s.nextStep);
-  const endTutorial = useTutorialStore((s: import('@/stores/tutorialStore').TutorialStore) => s.endTutorial);
-  const setStep = useTutorialStore((s: import('@/stores/tutorialStore').TutorialStore) => s.setStep);
+  const step = useTutorialStore((s: TutorialStore) => s.step);
+  const startTutorial = useTutorialStore((s: TutorialStore) => s.startTutorial);
+  const nextStep = useTutorialStore((s: TutorialStore) => s.nextStep);
+  const endTutorial = useTutorialStore((s: TutorialStore) => s.endTutorial);
+  const setStep = useTutorialStore((s: TutorialStore) => s.setStep);
 
   useEffect(() => {
     const tutorialCompleted = localStorage.getItem("sen_tutorial_completed");
