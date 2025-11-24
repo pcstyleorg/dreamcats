@@ -5,6 +5,7 @@ import {
   useEffect,
   useCallback,
   useRef,
+  useMemo,
 } from "react";
 import { GameState, Player, Card, ChatMessage, GameAction } from "@/types";
 import { createDeck, shuffleDeck } from "@/lib/game-logic";
@@ -23,6 +24,33 @@ type ReducerAction =
   }
   | { type: "ADD_CHAT_MESSAGE"; payload: ChatMessage }
   | { type: "SET_CHAT_MESSAGES"; payload: ChatMessage[] };
+
+const isRevealPhase = (phase: GameState["gamePhase"]) =>
+  phase === "round_end" || phase === "game_over";
+
+const getVisibleStateForViewer = (
+  state: GameState,
+  viewerId: string | null,
+): GameState => {
+  if (!viewerId) return state;
+  const revealAll = isRevealPhase(state.gamePhase);
+
+  const players = state.players.map((player) => {
+    if (revealAll || player.id === viewerId) return player;
+
+    return {
+      ...player,
+      // Opponent cards are always face-down in this player's view
+      hand: player.hand.map((slot) => ({
+        ...slot,
+        isFaceUp: false,
+        hasBeenPeeked: false,
+      })),
+    };
+  });
+
+  return { ...state, players };
+};
 
 const gameReducer = (state: GameState, action: ReducerAction): GameState => {
   switch (action.type) {
@@ -568,6 +596,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     [setState],
   );
 
+  const viewerId =
+    state.gameMode === "online"
+      ? myPlayerId
+      : state.players[state.currentPlayerIndex]?.id ?? null;
+  const visibleState = useMemo(
+    () => getVisibleStateForViewer(state, viewerId),
+    [state, viewerId],
+  );
+
   // Keep ref in sync with state
   useEffect(() => {
     currentStateRef.current = state;
@@ -725,7 +762,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           let changed = false;
 
           newPlayers.forEach((newPlayerData) => {
-            if (!updatedPlayers.some(p => p.id === newPlayerData.playerId)) {
+            if (
+              updatedPlayers.length < 5 &&
+              !updatedPlayers.some((p) => p.id === newPlayerData.playerId)
+            ) {
               toast.info(`${newPlayerData.name} has joined the room.`);
               updatedPlayers.push({
                 id: newPlayerData.playerId,
@@ -736,6 +776,10 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
               changed = true;
             }
           });
+
+          if (updatedPlayers.length >= 5 && newPlayers.length > 0) {
+            toast.error("Room is full (max 5 players for Sen).");
+          }
 
           if (changed) {
             // Update local state with new players
@@ -766,7 +810,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         }
       };
     }
-  }, [remotePlayers, state, myPlayerId, setGameStateMutation, dispatch]);
+  }, [remotePlayers, state, myPlayerId, setGameStateMutation, dispatch, setMyPlayerId]);
 
   // Update presence periodically
   useEffect(() => {
@@ -1053,6 +1097,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
+    if (state.players.length > 5) {
+      toast.error("Maximum 5 players are allowed in Sen.");
+      return;
+    }
+
     const deck = shuffleDeck(createDeck());
     const playersWithCards = state.players.map((p) => ({
       ...p,
@@ -1087,6 +1136,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
   const startHotseatGame = useCallback(
     (playerNames: string[]) => {
+      if (playerNames.length < 2 || playerNames.length > 5) {
+        toast.error("Sen supports 2 to 5 dreamers.");
+        return;
+      }
+
       const allPlayers = playerNames.map((name, index) => ({
         id: `player-${index + 1}`,
         name,
@@ -1121,7 +1175,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   return (
     <GameContext.Provider
       value={{
-        state,
+        state: visibleState,
         myPlayerId,
         createRoom,
         joinRoom,

@@ -1,72 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Serif+Display:wght@400&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
     :root {
-        /* Bright, fun theme for a playful card game */
-        --background: 210 100% 97%;
-        --foreground: 220 15% 20%;
+        --background: 233 39% 12%;
+        --foreground: 220 18% 92%;
 
-        --card: 0 0% 100%;
-        --card-foreground: 220 15% 20%;
+        --card: 232 32% 18%;
+        --card-foreground: 220 18% 92%;
 
-        --popover: 0 0% 100%;
-        --popover-foreground: 220 15% 20%;
+        --popover: 233 32% 18%;
+        --popover-foreground: 220 18% 92%;
 
-        /* Vibrant purple for primary actions */
-        --primary: 270 65% 60%;
-        --primary-foreground: 0 0% 100%;
+        --primary: 333 76% 78%; /* cherry blossom glow */
+        --primary-foreground: 249 28% 14%;
 
-        /* Bright teal/cyan for secondary */
-        --secondary: 185 75% 55%;
-        --secondary-foreground: 0 0% 100%;
+        --secondary: 40 88% 72%; /* lantern gold */
+        --secondary-foreground: 240 28% 14%;
 
-        --muted: 210 40% 92%;
-        --muted-foreground: 220 10% 45%;
+        --muted: 231 24% 22%;
+        --muted-foreground: 220 12% 72%;
 
-        --accent: 210 60% 88%;
-        --accent-foreground: 220 15% 25%;
+        --accent: 249 54% 68%; /* twilight periwinkle */
+        --accent-foreground: 240 22% 18%;
 
-        /* Warm coral/pink for destructive/pobudka */
-        --destructive: 10 80% 60%;
+        --destructive: 0 73% 66%;
         --destructive-foreground: 0 0% 100%;
 
-        --border: 210 30% 85%;
-        --input: 210 30% 90%;
-        --ring: 270 65% 60%;
+        --border: 231 22% 30%;
+        --input: 231 22% 28%;
+        --ring: 333 76% 78%;
 
-        --radius: 0.75rem;
+        --radius: 0.85rem;
     }
 
     .dark {
-        --background: 225 20% 7%;
-        --foreground: 220 15% 92%;
+        --background: 230 33% 8%;
+        --foreground: 220 18% 94%;
 
-        --card: 220 18% 13%;
-        --card-foreground: 220 15% 92%;
+        --card: 232 28% 14%;
+        --card-foreground: 220 18% 94%;
 
-        --popover: 220 18% 12%;
-        --popover-foreground: 220 15% 90%;
+        --popover: 232 28% 14%;
+        --popover-foreground: 220 18% 92%;
 
-        --primary: 270 70% 70%;
-        --primary-foreground: 0 0% 100%;
+        --primary: 333 76% 78%;
+        --primary-foreground: 249 28% 14%;
 
-        --secondary: 195 65% 55%;
-        --secondary-foreground: 0 0% 100%;
+        --secondary: 42 88% 73%;
+        --secondary-foreground: 240 28% 12%;
 
-        --muted: 220 13% 18%;
-        --muted-foreground: 220 10% 70%;
+        --muted: 230 23% 18%;
+        --muted-foreground: 220 16% 78%;
 
-        --accent: 260 30% 18%;
-        --accent-foreground: 220 15% 88%;
+        --accent: 248 52% 70%;
+        --accent-foreground: 240 22% 18%;
 
-        --destructive: 0 80% 65%;
+        --destructive: 0 74% 64%;
         --destructive-foreground: 0 0% 100%;
 
-        --border: 220 14% 25%;
-        --input: 220 14% 30%;
-        --ring: 270 70% 70%;
+        --border: 232 23% 24%;
+        --input: 232 23% 22%;
+        --ring: 333 76% 78%;
     }
 }
 
@@ -78,24 +76,27 @@
     html,
     body,
     #root {
-        height: 100%;
+        min-height: 100%;
         width: 100%;
         margin: 0;
         padding: 0;
-        overflow: hidden;
-        /* Prevent scrolling globally */
+        overflow-x: hidden;
+        overflow-y: auto;
     }
 
     body {
         @apply bg-background text-foreground;
         background-image:
-            linear-gradient(to bottom,
-                rgba(147, 197, 253, 0.1) 0%,
-                rgba(196, 181, 253, 0.1) 100%),
-            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.015'/%3E%3C/svg%3E");
+            radial-gradient(circle at 20% 18%, rgba(255, 202, 220, 0.2), transparent 32%),
+            radial-gradient(circle at 82% 12%, rgba(255, 228, 186, 0.16), transparent 30%),
+            radial-gradient(130% 130% at 78% 82%, rgba(104, 163, 255, 0.12), transparent 45%),
+            linear-gradient(140deg, rgba(8, 12, 26, 0.95), rgba(22, 26, 48, 0.95)),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%23f4c4d7' fill-opacity='0.14'%3E%3Cpath d='M20 18c8 0 12 6 12 12s-5 12-12 12S8 36 8 30s4-12 12-12Z'/%3E%3Cpath d='M88 12c7 0 12 5 12 12s-5 12-12 12-12-5-12-12 5-12 12-12Z'/%3E%3Cpath d='M64 72c9 0 16 6 16 14s-7 14-16 14-16-6-16-14 7-14 16-14Z'/%3E%3C/g%3E%3C/svg%3E");
+        background-blend-mode: screen, screen, screen, normal, normal;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         font-family:
+            "Space Grotesk",
             "Inter",
             system-ui,
             -apple-system,
@@ -104,14 +105,16 @@
 
     .dark body {
         background-image:
-            linear-gradient(to bottom,
-                rgba(15, 23, 42, 0.6) 0%,
-                rgba(30, 27, 75, 0.6) 100%),
-            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 100 100'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
+            radial-gradient(circle at 18% 20%, rgba(255, 196, 213, 0.18), transparent 32%),
+            radial-gradient(circle at 78% 18%, rgba(255, 225, 189, 0.14), transparent 32%),
+            radial-gradient(120% 120% at 72% 80%, rgba(110, 170, 255, 0.12), transparent 45%),
+            linear-gradient(145deg, rgba(5, 7, 18, 0.98), rgba(16, 21, 38, 0.96)),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='%23f6d4e2' fill-opacity='0.12'%3E%3Cpath d='M20 18c8 0 12 6 12 12s-5 12-12 12S8 36 8 30s4-12 12-12Z'/%3E%3Cpath d='M88 12c7 0 12 5 12 12s-5 12-12 12-12-5-12-12 5-12 12-12Z'/%3E%3Cpath d='M64 72c9 0 16 6 16 14s-7 14-16 14-16-6-16-14 7-14 16-14Z'/%3E%3C/g%3E%3C/svg%3E");
+        background-blend-mode: screen, screen, screen, normal, normal;
     }
 
     .font-heading {
-        font-family: "Lora", serif;
+        font-family: "DM Serif Display", "Lora", serif;
     }
 }
 

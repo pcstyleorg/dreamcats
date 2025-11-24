@@ -67,16 +67,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
     <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden p-4 sm:p-6 md:p-8 bg-background">
       {/* Background elements - theme-aware gradients */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/5 to-secondary/10"
+        className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--primary)/0.16)] via-[hsl(var(--accent)/0.08)] to-[hsl(var(--secondary)/0.2)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 2 }}
       />
-      <motion.div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-gradient-to-br from-primary/20 to-destructive/20 rounded-full blur-3xl animate-float" />
+      <motion.div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-gradient-to-br from-[hsl(var(--primary)/0.3)] to-[hsl(var(--secondary)/0.35)] rounded-full blur-3xl animate-float" />
       <motion.div
-        className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 bg-gradient-to-br from-secondary/20 to-primary/20 rounded-full blur-3xl animate-float"
+        className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 bg-gradient-to-br from-[hsl(var(--accent)/0.35)] to-[hsl(var(--primary)/0.25)] rounded-full blur-3xl animate-float"
         style={{ animationDelay: "-3s" }}
       />
+      <motion.div className="absolute top-1/3 left-10 w-32 h-32 rounded-full bg-[hsl(var(--secondary)/0.25)] blur-2xl opacity-70" />
 
       {/* Flying Crows - theme-aware for visibility */}
       <Crow
@@ -99,7 +100,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
         animate="visible"
       >
         <motion.h1
-          className="font-heading text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 bg-clip-text text-transparent flex overflow-hidden"
+          className="font-heading text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--accent))] to-[hsl(var(--secondary))] bg-clip-text text-transparent flex overflow-hidden"
           aria-label={title}
         >
           {title.split("").map((letter, index) => (

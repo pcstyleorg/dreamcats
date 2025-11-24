@@ -16,8 +16,10 @@ const TutorialContext = createContext<LocalTutorialContextType | undefined>(unde
 export { useTutorialStore } from '@/stores/tutorialStore';
 export type { TutorialStep } from '@/stores/tutorialStore';
 
-// Provide a legacy useTutorial hook for backward compatibility, delegating to the store
-export const useTutorialLegacy = useTutorialStore as unknown as (selector?: (s: any) => any) => any;
+// Provide a legacy hook that mirrors the previous signature while staying typed
+export const useTutorialLegacy = <T = TutorialStore>(
+  selector?: (state: TutorialStore) => T,
+) => useTutorialStore(selector ?? ((s) => s as unknown as T));
 
 export const TutorialProvider = ({ children }: { children: ReactNode }) => {
   const step = useTutorialStore((s: TutorialStore) => s.step);

@@ -169,13 +169,13 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   return (
     <div
       className={cn(
-        "relative p-1 sm:p-1.5 md:p-2 lg:p-3 rounded-xl border-2 transition-all duration-300 bg-card/80 dark:bg-card/30 backdrop-blur-sm",
-        "shadow-soft",
+        "relative p-2 sm:p-2.5 md:p-3 lg:p-3.5 rounded-2xl border transition-all duration-300 bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.12)] backdrop-blur-md",
+        "shadow-soft-lg",
         isCurrentPlayer &&
           gamePhase !== "round_end" &&
           gamePhase !== "game_over"
-          ? "border-primary/40 shadow-[0_0_20px_hsl(var(--primary)/0.2)]"
-          : "border-border/40",
+          ? "border-primary/40 shadow-[0_0_28px_hsl(var(--primary)/0.25)]"
+          : "border-border/50",
       )}
     >
       <div className="flex flex-col items-center gap-1 sm:gap-1.5">
@@ -260,7 +260,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                     onClick={() => handleCardClick(index)}
                     className={cn(
                       isOpponent &&
-                      "!w-20 sm:!w-24 md:!w-28 lg:!w-16 xl:!w-20",
+                      "!w-16 sm:!w-20 md:!w-24 lg:!w-16 xl:!w-20",
                       getCardInteractionClass(index),
                     )}
                     playSound={playSound}

@@ -56,7 +56,7 @@ export const GameActions = () => {
       <Button
         onClick={handleFinishPeeking}
         disabled={peekingState?.peekedCount !== 2}
-        className="w-auto min-w-[140px] sm:min-w-[160px] min-h-[48px] sm:min-h-[52px] text-base sm:text-lg font-semibold"
+        className="w-auto min-w-[160px] sm:min-w-[180px] min-h-[52px] sm:min-h-[56px] text-base sm:text-lg font-semibold bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-soft-lg hover:shadow-dreamy"
         size="lg"
       >
         {t('game.finishPeeking')}
@@ -70,7 +70,7 @@ export const GameActions = () => {
         <Button
           onClick={handlePobudka}
           variant="destructive"
-          className="w-auto min-w-[160px] sm:min-w-[180px] min-h-[52px] sm:min-h-[56px] text-lg sm:text-xl font-bold shadow-lg hover:shadow-xl"
+          className="w-auto min-w-[170px] sm:min-w-[190px] min-h-[56px] sm:min-h-[60px] text-lg sm:text-xl font-bold shadow-[0_12px_30px_rgba(0,0,0,0.28)] hover:shadow-[0_16px_38px_rgba(0,0,0,0.35)] rounded-full"
           size="lg"
         >
           {t('game.pobudka')}
@@ -86,7 +86,7 @@ export const GameActions = () => {
           variant="outline"
           onClick={() => broadcastAction({ type: "DISCARD_HELD_CARD" })}
           disabled={mustSwap}
-          className="min-w-[100px] sm:min-w-[120px] min-h-[48px] sm:min-h-[52px] text-base sm:text-lg"
+          className="min-w-[120px] sm:min-w-[140px] min-h-[50px] sm:min-h-[54px] text-base sm:text-lg rounded-full border-border/70 bg-card/70"
           size="lg"
         >
           {t('game.discard')}
@@ -94,7 +94,7 @@ export const GameActions = () => {
         <Button
           onClick={() => broadcastAction({ type: "USE_SPECIAL_ACTION" })}
           disabled={!canUseSpecial}
-          className="min-w-[100px] sm:min-w-[120px] min-h-[48px] sm:min-h-[52px] text-base sm:text-lg"
+          className="min-w-[130px] sm:min-w-[150px] min-h-[50px] sm:min-h-[54px] text-base sm:text-lg rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-[hsl(var(--primary-foreground))] shadow-soft-lg disabled:opacity-60"
           size="lg"
         >
           <Wand2 className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />
