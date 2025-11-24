@@ -1,0 +1,6 @@
+{
+  "enabledMcpjsonServers": [
+    "ucm-mcp-server"
+  ],
+  "enableAllProjectMcpServers": true
+}
