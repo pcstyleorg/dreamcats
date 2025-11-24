@@ -1,14 +1,15 @@
 # AGENTS.md
 
 ## Commands
-- **Build**: `npm run build` (runs TypeScript check then Vite build)
-- **Lint**: `npm run lint` (ESLint for TypeScript/React files)
+- **Build**: `bun run build` (preferred) or `npm run build` (runs TypeScript check then Vite build)
+- **Lint**: `bun run lint` (preferred) or `npm run lint` (ESLint for TypeScript/React files)
 - **Dev**: `npm run dev` (Vite development server)
 - **Preview**: `npm run preview` (preview production build)
 
 ## Agent/MCP Notes
 - Subagent MCP server is disabled; do not rely on parallel Claude subagents.
 - Use Context7 for library/framework docs when needed; otherwise work directly in the repo.
+- Use Voice Codex MCP only when the `.use-voice` file exists with content set to `true`; if the file is missing or has any other content, avoid Voice Codex unless explicitly asked.
 
 ## Code Style Guidelines
 

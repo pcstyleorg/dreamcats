@@ -81,7 +81,7 @@ export const LobbyScreen: React.FC = () => {
   };
 
   const handleAddHotseatPlayer = () => {
-    if (hotseatPlayers.length < 4) {
+    if (hotseatPlayers.length < 5) {
       setHotseatPlayers([...hotseatPlayers, ""]);
     }
   };
@@ -137,7 +137,7 @@ export const LobbyScreen: React.FC = () => {
       className="space-y-6"
     >
       <CardHeader className="space-y-2 sm:space-y-3">
-        <CardTitle className="text-5xl sm:text-6xl md:text-7xl text-center font-heading bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 bg-clip-text text-transparent drop-shadow-sm">
+        <CardTitle className="text-5xl sm:text-6xl md:text-7xl text-center font-heading bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--accent))] to-[hsl(var(--secondary))] bg-clip-text text-transparent drop-shadow-sm">
           {t('lobby.title')}
         </CardTitle>
         <CardDescription className="text-center text-base sm:text-lg font-medium text-muted-foreground">
@@ -147,7 +147,7 @@ export const LobbyScreen: React.FC = () => {
       <CardContent className="space-y-4">
         <Button
           onClick={() => setMode("online")}
-          className="w-full h-16 text-lg font-semibold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          className="w-full h-16 text-lg font-semibold bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] hover:from-[hsl(var(--primary))] hover:to-[hsl(var(--secondary))] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           size="lg"
         >
           <Cloud className="mr-3 h-6 w-6" /> {t('lobby.onlineMultiplayer')}
@@ -209,7 +209,7 @@ export const LobbyScreen: React.FC = () => {
 
             <div className="space-y-3">
               <div className="flex justify-between items-center px-1">
-                <span className="text-sm font-medium text-muted-foreground">{t('lobby.online.players')} ({state.players.length}/4)</span>
+                <span className="text-sm font-medium text-muted-foreground">{t('lobby.online.players')} ({state.players.length}/5)</span>
                 {state.players.length < 2 && (
                   <span className="text-xs text-amber-500 animate-pulse">{t('lobby.online.waitingForOpponent')}</span>
                 )}
@@ -217,14 +217,14 @@ export const LobbyScreen: React.FC = () => {
               <div className="grid gap-2">
                 {state.players.map(p => (
                   <div key={p.id} className="flex items-center gap-3 bg-card p-3 rounded-lg border border-border shadow-sm">
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-400 flex items-center justify-center text-white font-bold text-sm">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] flex items-center justify-center text-[hsl(var(--primary-foreground))] font-bold text-sm">
                       {p.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="font-medium text-foreground">{p.name}</span>
-                    {p.id === state.hostId && <span className="ml-auto text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 px-2 py-0.5 rounded-full">{t('lobby.online.host')}</span>}
+                    {p.id === state.hostId && <span className="ml-auto text-xs bg-secondary/30 dark:bg-secondary/20 text-secondary-foreground px-2 py-0.5 rounded-full border border-secondary/40">{t('lobby.online.host')}</span>}
                   </div>
                 ))}
-                {Array.from({ length: Math.max(0, 4 - state.players.length) }).map((_, i) => (
+                {Array.from({ length: Math.max(0, 5 - state.players.length) }).map((_, i) => (
                   <div key={`empty-${i}`} className="flex items-center gap-3 bg-muted p-3 rounded-lg border border-dashed border-border">
                     <div className="h-8 w-8 rounded-full bg-muted-foreground/20 animate-pulse" />
                     <div className="h-4 w-24 bg-muted-foreground/20 rounded animate-pulse" />
@@ -240,7 +240,7 @@ export const LobbyScreen: React.FC = () => {
                   handleStartOnlineGame();
                 }}
                 className={`w-full h-14 text-lg font-bold shadow-lg transition-all duration-300 ${state.players.length >= 2
-                    ? "bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 hover:shadow-xl transform hover:-translate-y-1"
+                    ? "bg-gradient-to-r from-[hsl(var(--secondary))] to-[hsl(var(--primary))] hover:from-[hsl(var(--primary))] hover:to-[hsl(var(--accent))] hover:shadow-xl transform hover:-translate-y-1"
                     : "bg-muted text-muted-foreground cursor-not-allowed"
                   }`}
                 disabled={state.players.length < 2}
@@ -279,7 +279,7 @@ export const LobbyScreen: React.FC = () => {
             <div className="pt-2">
               <Button
                 onClick={handleCreateRoom}
-                className="w-full h-12 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg transition-all"
+                className="w-full h-12 text-base font-semibold bg-[hsl(var(--accent))] hover:bg-[hsl(var(--primary))] shadow-md hover:shadow-lg transition-all text-[hsl(var(--primary-foreground))]"
                 disabled={effectiveLoading}
               >
                 {effectiveLoading && !state.hostId ? t('lobby.online.creating') : t('lobby.online.createGame')}
@@ -376,7 +376,7 @@ export const LobbyScreen: React.FC = () => {
           ))}
         </div>
 
-        {hotseatPlayers.length < 4 && (
+        {hotseatPlayers.length < 5 && (
           <Button
             variant="outline"
             onClick={handleAddHotseatPlayer}
@@ -388,7 +388,7 @@ export const LobbyScreen: React.FC = () => {
 
         <Button
           onClick={handleStartHotseat}
-          className="w-full h-14 text-lg font-bold bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 mt-4"
+          className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[hsl(var(--secondary))] to-[hsl(var(--primary))] hover:from-[hsl(var(--primary))] hover:to-[hsl(var(--accent))] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 mt-4 text-[hsl(var(--primary-foreground))]"
           size="lg"
         >
           {t('lobby.hotseat.startGame')}
@@ -398,9 +398,11 @@ export const LobbyScreen: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-background">
-      <Card className="w-full max-w-md sm:max-w-lg bg-card/80 backdrop-blur-xl shadow-2xl border-0 ring-1 ring-border/50 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-[hsl(var(--background))] via-[hsl(var(--background))] to-[hsl(var(--accent)/0.2)] relative overflow-hidden">
+      <div className="absolute -left-10 top-12 w-48 h-48 rounded-full bg-[hsl(var(--primary)/0.18)] blur-3xl" />
+      <div className="absolute right-0 bottom-6 w-56 h-56 rounded-full bg-[hsl(var(--secondary)/0.22)] blur-3xl" />
+      <Card className="w-full max-w-md sm:max-w-lg bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.08)] backdrop-blur-xl shadow-2xl border border-border/50 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[hsl(var(--secondary))] via-[hsl(var(--primary))] to-[hsl(var(--accent))]" />
         <AnimatePresence mode="wait">
           {mode === "select" && renderSelectMode()}
           {mode === "online" && renderOnlineMode()}
