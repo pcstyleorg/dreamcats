@@ -84,6 +84,8 @@ export const GameCard: React.FC<CardProps> = ({
   // No rings at all. Rounded, image edge-to-edge. Soft depth shadow only.
   const outerClasses = cn(
     "group w-[18vw] max-w-24 sm:w-[15vw] sm:max-w-28 md:w-[10vw] md:max-w-32 lg:w-[8vw] lg:max-w-36 aspect-[2/3] perspective-1000 rounded-xl overflow-hidden",
+    "shadow-[0_12px_28px_rgba(0,0,0,0.35)]",
+    isFaceUp ? "ring-1 ring-white/5" : "ring-1 ring-black/20",
     (isGlowing || justRevealed) && isFaceUp ? "shadow-soft" : "",
     peekGlow,
     specialRevealGlow,
@@ -122,6 +124,7 @@ export const GameCard: React.FC<CardProps> = ({
               className="w-full h-full object-cover"
               draggable={false}
             />
+            <div className="pointer-events-none absolute inset-0 rounded-xl mix-blend-soft-light bg-[radial-gradient(ellipse_at_50%_18%,rgba(255,255,255,0.08),transparent_42%),radial-gradient(ellipse_at_50%_62%,rgba(6,7,20,0.6),transparent_65%)]" />
           </div>
         </div>
 
@@ -169,6 +172,7 @@ export const GameCard: React.FC<CardProps> = ({
                     <div className="absolute inset-0 ring-0 md:ring-1 ring-white/30 rounded-xl" />
                   </div>
                 )}
+                <div className="pointer-events-none absolute inset-0 rounded-xl mix-blend-soft-light bg-[radial-gradient(ellipse_at_50%_18%,rgba(255,255,255,0.08),transparent_42%),radial-gradient(ellipse_at_50%_62%,rgba(6,7,20,0.6),transparent_65%)]" />
               </>
             ) : (
               <img

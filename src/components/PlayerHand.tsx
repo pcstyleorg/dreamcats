@@ -28,6 +28,12 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   const currentPlayer = state.players[state.currentPlayerIndex];
   const isMyTurn =
     gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
+  const isSwap2Phase =
+    gamePhase === "action_swap_2_select_1" ||
+    gamePhase === "action_swap_2_select_2";
+  const isPeekPhase = gamePhase === "action_peek_1";
+  const isTake2Phase = gamePhase === "action_take_2";
+  const isSpecialSelectionPhase = isSwap2Phase || isPeekPhase || isTake2Phase;
 
   const [animatingIndex, setAnimatingIndex] = React.useState<number | null>(
     null,
@@ -167,7 +173,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   const showYouTag = gameMode === "online" && myPlayerId === player.id;
 
   return (
-    <div
+    <motion.div
       className={cn(
         "relative p-2 sm:p-2.5 md:p-3 lg:p-3.5 rounded-2xl border transition-all duration-300 bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.12)] backdrop-blur-md",
         "shadow-soft-lg",
@@ -177,6 +183,16 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
           ? "border-primary/40 shadow-[0_0_28px_hsl(var(--primary)/0.25)]"
           : "border-border/50",
       )}
+      animate={
+        isMyTurn && isSpecialSelectionPhase
+          ? { boxShadow: "0 0 0 10px rgba(147, 51, 234, 0.08)", scale: 1.01 }
+          : { boxShadow: "0 0 0 0px rgba(0,0,0,0)", scale: 1 }
+      }
+      transition={
+        isMyTurn && isSpecialSelectionPhase
+          ? { duration: 1.2, repeat: Infinity, ease: "easeInOut", repeatType: "mirror" }
+          : { duration: 0.2 }
+      }
     >
       <div className="flex flex-col items-center gap-1 sm:gap-1.5">
         <h3
@@ -234,9 +250,32 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
               recentMoveForPlayer &&
               typeof recentMoveForPlayer.cardIndex === "number" &&
               recentMoveForPlayer.cardIndex === index;
+            const shouldPulseCard =
+              isMyTurn && isSpecialSelectionPhase && !cardInHand.isFaceUp;
 
             return (
-              <div key={index} className="relative">
+              <motion.div
+                key={index}
+                className="relative"
+                animate={
+                  shouldPulseCard
+                    ? {
+                        scale: [1, 1.05, 1],
+                        filter: ["brightness(1)", "brightness(1.06)", "brightness(1)"],
+                        boxShadow: [
+                          "0 0 0 0 rgba(147,51,234,0.0)",
+                          "0 0 0 8px rgba(147,51,234,0.15)",
+                          "0 0 0 0 rgba(147,51,234,0.0)",
+                        ],
+                      }
+                    : { scale: 1, filter: "brightness(1)", boxShadow: "0 0 0 0 rgba(0,0,0,0)" }
+                }
+                transition={
+                  shouldPulseCard
+                    ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
+                    : { duration: 0.2 }
+                }
+              >
                 {animatingIndex === index && (
                   <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-xs font-bold text-primary animate-bounce z-20 whitespace-nowrap pointer-events-none">
                     {t('actions.placed')}
@@ -266,11 +305,11 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                     playSound={playSound}
                   />
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };

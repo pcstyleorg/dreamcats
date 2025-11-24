@@ -161,6 +161,35 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     }
   }, [recentMove, recentPlayer, t]);
 
+  const activeSpecialAction = React.useMemo(() => {
+    if (drawnCard?.isSpecial && drawnCard.specialAction) {
+      return drawnCard.specialAction;
+    }
+    if (gamePhase === "action_swap_2_select_1" || gamePhase === "action_swap_2_select_2") {
+      return "swap_2";
+    }
+    if (gamePhase === "action_peek_1") {
+      return "peek_1";
+    }
+    if (gamePhase === "action_take_2") {
+      return "take_2";
+    }
+    return null;
+  }, [drawnCard, gamePhase]);
+
+  const specialAuraGradient = React.useMemo(() => {
+    switch (activeSpecialAction) {
+      case "swap_2":
+        return "radial-gradient(circle at 50% 50%, rgba(255, 113, 206, 0.18), rgba(33, 0, 44, 0.0) 55%)";
+      case "peek_1":
+        return "radial-gradient(circle at 50% 50%, rgba(108, 209, 255, 0.22), rgba(0, 10, 30, 0.0) 58%)";
+      case "take_2":
+        return "radial-gradient(circle at 50% 50%, rgba(255, 221, 150, 0.2), rgba(40, 20, 0, 0.0) 60%)";
+      default:
+        return null;
+    }
+  }, [activeSpecialAction]);
+
   if (players.length === 0) {
     return (
       <div className="w-full min-h-screen flex items-center justify-center font-heading">
@@ -265,72 +294,87 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
           className="flex-grow flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 md:gap-7 lg:gap-9 my-2 sm:my-3 md:my-4 min-h-0 w-full"
           data-tutorial-id="piles"
         >
-          <div className="bg-card/70 border border-border/60 rounded-2xl px-3 sm:px-5 py-4 sm:py-5 shadow-soft-lg backdrop-blur-xl flex items-center gap-4 sm:gap-6 md:gap-8">
-            <div
-              className="flex flex-col items-center w-full sm:w-auto"
-              data-tutorial-id="draw-pile"
-            >
-              <GameCard
-                card={null}
-                isFaceUp={false}
-                className={cn(
-                  isPlayerActionable ? "cursor-pointer" : "",
-                  pileCardClass,
-                )}
-                onClick={handleDrawFromDeck}
-                isGlowing={isPlayerActionable}
-                playSound={playSound}
-              />
-              <span className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base font-medium text-foreground text-center">
-                {t('game.draw')} ({drawPile.length})
-              </span>
-            </div>
-
+          <div className="relative w-full flex justify-center">
             <AnimatePresence>
-              {drawnCard && isMyTurn && gamePhase === "holding_card" && (
+              {specialAuraGradient && (
                 <motion.div
-                  className="flex flex-col items-center px-2"
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <p className="mb-2 text-sm sm:text-base font-semibold font-heading text-foreground">
-                    {t('game.yourCard')}
-                  </p>
-                  <GameCard
-                    card={drawnCard}
-                    isFaceUp={true}
-                    isGlowing
-                    className={pileCardClass}
-                  />
-                </motion.div>
+                  key={specialAuraGradient}
+                  className="absolute inset-[-10%] sm:inset-[-6%] blur-3xl rounded-[32px] pointer-events-none"
+                  style={{ background: specialAuraGradient }}
+                  initial={{ opacity: 0.1, scale: 0.9 }}
+                  animate={{ opacity: 0.35, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                />
               )}
             </AnimatePresence>
+            <div className="bg-card/70 border border-border/60 rounded-2xl px-3 sm:px-5 py-4 sm:py-5 shadow-soft-lg backdrop-blur-xl flex items-center gap-4 sm:gap-6 md:gap-8 relative z-10">
+              <div
+                className="flex flex-col items-center w-full sm:w-auto"
+                data-tutorial-id="draw-pile"
+              >
+                <GameCard
+                  card={null}
+                  isFaceUp={false}
+                  className={cn(
+                    isPlayerActionable ? "cursor-pointer" : "",
+                    pileCardClass,
+                  )}
+                  onClick={handleDrawFromDeck}
+                  isGlowing={isPlayerActionable}
+                  playSound={playSound}
+                />
+                <span className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base font-medium text-foreground text-center">
+                  {t('game.draw')} ({drawPile.length})
+                </span>
+              </div>
 
-            <div
-              className="flex flex-col items-center w-full sm:w-auto"
-              data-tutorial-id="discard-pile"
-            >
-              <GameCard
-                card={
-                  discardPile.length > 0
-                    ? discardPile[discardPile.length - 1]
-                    : null
-                }
-                isFaceUp={true}
-                className={cn(
-                  isPlayerActionable ? "cursor-pointer" : "",
-                  pileCardClass,
+              <AnimatePresence>
+                {drawnCard && isMyTurn && gamePhase === "holding_card" && (
+                  <motion.div
+                    className="flex flex-col items-center px-2"
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <p className="mb-2 text-sm sm:text-base font-semibold font-heading text-foreground">
+                      {t('game.yourCard')}
+                    </p>
+                    <GameCard
+                      card={drawnCard}
+                      isFaceUp={true}
+                      isGlowing
+                      className={pileCardClass}
+                    />
+                  </motion.div>
                 )}
-                onClick={handleDrawFromDiscard}
-                isGlowing={isPlayerActionable && discardPile.length > 0}
-                disableSpecialAnimation
-                playSound={playSound}
-              />
-              <span className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base font-medium text-foreground text-center">
-                {t('game.discard')}
-              </span>
+              </AnimatePresence>
+
+              <div
+                className="flex flex-col items-center w-full sm:w-auto"
+                data-tutorial-id="discard-pile"
+              >
+                <GameCard
+                  card={
+                    discardPile.length > 0
+                      ? discardPile[discardPile.length - 1]
+                      : null
+                  }
+                  isFaceUp={true}
+                  className={cn(
+                    isPlayerActionable ? "cursor-pointer" : "",
+                    pileCardClass,
+                  )}
+                  onClick={handleDrawFromDiscard}
+                  isGlowing={isPlayerActionable && discardPile.length > 0}
+                  disableSpecialAnimation
+                  playSound={playSound}
+                />
+                <span className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base font-medium text-foreground text-center">
+                  {t('game.discard')}
+                </span>
+              </div>
             </div>
           </div>
         </div>
