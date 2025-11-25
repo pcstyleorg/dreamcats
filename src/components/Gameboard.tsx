@@ -25,7 +25,21 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { usePlayersView } from "@/state/hooks";
+import {
+  usePlayersView,
+  useIsMyTurn,
+  useCurrentPlayer,
+  useGamePhase,
+  useGameMode,
+  useDrawPileCount,
+  useDiscardTop,
+  useDrawnCard,
+  useActionMessage,
+  useRoomId,
+  useLastMove,
+  useMyPlayerId,
+  useCanTakeAction,
+} from "@/state/hooks";
 
 interface GameboardProps {
   theme: "light" | "dark";
@@ -34,21 +48,24 @@ interface GameboardProps {
 
 export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   const { t } = useTranslation();
-  const { state, myPlayerId, broadcastAction, playSound } = useGame();
-  const {
-    currentPlayerIndex,
-    drawPile,
-    discardPile,
-    gamePhase,
-    actionMessage,
-    roomId,
-    drawnCard,
-    gameMode,
-    lastMove,
-  } = state;
+  const { broadcastAction, playSound } = useGame();
+  
+  // Use unified state hooks
   const players = usePlayersView();
+  const currentPlayer = useCurrentPlayer();
+  const isMyTurn = useIsMyTurn();
+  const gamePhase = useGamePhase();
+  const gameMode = useGameMode();
+  const drawPileCount = useDrawPileCount();
+  const discardTop = useDiscardTop();
+  const drawnCard = useDrawnCard();
+  const actionMessage = useActionMessage();
+  const roomId = useRoomId();
+  const lastMove = useLastMove();
+  const myPlayerId = useMyPlayerId();
+  const isPlayerActionable = useCanTakeAction();
 
-  const currentPlayer = players[currentPlayerIndex];
+  const currentPlayerIndex = players.findIndex(p => p.id === currentPlayer?.id);
 
   // Determine player positions
   // Bottom player is always "me" (online) or current player (hotseat)
@@ -59,7 +76,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
   if (gameMode === "hotseat") {
     // In hotseat, the current player is always at the bottom
-    bottomPlayer = currentPlayer;
+    bottomPlayer = currentPlayer!;
     // Other players are everyone else, ordered by turn order relative to current player
     otherPlayers = [
       ...players.slice(currentPlayerIndex + 1),
@@ -67,30 +84,27 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     ];
   } else {
     // Online mode: show my player at bottom
-    bottomPlayer = players.find((p) => p.id === myPlayerId) || currentPlayer;
+    bottomPlayer = players.find((p) => p.id === myPlayerId) || currentPlayer!;
     // Other players ordered by turn order relative to me
-    const myIndex = players.findIndex(p => p.id === bottomPlayer.id);
+    const myIndex = players.findIndex(p => p.id === bottomPlayer?.id);
     if (myIndex !== -1) {
       otherPlayers = [
         ...players.slice(myIndex + 1),
         ...players.slice(0, myIndex),
       ];
     } else {
-      otherPlayers = players.filter(p => p.id !== bottomPlayer.id);
+      otherPlayers = players.filter(p => p.id !== bottomPlayer?.id);
     }
   }
 
-  const isMyTurn =
-    gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
-
   const handleDrawFromDeck = () => {
-    if (isMyTurn && gamePhase === "playing") {
+    if (isPlayerActionable) {
       broadcastAction({ type: "DRAW_FROM_DECK" });
     }
   };
 
   const handleDrawFromDiscard = () => {
-    if (isMyTurn && gamePhase === "playing") {
+    if (isPlayerActionable) {
       broadcastAction({ type: "DRAW_FROM_DISCARD" });
     }
   };
@@ -102,7 +116,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     }
   };
 
-  const isPlayerActionable = isMyTurn && gamePhase === "playing";
   const pileCardClass =
     "!w-24 sm:!w-28 md:!w-32 lg:!w-28 xl:!w-32";
 
@@ -273,7 +286,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                 <div key={player.id} className="flex-shrink-0 min-w-0">
                   <PlayerHand
                     player={player}
-                    isCurrentPlayer={currentPlayer.id === player.id}
+                    isCurrentPlayer={currentPlayer?.id === player.id}
                     isOpponent={true}
                     playSound={playSound}
                   />
@@ -326,7 +339,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                   playSound={playSound}
                 />
                 <span className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base font-medium text-foreground text-center">
-                  {t('game.draw')} ({drawPile.length})
+                  {t('game.draw')} ({drawPileCount})
                 </span>
               </div>
 
@@ -357,18 +370,14 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                 data-tutorial-id="discard-pile"
               >
                 <GameCard
-                  card={
-                    discardPile.length > 0
-                      ? discardPile[discardPile.length - 1]
-                      : null
-                  }
+                  card={discardTop}
                   isFaceUp={true}
                   className={cn(
                     isPlayerActionable ? "cursor-pointer" : "",
                     pileCardClass,
                   )}
                   onClick={handleDrawFromDiscard}
-                  isGlowing={isPlayerActionable && discardPile.length > 0}
+                  isGlowing={isPlayerActionable && discardTop !== null}
                   disableSpecialAnimation
                   playSound={playSound}
                 />
@@ -386,7 +395,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
             <div data-tutorial-id="player-hand">
               <PlayerHand
                 player={bottomPlayer}
-                isCurrentPlayer={currentPlayer.id === bottomPlayer.id}
+                isCurrentPlayer={currentPlayer?.id === bottomPlayer.id}
                 playSound={playSound}
               />
             </div>

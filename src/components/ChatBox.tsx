@@ -12,6 +12,7 @@ export const ChatBox = () => {
   const { state, sendChatMessage, myPlayerId } = useGame();
   const [message, setMessage] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const chatMessages = state?.chatMessages ?? [];
 
   useEffect(() => {
     // Auto-scroll to bottom
@@ -21,7 +22,7 @@ export const ChatBox = () => {
             viewport.scrollTop = viewport.scrollHeight;
         }
     }
-  }, [state.chatMessages]);
+  }, [chatMessages]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +39,7 @@ export const ChatBox = () => {
         {t('game.chat')}
       </h4>
       <ScrollArea className="flex-grow h-48 rounded-md border p-2 mb-2 bg-black/10" ref={scrollAreaRef}>
-        {state.chatMessages.map((msg) => (
+        {chatMessages.map((msg) => (
           <div key={msg.id} className={cn("mb-2 text-sm", msg.senderId === myPlayerId ? "text-right" : "text-left")}>
             <div className={cn(
                 "inline-block p-2 rounded-lg max-w-[80%]",
@@ -49,7 +50,7 @@ export const ChatBox = () => {
             </div>
           </div>
         ))}
-         {state.chatMessages.length === 0 && <p className="text-center text-muted-foreground text-sm p-4">{t('game.noMessagesYet')}</p>}
+         {chatMessages.length === 0 && <p className="text-center text-muted-foreground text-sm p-4">{t('game.noMessagesYet')}</p>}
       </ScrollArea>
       <form onSubmit={handleSubmit} className="flex gap-2">
         <Input

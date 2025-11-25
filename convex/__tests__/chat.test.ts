@@ -16,20 +16,28 @@ describe("chat.getMessages pagination", () => {
       mode: "online",
     });
 
+    // Insert messages directly into the database with deterministic timestamps
+    // to avoid timing issues in tests
     for (let i = 0; i < 5; i++) {
-      await t.mutation(api.chat.sendMessage, {
-        roomId: "ROOM3",
-        senderId: "host",
-        senderName: "Host",
-        message: `m${i}`,
+      await t.run(async (ctx) => {
+        await ctx.db.insert("messages", {
+          roomId: "ROOM3",
+          senderId: "host",
+          senderName: "Host",
+          message: `m${i}`,
+          timestamp: 1000 + i * 100, // Deterministic: 1000, 1100, 1200, 1300, 1400
+        });
       });
     }
 
+    // First page should get latest 3 messages in chronological order
     const firstPage = await t.query(api.chat.getMessages, { roomId: "ROOM3", limit: 3 });
     expect(firstPage.map((m: { message: string }) => m.message)).toEqual(["m2", "m3", "m4"]);
 
-    const cursor = firstPage[firstPage.length - 1].timestamp;
+    // Use the first item's timestamp as cursor to get older messages
+    const cursor = firstPage[0].timestamp; // timestamp of m2 = 1200
     const nextPage = await t.query(api.chat.getMessages, { roomId: "ROOM3", cursor, limit: 3 });
-    expect(nextPage.map((m: { message: string }) => m.message)).toEqual(["m0", "m1", "m2"]);
+    // With lt() filter, we get messages with timestamp < 1200, so m0 (1000) and m1 (1100)
+    expect(nextPage.map((m: { message: string }) => m.message)).toEqual(["m0", "m1"]);
   });
 });

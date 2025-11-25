@@ -76,9 +76,5 @@ export interface NetSlice {
 
 export type AppState = SessionSlice & GameSlice & UISlice & NetSlice;
 
-export type SliceCreator<S> = StateCreator<
-  AppState,
-  [["zustand/devtools", never], ["zustand/subscribeWithSelector", never], ["zustand/persist", unknown?]],
-  [],
-  S
->;
+// Simplified slice creator type for zustand v4
+export type SliceCreator<S> = StateCreator<AppState, [], [], S>;

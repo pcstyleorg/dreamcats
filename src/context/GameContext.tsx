@@ -231,15 +231,17 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           const nextPlayerIndex = (playerIndex + 1) % state.players.length;
           // If we've looped back to the starting player, peeking is done
           if (nextPlayerIndex === startIndex) {
+            const currentPlayerName = players[state.currentPlayerIndex]?.name ?? 'Player';
             return {
               ...state,
               players,
               gamePhase: "playing",
               peekingState: undefined,
-              actionMessage: i18n.t('game.gameBegins', { player: state.players[state.currentPlayerIndex].name }),
+              actionMessage: i18n.t('game.gameBegins', { player: currentPlayerName }),
             };
           }
           if (nextPlayerIndex < state.players.length) {
+            const nextPlayerName = players[nextPlayerIndex]?.name ?? 'Player';
             return {
               ...state,
               players,
@@ -248,15 +250,16 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
                 playerIndex: nextPlayerIndex,
                 peekedCount: 0,
               },
-              actionMessage: i18n.t('game.peekTwoCards', { player: state.players[nextPlayerIndex].name }),
+              actionMessage: i18n.t('game.peekTwoCards', { player: nextPlayerName }),
             };
           } else {
+            const currentPlayerName = players[state.currentPlayerIndex]?.name ?? 'Player';
             return {
               ...state,
               players,
               gamePhase: "playing",
               peekingState: undefined,
-              actionMessage: i18n.t('game.gameBegins', { player: state.players[state.currentPlayerIndex].name }),
+              actionMessage: i18n.t('game.gameBegins', { player: currentPlayerName }),
             };
           }
         }

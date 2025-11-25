@@ -2,11 +2,13 @@ import { mutation, query, action } from "./_generated/server";
 import { api } from "./_generated/api";
 import { v } from "convex/values";
 
+type SpecialAction = "take_2" | "peek_1" | "swap_2";
+
 type Card = {
   id: number;
   value: number;
   isSpecial: boolean;
-  specialAction?: "take_2" | "peek_1" | "swap_2";
+  specialAction?: SpecialAction;
 };
 
 const buildDeck = (): Card[] => {
@@ -19,7 +21,7 @@ const buildDeck = (): Card[] => {
       cards.push({ id: id++, value: i, isSpecial: false });
     }
   }
-  const addSpecial = (value: number, specialAction: string) => {
+  const addSpecial = (value: number, specialAction: SpecialAction) => {
     for (let i = 0; i < 3; i++) {
       cards.push({ id: id++, value, isSpecial: true, specialAction });
     }
@@ -102,7 +104,7 @@ export const getGameState = query({
 
 export const startGame = action({
   args: { roomId: v.string() },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<{ success: boolean; state?: unknown }> => {
     const deck = shuffle(buildDeck());
     const room = await ctx.runQuery(api.rooms.getRoom, { roomId: args.roomId });
     if (!room) throw new Error("Room not found");
@@ -110,7 +112,7 @@ export const startGame = action({
     if (!players || players.length < 2) throw new Error("Need at least 2 players");
 
     // deal 4 cards to each player
-    const hands: { playerId: string; hand: { card: Card; isFaceUp: boolean; hasBeenPeeked: boolean }[] }[] = players.map((p) => ({
+    const hands: { playerId: string; hand: { card: Card; isFaceUp: boolean; hasBeenPeeked: boolean }[] }[] = players.map((p: { playerId: string }) => ({
       playerId: p.playerId,
       hand: [],
     }));
@@ -131,7 +133,7 @@ export const startGame = action({
       gameMode: room.mode ?? "online",
       roomId: room.roomId,
       hostId: room.hostId,
-      players: players.map((p) => ({
+      players: players.map((p: { playerId: string; name: string; score?: number }) => ({
         id: p.playerId,
         name: p.name,
         hand: hands.find((h) => h.playerId === p.playerId)?.hand ?? [],

@@ -12,6 +12,7 @@ import type * as chat from "../chat.js";
 import type * as cleanup from "../cleanup.js";
 import type * as crons from "../crons.js";
 import type * as games from "../games.js";
+import type * as presence from "../presence.js";
 import type * as rooms from "../rooms.js";
 
 import type {
@@ -25,6 +26,7 @@ declare const fullApi: ApiFromModules<{
   cleanup: typeof cleanup;
   crons: typeof crons;
   games: typeof games;
+  presence: typeof presence;
   rooms: typeof rooms;
 }>;
 

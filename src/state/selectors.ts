@@ -1,3 +1,8 @@
+/**
+ * @deprecated These batch selectors are kept for reference.
+ * Prefer using the specific hooks from `./hooks.ts` instead,
+ * which provide better memoization and feature flag support.
+ */
 import { useAppStore } from "./store";
 
 export const useSession = () =>

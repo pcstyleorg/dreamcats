@@ -6,7 +6,7 @@ import { api } from "../_generated/api";
 const modules = import.meta.glob(["../*.ts", "../_generated/**/*.{ts,js}"]);
 const makeCtx = () => convexTest(schema, modules) as TestConvex<typeof schema>;
 
-const buildRoomWithPlayers = async (t: ConvexTest, count = 2) => {
+const buildRoomWithPlayers = async (t: TestConvex<typeof schema>, count = 2) => {
   const roomId = "ROOM1";
   await t.mutation(api.rooms.createRoom, {
     roomId,

@@ -13,16 +13,18 @@ export const GameActions = () => {
     drawSource,
     gameMode,
     currentPlayerIndex,
+    players,
   } = state;
 
-  const currentPlayer = state.players[currentPlayerIndex];
+  const currentPlayer = players[currentPlayerIndex];
   const isMyTurn =
     gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
-  const amICurrentPeeker =
-    gamePhase === "peeking" &&
-    peekingState &&
-    peekingState.playerIndex ===
-      state.players.findIndex((p) => p.id === myPlayerId);
+  
+  // In online mode, check if it's my turn to peek
+  // In hotseat mode, the current peeking player is always shown
+  const myPlayerIndex = players.findIndex((p) => p.id === myPlayerId);
+  const isMyPeekingTurn = gameMode === "hotseat" || 
+    (peekingState && peekingState.playerIndex === myPlayerIndex);
 
   const handleFinishPeeking = () => {
     if (peekingState?.peekedCount === 2) {
@@ -43,19 +45,12 @@ export const GameActions = () => {
   const mustSwap =
     gamePhase === "holding_card" && !!drawnCard && drawSource === "discard";
 
-  if (
-    (gameMode === "hotseat" || amICurrentPeeker) &&
-    gamePhase === "peeking" &&
-    peekingState &&
-    peekingState.playerIndex ===
-      state.players.findIndex(
-        (p) => p.id === state.players[peekingState.playerIndex].id,
-      )
-  ) {
+  // Show finish peeking button during peeking phase when it's my turn to peek
+  if (gamePhase === "peeking" && peekingState && isMyPeekingTurn) {
     return (
       <Button
         onClick={handleFinishPeeking}
-        disabled={peekingState?.peekedCount !== 2}
+        disabled={peekingState.peekedCount !== 2}
         className="w-auto min-w-[160px] sm:min-w-[180px] min-h-[52px] sm:min-h-[56px] text-base sm:text-lg font-semibold bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-soft-lg hover:shadow-dreamy"
         size="lg"
       >
