@@ -279,9 +279,9 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         </div>
 
         {/* Opponents Area */}
-        <div className="flex justify-start sm:justify-center items-start mt-4 sm:mt-6 lg:mt-6 xl:mt-8 mb-1.5 sm:mb-2 md:mb-3 flex-shrink-0 w-full px-1 sm:px-2 overflow-x-auto">
+        <div className="flex justify-start sm:justify-center items-start mt-4 sm:mt-6 lg:mt-6 xl:mt-8 mb-1.5 sm:mb-2 md:mb-3 flex-shrink-0 w-full px-1 sm:px-2 overflow-x-auto relative z-20">
           {otherPlayers.length > 0 ? (
-            <div className="flex flex-nowrap sm:flex-wrap justify-start sm:justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-10 w-full max-w-5xl mx-auto px-2 sm:px-3 py-2 sm:py-3 bg-card/70 border border-border/60 rounded-2xl shadow-soft-lg backdrop-blur-xl overflow-x-auto sm:overflow-visible">
+            <div className="flex flex-nowrap sm:flex-wrap justify-start sm:justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-10 w-full max-w-5xl mx-auto px-2 sm:px-3 py-2 sm:py-3 bg-card/70 border border-border/60 rounded-2xl shadow-soft-lg backdrop-blur-xl overflow-x-auto sm:overflow-visible relative z-20">
               {otherPlayers.map((player) => (
                 <div key={player.id} className="flex-shrink-0 min-w-0">
                   <PlayerHand
@@ -305,15 +305,15 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
         {/* Center Area */}
         <div
-          className="flex-grow flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 md:gap-7 lg:gap-9 my-2 sm:my-3 md:my-4 min-h-0 w-full"
+          className="flex-shrink-0 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 md:gap-7 lg:gap-9 my-2 sm:my-3 md:my-4 w-full"
           data-tutorial-id="piles"
         >
-          <div className="relative w-full flex justify-center">
+          <div className="relative w-auto flex justify-center">
             <AnimatePresence>
               {specialAuraGradient && (
                 <motion.div
                   key={specialAuraGradient}
-                  className="absolute inset-[-10%] sm:inset-[-6%] blur-3xl rounded-[32px] pointer-events-none"
+                  className="absolute inset-[-10%] sm:inset-[-6%] blur-3xl rounded-[32px] pointer-events-none z-0"
                   style={{ background: specialAuraGradient }}
                   initial={{ opacity: 0.1, scale: 0.9 }}
                   animate={{ opacity: 0.35, scale: 1 }}
