@@ -220,7 +220,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.25 }}
-            className="absolute top-3 left-1/2 -translate-x-1/2 z-30 pointer-events-none"
+            className="absolute top-16 sm:top-14 lg:top-6 left-1/2 -translate-x-1/2 z-30 pointer-events-none px-3 w-max"
           >
             <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-card/90 dark:bg-background/90 border border-border/60 shadow-soft">
               <Sparkles className="h-4 w-4 text-primary" />
@@ -249,7 +249,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
           </div>
           <div className="flex items-center gap-2">
             {gameMode === "online" && roomId && (
-              <div className="flex items-center gap-2 bg-card/70 px-3 py-2 rounded-xl border border-border/60 shadow-soft">
+              <div className="flex items-center gap-2 bg-card/70 px-3 py-2 rounded-xl border border-border/60 shadow-soft lg:hidden">
                 <Cloud className="w-4 h-4 text-secondary" />
                 <span className="font-mono text-sm text-foreground">{roomId}</span>
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={copyRoomId}>

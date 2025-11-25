@@ -99,12 +99,12 @@ export const GameCard: React.FC<CardProps> = ({
       onClick={handleClick}
       animate={
         isSpecialFaceUp
-          ? { scale: [1, 1.04, 1], rotateZ: [0, -1.2, 1.2, 0] }
-          : { scale: 1, rotateZ: 0 }
+          ? { filter: "drop-shadow(0 0 12px rgba(168,85,247,0.28))" }
+          : { filter: "drop-shadow(0 0 0 rgba(0,0,0,0))" }
       }
       transition={
         isSpecialFaceUp
-          ? { duration: 1.4, repeat: Infinity, ease: "easeInOut" }
+          ? { duration: 0.9, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }
           : { duration: 0.2 }
       }
       initial={false}
