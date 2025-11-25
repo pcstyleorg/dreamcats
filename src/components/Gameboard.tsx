@@ -117,7 +117,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   };
 
   const pileCardClass =
-    "!w-24 sm:!w-28 md:!w-32 lg:!w-28 xl:!w-32";
+    "!w-20 sm:!w-24 md:!w-28 lg:!w-24 xl:!w-28";
 
   const SidePanelContent = () => (
     <>
@@ -246,17 +246,17 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         )}
       </AnimatePresence>
 
-      <main className="flex-grow flex flex-col relative z-10 min-h-0 gap-3 sm:gap-4 overflow-hidden">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 px-1 sm:px-3 md:px-4 py-3 sm:py-4 sticky top-0 z-20 backdrop-blur-md bg-background/70 border-b border-border/40">
-          <div className="flex items-center gap-3 bg-card/70 border border-border/60 px-4 py-3 rounded-2xl shadow-soft backdrop-blur-lg">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] flex items-center justify-center text-[hsl(var(--primary-foreground))] font-heading text-lg shadow-soft">
+      <main className="flex-grow flex flex-col justify-between relative z-10 min-h-0 gap-2 sm:gap-3 overflow-hidden">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 px-1 sm:px-3 md:px-4 py-2 sm:py-3 flex-shrink-0 z-20 backdrop-blur-md bg-background/70 border-b border-border/40">
+          <div className="flex items-center gap-3 bg-card/70 border border-border/60 px-3 py-2 sm:px-4 sm:py-3 rounded-2xl shadow-soft backdrop-blur-lg">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] flex items-center justify-center text-[hsl(var(--primary-foreground))] font-heading text-base sm:text-lg shadow-soft">
               {currentPlayer?.name?.charAt(0) ?? 'S'}
             </div>
             <div className="flex flex-col">
-              <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              <span className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-muted-foreground">
                 {isMyTurn ? t('game.yourTurn') : t('game.playerTurn', { player: currentPlayer?.name ?? '' })}
               </span>
-              <span className="text-sm sm:text-base text-foreground font-semibold">
+              <span className="text-xs sm:text-sm md:text-base text-foreground font-semibold">
                 {actionMessage}
               </span>
             </div>
@@ -279,9 +279,9 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         </div>
 
         {/* Opponents Area */}
-        <div className="flex justify-start sm:justify-center items-start mt-4 sm:mt-6 lg:mt-6 xl:mt-8 mb-1.5 sm:mb-2 md:mb-3 flex-shrink-0 w-full px-1 sm:px-2 overflow-x-auto relative z-20">
+        <div className="flex justify-start sm:justify-center items-start flex-shrink-0 w-full px-1 sm:px-2 overflow-x-auto relative z-20">
           {otherPlayers.length > 0 ? (
-            <div className="flex flex-nowrap sm:flex-wrap justify-start sm:justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-10 w-full max-w-5xl mx-auto px-2 sm:px-3 py-2 sm:py-3 bg-card/70 border border-border/60 rounded-2xl shadow-soft-lg backdrop-blur-xl overflow-x-auto sm:overflow-visible relative z-20">
+            <div className="flex flex-nowrap sm:flex-wrap justify-start sm:justify-center gap-1 sm:gap-2 md:gap-3 lg:gap-4 w-full max-w-5xl mx-auto px-2 py-1.5 sm:py-2 bg-card/70 border border-border/60 rounded-2xl shadow-soft-lg backdrop-blur-xl overflow-x-auto sm:overflow-visible relative z-20">
               {otherPlayers.map((player) => (
                 <div key={player.id} className="flex-shrink-0 min-w-0">
                   <PlayerHand
@@ -294,7 +294,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
               ))}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-20 sm:h-24 w-full max-w-md rounded-lg bg-primary/10 border-2 border-dashed border-border/60 mx-auto shadow-soft">
+            <div className="flex items-center justify-center h-16 sm:h-20 w-full max-w-md rounded-lg bg-primary/10 border-2 border-dashed border-border/60 mx-auto shadow-soft">
               <p className="text-muted-foreground font-heading text-xs sm:text-sm md:text-base">
                 {t('game.waitingForOpponents')}
               </p>
@@ -305,7 +305,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
         {/* Center Area */}
         <div
-          className="flex-shrink-0 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 md:gap-7 lg:gap-9 my-2 sm:my-3 md:my-4 w-full"
+          className="flex-shrink-0 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 md:gap-6 w-full"
           data-tutorial-id="piles"
         >
           <div className="relative w-auto flex justify-center">
@@ -322,7 +322,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                 />
               )}
             </AnimatePresence>
-            <div className="bg-card/70 border border-border/60 rounded-2xl px-3 sm:px-5 py-4 sm:py-5 shadow-soft-lg backdrop-blur-xl flex items-center gap-4 sm:gap-6 md:gap-8 relative z-10">
+            <div className="bg-card/70 border border-border/60 rounded-2xl px-3 sm:px-4 py-3 sm:py-4 shadow-soft-lg backdrop-blur-xl flex items-center gap-3 sm:gap-5 md:gap-6 relative z-10">
               <div
                 className="flex flex-col items-center w-full sm:w-auto"
                 data-tutorial-id="draw-pile"
@@ -391,7 +391,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
         {/* Bottom Player Area */}
         {bottomPlayer && (
-          <div className="mt-auto flex-shrink-0 pb-[calc(env(safe-area-inset-bottom)+16px)] sm:pb-3 lg:pb-2">
+          <div className="flex-shrink-0 pb-[calc(env(safe-area-inset-bottom)+8px)] sm:pb-2">
             <div data-tutorial-id="player-hand">
               <PlayerHand
                 player={bottomPlayer}
@@ -400,7 +400,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
               />
             </div>
             <div
-              className="flex justify-center mt-1 sm:mt-2 md:mt-3 h-8 sm:h-10 md:h-12"
+              className="flex justify-center mt-1 sm:mt-2 h-8 sm:h-10"
               data-tutorial-id="game-actions"
             >
               <GameActions />
