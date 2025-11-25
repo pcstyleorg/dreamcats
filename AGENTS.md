@@ -11,6 +11,7 @@
 - Use Context7 for library/framework docs when needed; otherwise work directly in the repo.
 - Use Voice Codex MCP only when the `.use-voice` file exists with content set to `true`; if the file is missing or has any other content, avoid Voice Codex unless explicitly asked.
 - If Voice MCP is enabled (via `.use-voice` or explicit request), first read `agent-voice.md` for voice tool usage and follow it.
+- Follow `tasks.md`: tackle only one major task at a time in order, mark checkboxes as you complete them, and proceed step-by-step.
 
 ## Code Style Guidelines
 

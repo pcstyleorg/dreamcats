@@ -18,6 +18,8 @@ export const cleanupOldRooms = internalMutation({
     let deletedPlayers = 0;
     let deletedGames = 0;
     let deletedMessages = 0;
+    let deletedMoves = 0;
+    let deletedPresence = 0;
 
     for (const room of oldRooms) {
       // Delete all players in this room
@@ -50,6 +52,24 @@ export const cleanupOldRooms = internalMutation({
         deletedMessages++;
       }
 
+      const moves = await ctx.db
+        .query("moves")
+        .withIndex("by_room_time", (q) => q.eq("roomId", room.roomId))
+        .collect();
+      for (const move of moves) {
+        await ctx.db.delete(move._id);
+        deletedMoves++;
+      }
+
+      const presence = await ctx.db
+        .query("presence")
+        .withIndex("by_roomId", (q) => q.eq("roomId", room.roomId))
+        .collect();
+      for (const pres of presence) {
+        await ctx.db.delete(pres._id);
+        deletedPresence++;
+      }
+
       // Delete the room itself
       await ctx.db.delete(room._id);
       deletedRooms++;
@@ -60,8 +80,9 @@ export const cleanupOldRooms = internalMutation({
       deletedPlayers,
       deletedGames,
       deletedMessages,
+      deletedMoves,
+      deletedPresence,
       timestamp: now,
     };
   },
 });
-

@@ -25,6 +25,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { usePlayersView } from "@/state/hooks";
 
 interface GameboardProps {
   theme: "light" | "dark";
@@ -35,7 +36,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   const { t } = useTranslation();
   const { state, myPlayerId, broadcastAction, playSound } = useGame();
   const {
-    players,
     currentPlayerIndex,
     drawPile,
     discardPile,
@@ -46,6 +46,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     gameMode,
     lastMove,
   } = state;
+  const players = usePlayersView();
 
   const currentPlayer = players[currentPlayerIndex];
 
@@ -200,14 +201,14 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
   return (
     <div
-      className="relative w-full min-h-[100svh] lg:min-h-[100dvh] lg:h-full text-foreground px-1 sm:px-2 md:px-4 lg:px-6 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 bg-cover bg-center overflow-y-auto lg:overflow-hidden"
+      className="relative w-full min-h-[100svh] lg:min-h-[100dvh] lg:h-full text-foreground px-1 sm:px-2 md:px-4 lg:px-6 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 bg-cover bg-center overflow-hidden"
       style={{
         backgroundImage,
       }}
     >
       {/* Light overlays for better readability on bright background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[rgba(8,12,24,0.9)] via-[rgba(12,15,32,0.8)] to-[rgba(10,8,18,0.9)] pointer-events-none" />
-      <div className="absolute inset-0 opacity-70 pointer-events-none" style={{ backgroundImage: backgroundImage }} />
+      <div className="absolute inset-0 opacity-60 pointer-events-none" style={{ backgroundImage: backgroundImage }} />
       <div className="absolute -top-32 -left-16 w-72 h-72 rounded-full bg-[hsl(var(--primary)/0.25)] blur-3xl" />
       <div className="absolute top-12 -right-24 w-72 h-72 rounded-full bg-[hsl(var(--accent)/0.2)] blur-3xl" />
       <div className="absolute bottom-10 left-1/3 w-64 h-64 rounded-full bg-[hsl(var(--secondary)/0.16)] blur-3xl" />
@@ -232,8 +233,8 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         )}
       </AnimatePresence>
 
-      <main className="flex-grow flex flex-col relative z-10 min-h-0 gap-3 sm:gap-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 px-1 sm:px-3 md:px-4 py-3 sm:py-4">
+      <main className="flex-grow flex flex-col relative z-10 min-h-0 gap-3 sm:gap-4 overflow-hidden">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 px-1 sm:px-3 md:px-4 py-3 sm:py-4 sticky top-0 z-20 backdrop-blur-md bg-background/70 border-b border-border/40">
           <div className="flex items-center gap-3 bg-card/70 border border-border/60 px-4 py-3 rounded-2xl shadow-soft backdrop-blur-lg">
             <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] flex items-center justify-center text-[hsl(var(--primary-foreground))] font-heading text-lg shadow-soft">
               {currentPlayer?.name?.charAt(0) ?? 'S'}
@@ -265,7 +266,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         </div>
 
         {/* Opponents Area */}
-        <div className="flex justify-start sm:justify-center items-start mt-4 sm:mt-6 lg:mt-6 xl:mt-8 mb-1.5 sm:mb-2 md:mb-3 flex-shrink-0 w-full px-1 sm:px-2">
+        <div className="flex justify-start sm:justify-center items-start mt-4 sm:mt-6 lg:mt-6 xl:mt-8 mb-1.5 sm:mb-2 md:mb-3 flex-shrink-0 w-full px-1 sm:px-2 overflow-x-auto">
           {otherPlayers.length > 0 ? (
             <div className="flex flex-nowrap sm:flex-wrap justify-start sm:justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-10 w-full max-w-5xl mx-auto px-2 sm:px-3 py-2 sm:py-3 bg-card/70 border border-border/60 rounded-2xl shadow-soft-lg backdrop-blur-xl overflow-x-auto sm:overflow-visible">
               {otherPlayers.map((player) => (
@@ -381,7 +382,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
         {/* Bottom Player Area */}
         {bottomPlayer && (
-          <div className="mt-auto flex-shrink-0 pb-5 sm:pb-3 lg:pb-2">
+          <div className="mt-auto flex-shrink-0 pb-[calc(env(safe-area-inset-bottom)+16px)] sm:pb-3 lg:pb-2">
             <div data-tutorial-id="player-hand">
               <PlayerHand
                 player={bottomPlayer}

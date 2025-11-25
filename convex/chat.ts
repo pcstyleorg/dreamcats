@@ -21,14 +21,16 @@ export const sendMessage = mutation({
 });
 
 export const getMessages = query({
-  args: { roomId: v.string() },
+  args: { roomId: v.string(), cursor: v.optional(v.number()), limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
+    const limit = args.limit ?? 100;
     const messages = await ctx.db
       .query("messages")
-      .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
+      .withIndex("by_room_time", (q) => q.eq("roomId", args.roomId))
       .order("desc")
-      .take(100); // Limit to last 100 messages
+      .filter((q) => (args.cursor ? q.lt(q.field("timestamp"), args.cursor) : true))
+      .take(limit);
+
     return messages.reverse(); // Return in chronological order
   },
 });
-
