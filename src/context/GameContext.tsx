@@ -662,10 +662,13 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
 
     const remoteState = remoteGameState as GameState;
     
-    // Use a simpler comparison: only check key fields that matter for sync
-    const remoteKey = `${remoteState.gamePhase}-${remoteState.currentPlayerIndex}-${remoteState.turnCount}-${remoteState.peekingState?.playerIndex ?? 'none'}-${remoteState.peekingState?.peekedCount ?? 0}`;
+    // Helper to generate a comparison key from game state
+    const generateStateKey = (s: GameState) => 
+      `${s.gamePhase}-${s.currentPlayerIndex}-${s.turnCount}-${s.peekingState?.playerIndex ?? 'none'}-${s.peekingState?.peekedCount ?? 0}`;
+    
+    const remoteKey = generateStateKey(remoteState);
     const lastKey = lastSyncedStateRef.current 
-      ? `${lastSyncedStateRef.current.gamePhase}-${lastSyncedStateRef.current.currentPlayerIndex}-${lastSyncedStateRef.current.turnCount}-${lastSyncedStateRef.current.peekingState?.playerIndex ?? 'none'}-${lastSyncedStateRef.current.peekingState?.peekedCount ?? 0}`
+      ? generateStateKey(lastSyncedStateRef.current)
       : null;
 
     // During peeking phase, preserve local peeked card visibility
