@@ -6,13 +6,27 @@ export const createRoom = mutation({
     roomId: v.string(),
     hostId: v.string(),
     hostName: v.string(),
+    mode: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const now = Date.now();
+    const mode = args.mode ?? "online";
+
+    // Prevent duplicate room codes
+    const existing = await ctx.db
+      .query("rooms")
+      .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
+      .first();
+    if (existing) {
+      throw new Error("Room already exists");
+    }
+
     await ctx.db.insert("rooms", {
       roomId: args.roomId,
       hostId: args.hostId,
       hostName: args.hostName,
+      status: "lobby",
+      mode,
       createdAt: now,
       lastUpdated: now,
     });
@@ -21,7 +35,24 @@ export const createRoom = mutation({
       roomId: args.roomId,
       playerId: args.hostId,
       name: args.hostName,
+        seat: 0,
+        score: 0,
+        connected: true,
       lastSeenAt: now,
+    });
+
+    // Seed game snapshot shell
+    await ctx.db.insert("games", {
+      roomId: args.roomId,
+      state: {
+        roomId: args.roomId,
+        gameMode: mode,
+        gamePhase: "lobby",
+        hostId: args.hostId,
+        players: [],
+      },
+      version: 0,
+      lastUpdated: now,
     });
     return { success: true };
   },
@@ -51,10 +82,19 @@ export const joinRoom = mutation({
       .first();
 
     const now = Date.now();
+    const roomPlayers = await ctx.db
+      .query("players")
+      .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
+      .collect();
+    const takenSeats = new Set(roomPlayers.map((p) => p.seat));
+    let seat = 0;
+    while (takenSeats.has(seat)) seat += 1;
+
     if (existingPlayer) {
       // Update last seen
       await ctx.db.patch(existingPlayer._id, {
         lastSeenAt: now,
+        connected: true,
       });
     } else {
       // Add new player
@@ -62,6 +102,9 @@ export const joinRoom = mutation({
         roomId: args.roomId,
         playerId: args.playerId,
         name: args.name,
+        seat,
+        score: 0,
+        connected: true,
         lastSeenAt: now,
       });
     }
@@ -103,6 +146,7 @@ export const updatePlayerPresence = mutation({
     playerId: v.string(),
   },
   handler: async (ctx, args) => {
+    const now = Date.now();
     const player = await ctx.db
       .query("players")
       .withIndex("by_playerId", (q) => q.eq("playerId", args.playerId))
@@ -110,9 +154,24 @@ export const updatePlayerPresence = mutation({
 
     if (player) {
       await ctx.db.patch(player._id, {
-        lastSeenAt: Date.now(),
+        lastSeenAt: now,
+        connected: true,
+      });
+    }
+
+    const presence = await ctx.db
+      .query("presence")
+      .withIndex("by_playerId", (q) => q.eq("playerId", args.playerId))
+      .first();
+    if (presence) {
+      await ctx.db.patch(presence._id, { lastPing: now, status: "online" });
+    } else {
+      await ctx.db.insert("presence", {
+        roomId: args.roomId,
+        playerId: args.playerId,
+        status: "online",
+        lastPing: now,
       });
     }
   },
 });
-

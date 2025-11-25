@@ -10,6 +10,7 @@ import { LandingPage } from './components/LandingPage';
 import { ThemeToggle } from './components/ThemeToggle';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import './i18n/config';
+import { GameStateBridge } from '@/state/bridge/GameStateBridge';
 
 function App() {
   const { state } = useGame();
@@ -41,11 +42,13 @@ function App() {
   const showLanding = !hasEntered;
   const showLobby = hasEntered && state.gamePhase === 'lobby';
   const showGameboard = hasEntered && state.gamePhase !== 'lobby';
+  const inGame = showGameboard;
 
   return (
     <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="text-foreground">Loading...</div></div>}>
       <TutorialProvider>
-        <main className="font-sans bg-background text-foreground min-h-[100dvh] overflow-x-hidden overflow-y-auto transition-colors relative flex flex-col">
+        <main className={`font-sans bg-background text-foreground min-h-[100dvh] ${inGame ? "h-[100dvh] overflow-hidden" : "overflow-x-hidden overflow-y-auto"} transition-colors relative flex flex-col`}>
+          <GameStateBridge />
           {!showGameboard && (
             <div className="fixed top-3 sm:top-4 right-3 sm:right-4 z-50 flex gap-2">
               <LanguageSwitcher />
