@@ -310,7 +310,8 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           };
         }
         case "DISCARD_HELD_CARD": {
-          if (state.gamePhase !== "holding_card" || !state.drawnCard)
+          // Cannot discard if drew from discard pile - must swap (per game rules)
+          if (state.gamePhase !== "holding_card" || !state.drawnCard || state.drawSource === "discard")
             return state;
           const newDiscardPile = [...state.discardPile, state.drawnCard];
           return advanceTurn({
@@ -599,10 +600,21 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     [setState],
   );
 
-  const viewerId =
-    state.gameMode === "online"
-      ? myPlayerId
-      : state.players[state.currentPlayerIndex]?.id ?? null;
+  // Determine the viewer ID based on game mode and phase
+  // In online mode: always the local player
+  // In hotseat mode during peeking: the player who is currently peeking
+  // In hotseat mode otherwise: the current player whose turn it is
+  const viewerId = useMemo(() => {
+    if (state.gameMode === "online") {
+      return myPlayerId;
+    }
+    // Hotseat mode
+    if (state.gamePhase === "peeking" && state.peekingState) {
+      return state.players[state.peekingState.playerIndex]?.id ?? null;
+    }
+    return state.players[state.currentPlayerIndex]?.id ?? null;
+  }, [state.gameMode, state.gamePhase, state.peekingState, state.players, state.currentPlayerIndex, myPlayerId]);
+  
   const visibleState = useMemo(
     () => getVisibleStateForViewer(state, viewerId),
     [state, viewerId],
@@ -648,67 +660,56 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // Only update if remote state is different from what we last synced
-    // This prevents loops when we sync our own changes
-    const remoteStateStr = JSON.stringify(remoteGameState);
-    const lastSyncedStr = lastSyncedStateRef.current
-      ? JSON.stringify(lastSyncedStateRef.current)
+    const remoteState = remoteGameState as GameState;
+    
+    // Use a simpler comparison: only check key fields that matter for sync
+    const remoteKey = `${remoteState.gamePhase}-${remoteState.currentPlayerIndex}-${remoteState.turnCount}-${remoteState.peekingState?.playerIndex ?? 'none'}-${remoteState.peekingState?.peekedCount ?? 0}`;
+    const lastKey = lastSyncedStateRef.current 
+      ? `${lastSyncedStateRef.current.gamePhase}-${lastSyncedStateRef.current.currentPlayerIndex}-${lastSyncedStateRef.current.turnCount}-${lastSyncedStateRef.current.peekingState?.playerIndex ?? 'none'}-${lastSyncedStateRef.current.peekingState?.peekedCount ?? 0}`
       : null;
 
-    // Skip if remote state hasn't changed
-    if (remoteStateStr === lastSyncedStr) {
-      return;
-    }
-
-    // Sanitize remote state to ensure we don't show opponent's peeked cards
-    // But preserve our own local peeked cards
-    const remoteState = remoteGameState as GameState;
+    // During peeking phase, preserve local peeked card visibility
+    // The key insight: peeked cards should only be visible locally to the player who peeked them
     let finalState = remoteState;
 
-    // During peeking phase, merge our local peeked cards with remote state
-    // Use ref to access current state without adding it to dependencies
     if (remoteState.gamePhase === "peeking" && myPlayerId) {
       const currentState = currentStateRef.current;
       const localPlayer = currentState.players.find((p) => p.id === myPlayerId);
       const remotePlayer = remoteState.players.find((p) => p.id === myPlayerId);
 
-      if (localPlayer && remotePlayer) {
-        // Check if we actually need to merge (if we have locally peeked cards)
-        const hasLocalPeekedCards = localPlayer.hand.some(
-          (card) => card.hasBeenPeeked && card.isFaceUp,
-        );
+      if (localPlayer && remotePlayer && localPlayer.hand.length === remotePlayer.hand.length) {
+        // Preserve our locally peeked cards (only for our own hand)
+        const mergedHand = remotePlayer.hand.map((remoteCard, index) => {
+          const localCard = localPlayer.hand[index];
+          // If we peeked this card locally, preserve the local view
+          if (localCard && localCard.hasBeenPeeked && localCard.isFaceUp) {
+            return { ...remoteCard, isFaceUp: true, hasBeenPeeked: true };
+          }
+          return remoteCard;
+        });
 
-        if (hasLocalPeekedCards) {
-          // Preserve our local peeked cards (isFaceUp state)
-          const mergedHand = localPlayer.hand.map((localCard, index) => {
-            const remoteCard = remotePlayer.hand[index];
-            // If we peeked this card locally, keep it face up
-            if (localCard.hasBeenPeeked && localCard.isFaceUp) {
-              return localCard;
-            }
-            // Otherwise use remote state
-            return remoteCard;
-          });
-
-          finalState = {
-            ...remoteState,
-            players: remoteState.players.map((p) =>
-              p.id === myPlayerId
-                ? { ...p, hand: mergedHand }
-                : p, // Opponent's cards are already sanitized from remote
-            ),
-          };
-        }
+        finalState = {
+          ...remoteState,
+          players: remoteState.players.map((p) =>
+            p.id === myPlayerId
+              ? { ...p, hand: mergedHand }
+              : p,
+          ),
+        };
       }
     }
 
-    // Only dispatch if finalState is actually different from what we last synced
-    const finalStateStr = JSON.stringify(finalState);
-    if (finalStateStr !== lastSyncedStr) {
+    // Always update if game phase or turn changed, or if it's a meaningful state change
+    const shouldUpdate = remoteKey !== lastKey || 
+      JSON.stringify(remoteState.players.map(p => p.score)) !== JSON.stringify(currentStateRef.current.players.map(p => p.score)) ||
+      remoteState.drawPile.length !== currentStateRef.current.drawPile.length ||
+      remoteState.discardPile.length !== currentStateRef.current.discardPile.length;
+
+    if (shouldUpdate) {
       dispatch({ type: "SET_STATE", payload: finalState });
       lastSyncedStateRef.current = finalState;
     }
-  }, [remoteGameState, state.gameMode, myPlayerId, dispatch]); // Removed state from deps to prevent loops
+  }, [remoteGameState, state.gameMode, myPlayerId, dispatch]);
 
   // Sync remote chat messages
   useEffect(() => {
@@ -876,44 +877,23 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   );
 
   // Sanitize game state for syncing - hide peeked cards from opponents
-  const sanitizeStateForSync = useCallback((gameState: GameState, currentPlayerId: string | null): GameState => {
-    if (gameState.gamePhase !== "peeking" || !currentPlayerId) {
-      return gameState;
+  const sanitizeStateForSync = useCallback((gameState: GameState): GameState => {
+    // During peeking phase, all cards should be synced as face-down
+    // Each player sees their own peeked cards locally, but we don't sync that visibility
+    if (gameState.gamePhase === "peeking") {
+      return {
+        ...gameState,
+        players: gameState.players.map((player) => ({
+          ...player,
+          hand: player.hand.map((cardInHand) => ({
+            ...cardInHand,
+            // Keep hasBeenPeeked for tracking, but hide the card visually when syncing
+            isFaceUp: false,
+          })),
+        })),
+      };
     }
-
-    // During peeking phase, hide each player's peeked cards from other players
-    // Each player should only see their own peeked cards locally
-    const sanitizedPlayers = gameState.players.map((player) => {
-      if (player.id === currentPlayerId) {
-        // For the current player, hide their peeked cards when syncing
-        // (they see them locally, but opponent shouldn't)
-        const sanitizedHand = player.hand.map((cardInHand) => {
-          // If card is peeked (hasBeenPeeked) but not permanently face up, hide it
-          if (cardInHand.hasBeenPeeked && cardInHand.isFaceUp) {
-            // This is a temporarily peeked card - hide it from opponent
-            return { ...cardInHand, isFaceUp: false };
-          }
-          return cardInHand;
-        });
-        return { ...player, hand: sanitizedHand };
-      } else {
-        // For opponents, ensure their peeked cards are hidden
-        const sanitizedHand = player.hand.map((cardInHand) => {
-          // Opponent's cards should never be visible during peeking unless permanently face up
-          if (cardInHand.hasBeenPeeked && cardInHand.isFaceUp) {
-            // Hide opponent's peeked cards
-            return { ...cardInHand, isFaceUp: false };
-          }
-          return cardInHand;
-        });
-        return { ...player, hand: sanitizedHand };
-      }
-    });
-
-    return {
-      ...gameState,
-      players: sanitizedPlayers,
-    };
+    return gameState;
   }, []);
 
   // Sync local state changes to Convex (for online games)
@@ -925,7 +905,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       remoteGameState // Only sync if we have a remote state to compare
     ) {
       // Sanitize state before syncing to hide peeked cards
-      const sanitizedState = sanitizeStateForSync(state, myPlayerId);
+      const sanitizedState = sanitizeStateForSync(state);
       const currentStateStr = JSON.stringify(sanitizedState);
       const lastSyncedStr = lastSyncedStateRef.current
         ? JSON.stringify(lastSyncedStateRef.current)
@@ -955,7 +935,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         return () => clearTimeout(timeoutId);
       }
     }
-  }, [state, remoteGameState, setGameStateMutation, myPlayerId, sanitizeStateForSync]);
+  }, [state, remoteGameState, setGameStateMutation, sanitizeStateForSync]);
 
   const sendChatMessage = useCallback(
     async (message: string) => {
