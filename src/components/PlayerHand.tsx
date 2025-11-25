@@ -185,13 +185,13 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       )}
       animate={
         isMyTurn && isSpecialSelectionPhase
-          ? { boxShadow: "0 0 0 10px rgba(147, 51, 234, 0.08)", scale: 1.01 }
-          : { boxShadow: "0 0 0 0px rgba(0,0,0,0)", scale: 1 }
+          ? { boxShadow: "0 0 0 12px rgba(147, 51, 234, 0.08)" }
+          : { boxShadow: "0 0 0 0px rgba(0,0,0,0)" }
       }
       transition={
         isMyTurn && isSpecialSelectionPhase
-          ? { duration: 1.2, repeat: Infinity, ease: "easeInOut", repeatType: "mirror" }
-          : { duration: 0.2 }
+          ? { duration: 1.1, repeat: Infinity, ease: "easeInOut", repeatType: "mirror" }
+          : { duration: 0.18 }
       }
     >
       <div className="flex flex-col items-center gap-1 sm:gap-1.5">
@@ -260,15 +260,14 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                 animate={
                   shouldPulseCard
                     ? {
-                        scale: [1, 1.05, 1],
-                        filter: ["brightness(1)", "brightness(1.06)", "brightness(1)"],
+                        filter: ["brightness(1)", "brightness(1.08)", "brightness(1)"],
                         boxShadow: [
                           "0 0 0 0 rgba(147,51,234,0.0)",
-                          "0 0 0 8px rgba(147,51,234,0.15)",
+                          "0 0 0 10px rgba(147,51,234,0.14)",
                           "0 0 0 0 rgba(147,51,234,0.0)",
                         ],
                       }
-                    : { scale: 1, filter: "brightness(1)", boxShadow: "0 0 0 0 rgba(0,0,0,0)" }
+                    : { filter: "brightness(1)", boxShadow: "0 0 0 0 rgba(0,0,0,0)" }
                 }
                 transition={
                   shouldPulseCard
@@ -285,7 +284,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                   className={cn(
                     "transition-all duration-300",
                     (animatingIndex === index || isTargeted) &&
-                    "scale-105 ring-2 ring-primary/70 rounded-md z-10",
+                    "ring-2 ring-primary/70 rounded-md z-10",
                   )}
                 >
                   <GameCard

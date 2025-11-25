@@ -179,9 +179,26 @@
 }
 
 /* Smooth transitions */
-* {
-    transition-duration: 200ms;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+/* Limit default transitions to non-layout properties to prevent jank */
+:root {
+    --transition-duration: 200ms;
+    --transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.motion-default {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter;
+    transition-duration: var(--transition-duration);
+    transition-timing-function: var(--transition-ease);
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 /* Animation keyframes */
