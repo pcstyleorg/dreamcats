@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { Player } from "@/types";
+import { Player, Card } from "@/types";
 import { GameCard } from "./Card";
 import { useGame } from "@/state/useGame";
 import { cn } from "@/lib/utils";
@@ -49,6 +49,17 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       ? lastMove
       : null;
 
+  // Check if this player has a card that was involved in a recent swap_2
+  const swap2HighlightIndex = React.useMemo(() => {
+    if (!lastMove || lastMove.action !== "swap_2" || !lastMove.swap2Details) return null;
+    if (Date.now() - lastMove.timestamp > 3200) return null;
+    
+    const { card1, card2 } = lastMove.swap2Details;
+    if (card1.playerId === player.id) return card1.cardIndex;
+    if (card2.playerId === player.id) return card2.cardIndex;
+    return null;
+  }, [lastMove, player.id]);
+
   React.useEffect(() => {
     if (recentMoveForPlayer?.action === "swap") {
       // Trigger animation on the affected card slot
@@ -58,23 +69,27 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     }
   }, [recentMoveForPlayer]);
 
-  // GSAP Animations
+  // GSAP Animations - Entrance (only run once)
+  useGSAP(() => {
+    if (!containerRef.current || hasAnimatedRef.current) return;
+
+    hasAnimatedRef.current = true;
+    gsap.from(".hand-card", {
+      y: 50,
+      opacity: 0,
+      duration: 0.5,
+      stagger: 0.05,
+      ease: "back.out(1.2)",
+      clearProps: "y,opacity,transform"
+    });
+  }, { scope: containerRef, dependencies: [] }); // Only run on mount
+
+  // GSAP Animations - Active Player Border
   useGSAP(() => {
     if (!containerRef.current) return;
 
-    // Staggered entrance for cards - only animate once on initial mount
-    if (!hasAnimatedRef.current) {
-      hasAnimatedRef.current = true;
-      gsap.from(".hand-card", {
-        y: 50,
-        opacity: 0,
-        duration: 0.5,
-        stagger: 0.05,
-        ease: "back.out(1.2)",
-        immediateRender: false,
-        clearProps: "y,opacity,transform"
-      });
-    }
+    // Kill existing tweens first
+    gsap.killTweensOf(containerRef.current);
 
     // Pulse effect for active player border
     if (isMyTurn && isSpecialSelectionPhase) {
@@ -86,38 +101,56 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
         ease: "power1.inOut"
       });
     } else {
-      gsap.to(containerRef.current, {
-        boxShadow: "0 0 0 0px rgba(0,0,0,0)",
-        duration: 0.2
+      gsap.set(containerRef.current, {
+        boxShadow: "0 0 0 0px rgba(0,0,0,0)"
       });
     }
-  }, { scope: containerRef, dependencies: [player.hand.length, isMyTurn, isSpecialSelectionPhase] });
+    
+    return () => {
+      if (containerRef.current) {
+        gsap.killTweensOf(containerRef.current);
+      }
+    };
+  }, { scope: containerRef, dependencies: [isMyTurn, isSpecialSelectionPhase] });
 
   // Pulse effect for individual cards
   useGSAP(() => {
     if (!containerRef.current) return;
     
     // Kill existing tweens to prevent conflict
-    gsap.killTweensOf(".pulsing-card");
+    const cards = containerRef.current.querySelectorAll(".hand-card");
+    cards.forEach(card => gsap.killTweensOf(card));
 
     if (isMyTurn && isSpecialSelectionPhase) {
-       gsap.to(".pulsing-card", {
-        filter: "brightness(1.08)",
-        boxShadow: "0 0 0 10px rgba(147,51,234,0.14)",
-        duration: 1.6,
-        repeat: -1,
-        yoyo: true,
-        ease: "power1.inOut"
-      });
+       // Only animate if elements exist
+       const pulsingCards = containerRef.current.querySelectorAll(".pulsing-card");
+       if (pulsingCards.length > 0) {
+         gsap.to(pulsingCards, {
+          filter: "brightness(1.08)",
+          boxShadow: "0 0 0 10px rgba(147,51,234,0.14)",
+          duration: 1.6,
+          repeat: -1,
+          yoyo: true,
+          ease: "power1.inOut"
+        });
+       }
     } else {
-       gsap.to(".pulsing-card", {
-        filter: "brightness(1)",
-        boxShadow: "0 0 0 0 rgba(0,0,0,0)",
-        duration: 0.2,
-        clearProps: "filter,boxShadow"
-      });
+       // Reset all cards
+       if (cards.length > 0) {
+         gsap.set(cards, {
+          filter: "brightness(1)",
+          boxShadow: "0 0 0 0 rgba(0,0,0,0)"
+        });
+       }
     }
-  }, { scope: containerRef, dependencies: [isMyTurn, isSpecialSelectionPhase, player.hand] });
+    
+    return () => {
+      if (containerRef.current) {
+        const allCards = containerRef.current.querySelectorAll(".hand-card");
+        allCards.forEach(card => gsap.killTweensOf(card));
+      }
+    };
+  }, { scope: containerRef, dependencies: [isMyTurn, isSpecialSelectionPhase, player.hand.length] });
 
 
   const actionLabel = React.useMemo(() => {
@@ -191,17 +224,18 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     // 'Peek 1' special action (can target any hand while it's my turn)
     if (gamePhase === "action_peek_1" && isMyTurn) {
       broadcastAction({
-        type: "ACTION_PEEK_1_SELECT",
-        payload: { playerId: player.id, cardIndex },
-      }).then((card: any) => {
-          if (card) {
-              toast.success(t('game.peekResult', { value: card.value }), {
-                  description: card.isSpecial ? `Special: ${card.specialAction}` : "Number card",
-                  duration: 4000,
-                  icon: <div className="text-xl font-bold">{card.value}</div>
-              });
-          }
-      });
+      type: "ACTION_PEEK_1_SELECT",
+      payload: { playerId: player.id, cardIndex },
+    }).then((card) => {
+        if (card) {
+            const c = card as Card;
+            toast.success(t('game.peekResult', { value: c.value }), {
+                description: c.isSpecial ? `Special: ${c.specialAction}` : "Number card",
+                duration: 4000,
+                icon: <div className="text-xl font-bold">{c.value}</div>
+            });
+        }
+    });
       return;
     }
 
@@ -329,12 +363,20 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                     : "hover:-translate-y-4 hover:z-30 hover:scale-105",
                   // Subtle glow on all cards when swap is available
                   isSwapCandidate && "swap-candidate",
+                  // Swap 2 highlight effect for cards involved in recent swap
+                  swap2HighlightIndex === index && "ring-2 ring-pink-500/70 ring-offset-2 ring-offset-background shadow-[0_0_20px_rgba(236,72,153,0.4)]",
                 )}
                 style={{ zIndex: index }} // Default stacking order
               >
                 {animatingIndex === index && (
                   <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-xs font-bold text-primary animate-bounce z-20 whitespace-nowrap pointer-events-none">
                     {t('actions.placed')}
+                  </span>
+                )}
+                {/* Swap 2 indicator badge */}
+                {swap2HighlightIndex === index && (
+                  <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[0.6rem] sm:text-xs font-bold text-pink-400 animate-pulse z-20 whitespace-nowrap pointer-events-none bg-pink-500/20 px-2 py-0.5 rounded-full border border-pink-500/40">
+                    {t('actions.swappedTwo')}
                   </span>
                 )}
                 <div

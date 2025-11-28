@@ -76,9 +76,9 @@ export const getGameState = query({
     });
 
     // Also redact draw pile?
-    const drawPile = (state.drawPile || []).map(c => ({ 
-        id: -1, 
-        value: -1, 
+    const drawPile = (state.drawPile || []).map(() => ({
+        id: -1,
+        value: -1,
         isSpecial: false 
     }));
 

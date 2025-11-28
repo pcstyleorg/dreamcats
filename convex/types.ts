@@ -74,6 +74,11 @@ export interface GameState {
     source?: "deck" | "discard";
     targetPlayerId?: string;
     timestamp: number;
+    /** Details about swap_2 action - which cards were swapped */
+    swap2Details?: {
+      card1: { playerId: string; cardIndex: number };
+      card2: { playerId: string; cardIndex: number };
+    };
   } | null;
 }
 

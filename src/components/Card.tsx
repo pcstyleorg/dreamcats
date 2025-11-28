@@ -64,6 +64,9 @@ export const GameCard: React.FC<CardProps> = ({
   useGSAP(() => {
     if (!containerRef.current) return;
     
+    // Kill any existing animations on the container first
+    gsap.killTweensOf(containerRef.current);
+    
     const isSpecialFaceUp = Boolean(card?.isSpecial && isFaceUp && !disableSpecialAnimation);
 
     if (isSpecialFaceUp) {
@@ -75,12 +78,18 @@ export const GameCard: React.FC<CardProps> = ({
         ease: "power1.inOut"
       });
     } else {
-      gsap.to(containerRef.current, {
-        filter: "drop-shadow(0 0 0 rgba(0,0,0,0))",
-        duration: 0.2
+      gsap.set(containerRef.current, {
+        filter: "drop-shadow(0 0 0 rgba(0,0,0,0))"
       });
     }
-  }, [card, isFaceUp, disableSpecialAnimation]);
+    
+    // Cleanup on unmount or dependency change
+    return () => {
+      if (containerRef.current) {
+        gsap.killTweensOf(containerRef.current);
+      }
+    };
+  }, [card?.isSpecial, isFaceUp, disableSpecialAnimation]);
 
   const frontAsset = getCardAsset(card);
   const backAsset = getCardBackAsset();
