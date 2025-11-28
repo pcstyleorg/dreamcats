@@ -50,6 +50,8 @@
     "draw": "Draw",
     "discard": "Discard",
     "yourCard": "Your Card",
+    "orSelectCardToSwap": "Or tap a card below to swap",
+    "yourTurn": "Your Turn",
     "you": "You",
     "player": "Player",
     "score": "Score",

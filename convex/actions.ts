@@ -277,7 +277,7 @@ export const performAction = mutation({
             drawPile,
             drawnCard,
             drawSource: "deck",
-            gamePhase: drawnCard.isSpecial ? "action_take_2" : "holding_card",
+            gamePhase: "holding_card",
             actionMessage: drawnCard.isSpecial 
                 ? `${currentPlayer.name} drew a special card!` 
                 : `${currentPlayer.name} drew a card`,

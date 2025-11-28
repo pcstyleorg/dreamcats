@@ -27,6 +27,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   const { state, broadcastAction, myPlayerId } = useGame();
   const { gamePhase, gameMode, lastMove } = state;
   const containerRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedRef = useRef(false);
   const currentPlayer = state.players[state.currentPlayerIndex];
   const isMyTurn =
     gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
@@ -61,15 +62,19 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   useGSAP(() => {
     if (!containerRef.current) return;
 
-    // Staggered entrance for cards
-    gsap.from(".hand-card", {
-      y: 50,
-      opacity: 0,
-      duration: 0.5,
-      stagger: 0.05,
-      ease: "back.out(1.2)",
-      clearProps: "y,opacity,transform" // Only clear animated props to preserve zIndex
-    });
+    // Staggered entrance for cards - only animate once on initial mount
+    if (!hasAnimatedRef.current) {
+      hasAnimatedRef.current = true;
+      gsap.from(".hand-card", {
+        y: 50,
+        opacity: 0,
+        duration: 0.5,
+        stagger: 0.05,
+        ease: "back.out(1.2)",
+        immediateRender: false,
+        clearProps: "y,opacity,transform"
+      });
+    }
 
     // Pulse effect for active player border
     if (isMyTurn && isSpecialSelectionPhase) {
@@ -145,6 +150,13 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     gamePhase === "peeking" &&
     state.peekingState?.playerIndex ===
     state.players.findIndex((p) => p.id === player.id);
+
+  // Check if this hand should be highlighted for swap interaction
+  const isSwapTarget =
+    gamePhase === "holding_card" &&
+    isMyTurn &&
+    !isOpponent &&
+    player.id === myPlayerId;
 
   const handleCardClick = (cardIndex: number) => {
     // Block interaction with opponent cards during normal gameplay
@@ -254,8 +266,14 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
           gamePhase !== "game_over"
           ? "border-primary/40 shadow-[0_0_28px_hsl(var(--primary)/0.25)]"
           : "border-border/50",
+        // Enhanced glow when player hand is interactive swap target
+        isSwapTarget && "swap-target-hand border-primary/60 shadow-[0_0_40px_hsl(var(--primary)/0.4),0_0_80px_hsl(var(--primary)/0.2)] ring-2 ring-primary/30 ring-offset-2 ring-offset-background/50",
       )}
     >
+      {/* Swap target indicator glow overlay */}
+      {isSwapTarget && (
+        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-t from-primary/20 via-primary/10 to-transparent pointer-events-none animate-pulse" />
+      )}
       <div className="flex flex-col items-center gap-1 sm:gap-1.5">
         <h3
           className={cn(
@@ -297,6 +315,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
               recentMoveForPlayer.cardIndex === index;
             const shouldPulseCard =
               isMyTurn && isSpecialSelectionPhase && !cardInHand.isFaceUp;
+            const isSwapCandidate = isSwapTarget;
 
             return (
               <div
@@ -304,8 +323,12 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                 className={cn(
                   "hand-card relative transition-all duration-300",
                   shouldPulseCard ? "pulsing-card" : "",
-                  // Hover effect to lift card and show it fully
-                  "hover:-translate-y-4 hover:z-30 hover:scale-105"
+                  // Enhanced hover for swap candidates
+                  isSwapCandidate
+                    ? "cursor-pointer hover:-translate-y-6 hover:z-30 hover:scale-110 hover:shadow-[0_0_30px_hsl(var(--primary)/0.5)]"
+                    : "hover:-translate-y-4 hover:z-30 hover:scale-105",
+                  // Subtle glow on all cards when swap is available
+                  isSwapCandidate && "swap-candidate",
                 )}
                 style={{ zIndex: index }} // Default stacking order
               >

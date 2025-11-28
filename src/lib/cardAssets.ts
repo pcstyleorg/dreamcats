@@ -1,18 +1,18 @@
-// Import new dreamy assets from assets/new
-import card0 from "../../assets/new/0.png";
-import card1 from "../../assets/new/1.png";
-import card2 from "../../assets/new/2.png";
-import card3 from "../../assets/new/3.png";
-import card4 from "../../assets/new/4.png";
-import card5 from "../../assets/new/5.png";
-import card6 from "../../assets/new/6.png";
-import card7 from "../../assets/new/7.png";
-import card8 from "../../assets/new/8.png";
-import card9 from "../../assets/new/9.png";
-import cardBack from "../../assets/new/back.png";
-import peekCard from "../../assets/new/podejrzyj1.png";
-import swapCard from "../../assets/new/zamien2.png";
-import takeCard from "../../assets/new/wez2.png";
+// Import new dreamy assets from assets root
+import card0 from "../../assets/0.png";
+import card1 from "../../assets/1.png";
+import card2 from "../../assets/2.png";
+import card3 from "../../assets/3.png";
+import card4 from "../../assets/4.png";
+import card5 from "../../assets/5.png";
+import card6 from "../../assets/6.png";
+import card7 from "../../assets/7.png";
+import card8 from "../../assets/8.png";
+import card9 from "../../assets/9.png";
+import cardBack from "../../assets/back.png";
+import peekCard from "../../assets/podjerzyj1.png";
+import swapCard from "../../assets/zamien2.png";
+import takeCard from "../../assets/wez2.png";
 import { Card } from "@/types";
 
 const normalCardAssets: Record<number, string> = {
