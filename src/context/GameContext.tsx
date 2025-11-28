@@ -40,6 +40,13 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
       };
     case "PROCESS_ACTION": {
       const gameAction = action.payload.action;
+      
+      // Validate current player index
+      if (state.currentPlayerIndex < 0 || state.currentPlayerIndex >= state.players.length) {
+        console.error("Invalid currentPlayerIndex in PROCESS_ACTION");
+        return state;
+      }
+      
       const currentPlayer = state.players[state.currentPlayerIndex];
 
       const advanceTurn = (s: GameState): GameState => {
@@ -555,7 +562,15 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
               .splice(0, 4)
               .map((card) => ({ card, isFaceUp: false, hasBeenPeeked: false })),
           }));
-          const discardPile = [deck.pop()!];
+          const lastCard = deck.pop();
+          
+          // Safety check: ensure deck has enough cards
+          if (!lastCard) {
+            console.error("Deck ran out of cards during setup");
+            return state;
+          }
+          
+          const discardPile = [lastCard];
           const callerIndex = state.lastCallerId
             ? state.players.findIndex((p) => p.id === state.lastCallerId)
             : state.currentPlayerIndex;
@@ -1193,7 +1208,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           hasBeenPeeked: false,
         })),
     }));
-    const discardPile = [deck.pop()!];
+    const lastCard = deck.pop();
+    
+    // Safety check: ensure deck has enough cards
+    if (!lastCard) {
+      toast.error("Failed to initialize game: deck ran out of cards.");
+      return;
+    }
+    
+    const discardPile = [lastCard];
 
     const startPeekingState: GameState = {
       ...state,
@@ -1230,7 +1253,15 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           .splice(0, 4)
           .map((card) => ({ card, isFaceUp: false, hasBeenPeeked: false })),
       }));
-      const discardPile = [deck.pop()!];
+      const lastCard = deck.pop();
+      
+      // Safety check: ensure deck has enough cards
+      if (!lastCard) {
+        toast.error("Failed to initialize game: deck ran out of cards.");
+        return;
+      }
+      
+      const discardPile = [lastCard];
 
       const startPeekingState: GameState = {
         ...initialState,
