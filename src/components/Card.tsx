@@ -104,7 +104,7 @@ export const GameCard: React.FC<CardProps> = ({
     : "";
 
   const outerClasses = cn(
-    "group w-[18vw] max-w-24 sm:w-[15vw] sm:max-w-28 md:w-[10vw] md:max-w-32 lg:w-[8vw] lg:max-w-36 aspect-[2/3] perspective-1000 rounded-xl overflow-hidden",
+    "group w-[18vw] max-w-24 sm:w-[15vw] sm:max-w-28 md:w-[10vw] md:max-w-32 lg:w-[8vw] lg:max-w-36 perspective-1000 rounded-xl overflow-hidden",
     "shadow-[0_12px_28px_rgba(0,0,0,0.45)] border-2 border-white/20",
     isFaceUp ? "ring-1 ring-white/5" : "ring-1 ring-black/20",
     (isGlowing || justRevealed) && isFaceUp ? "shadow-soft" : "",
@@ -118,6 +118,7 @@ export const GameCard: React.FC<CardProps> = ({
     <div
       ref={containerRef}
       className={outerClasses}
+      style={{ aspectRatio: "836/1214" }}
       onClick={handleClick}
     >
       <div

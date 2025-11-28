@@ -50,6 +50,8 @@
     "draw": "Dobierz",
     "discard": "Odrzuć",
     "yourCard": "Twoja Karta",
+    "orSelectCardToSwap": "Lub dotknij kartę poniżej, aby zamienić",
+    "yourTurn": "Twoja Tura",
     "you": "Ty",
     "player": "Gracz",
     "score": "Wynik",
