@@ -15,6 +15,8 @@ interface CardProps {
   isGlowing?: boolean;
   playSound?: (sound: SoundType) => void;
   disableSpecialAnimation?: boolean;
+  /** Render without 3D flip (useful for static piles / Safari glitches) */
+  staticMode?: boolean;
 }
 
 export const GameCard: React.FC<CardProps> = ({
@@ -26,6 +28,7 @@ export const GameCard: React.FC<CardProps> = ({
   isGlowing,
   playSound,
   disableSpecialAnimation,
+  staticMode,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const cardInnerRef = useRef<HTMLDivElement>(null);
@@ -122,6 +125,42 @@ export const GameCard: React.FC<CardProps> = ({
     externalGlow,
     className,
   );
+
+  // Fallback static rendering (no 3D / GSAP) to avoid GPU/backface glitches in production
+  if (staticMode) {
+    const staticSrc = isFaceUp && card ? frontAsset : backAsset;
+    return (
+      <div
+        ref={containerRef}
+        className={outerClasses}
+        style={{ aspectRatio: "836/1214" }}
+        onClick={onClick}
+      >
+        <div className="relative w-full h-full rounded-xl overflow-hidden bg-transparent">
+          <img
+            src={staticSrc}
+            alt={card ? (card.isSpecial ? card.specialAction ?? "Card" : `Card ${card.value}`) : "Card Back"}
+            className="w-full h-full object-cover"
+            draggable={false}
+          />
+          {isFaceUp && (
+            <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
+              <span
+                className={cn(
+                  "inline-block text-xs sm:text-sm font-bold font-heading",
+                  card?.isSpecial ? "text-purple-200" : "text-white",
+                )}
+              >
+                {card?.value}
+              </span>
+            </div>
+          )}
+          <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_center,transparent_0%,transparent_50%,rgba(0,0,0,0.25)_100%)]" />
+          <div className="pointer-events-none absolute inset-0 rounded-xl mix-blend-soft-light bg-[radial-gradient(ellipse_at_50%_18%,rgba(255,255,255,0.08),transparent_42%),radial-gradient(ellipse_at_50%_62%,rgba(6,7,20,0.6),transparent_65%)]" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

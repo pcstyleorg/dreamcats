@@ -28,6 +28,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { usePlayersView } from "@/state/hooks";
 import { useNetStatus } from "@/state/selectors";
+import { PileCard } from "./PileCard";
 
 interface GameboardProps {
   theme: "light" | "dark";
@@ -436,17 +437,16 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
               >
                 <div className="relative group">
                     <div className="absolute inset-0 bg-white/5 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <GameCard
-                    card={null}
-                    isFaceUp={false}
-                    className={cn(
+                    <PileCard
+                      card={null}
+                      faceUp={false}
+                      onClick={handleDrawFromDeck}
+                      isGlowing={isPlayerActionable}
+                      className={cn(
                         isPlayerActionable ? "cursor-pointer" : "",
                         pileCardClass,
                         "shadow-2xl"
-                    )}
-                    onClick={handleDrawFromDeck}
-                    isGlowing={isPlayerActionable}
-                    playSound={playSound}
+                      )}
                     />
                 </div>
                 <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm whitespace-nowrap">
@@ -491,22 +491,20 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
               >
                 <div className="relative group">
                     <div className="absolute inset-0 bg-white/5 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <GameCard
-                    card={
+                    <PileCard
+                      card={
                         discardPile.length > 0
-                        ? discardPile[discardPile.length - 1]
-                        : null
-                    }
-                    isFaceUp={true}
-                    className={cn(
+                          ? discardPile[discardPile.length - 1]
+                          : null
+                      }
+                      faceUp={true}
+                      onClick={handleDrawFromDiscard}
+                      isGlowing={isPlayerActionable && discardPile.length > 0}
+                      className={cn(
                         isPlayerActionable ? "cursor-pointer" : "",
                         pileCardClass,
                         "shadow-2xl"
-                    )}
-                    onClick={handleDrawFromDiscard}
-                    isGlowing={isPlayerActionable && discardPile.length > 0}
-                    disableSpecialAnimation
-                    playSound={playSound}
+                      )}
                     />
                 </div>
                 <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm whitespace-nowrap">
