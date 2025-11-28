@@ -556,6 +556,8 @@ const Gameboard = lazy(() => import('./components/Gameboard'));
 - [ ] Multiple simultaneous actions
 - [ ] State recovery after network interruption
 
+Guardrail automation now exists for peek visibility, deck draws, and peek_1 targeting in `gameReducer` via Vitest to reduce manual-only coverage gaps.【F:src/context/GameContext.test.ts†L1-L102】
+
 ---
 
 ## Migration & Improvement Roadmap
@@ -593,7 +595,7 @@ const Gameboard = lazy(() => import('./components/Gameboard'));
 - ✅ Linter Errors: 0 errors, 10 warnings (cosmetic only)
 - ✅ Critical Bugs: 0
 - ✅ Type Safety: All `any` types removed
-- ⚠️ Test Coverage: 0% (recommend adding tests)
+- ⚠️ Guardrail Coverage: Automated reducer guardrails cover peeking visibility, deck draws, and special-action targeting; full integration and UI test coverage remains pending.
 
 ---
 
