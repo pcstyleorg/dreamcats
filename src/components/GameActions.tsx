@@ -1,4 +1,4 @@
-import { useGame } from "@/context/GameContext";
+import { useGame } from "@/state/useGame";
 import { Button } from "./ui/button";
 import { Wand2 } from "lucide-react";
 import { useTranslation } from "react-i18next";

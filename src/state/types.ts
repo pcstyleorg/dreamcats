@@ -1,5 +1,5 @@
 import { StateCreator } from "zustand";
-import { GamePhase, GameState, Player, Card, ChatMessage } from "@/types";
+import { GameState, ChatMessage } from "@/types";
 
 export type RoomStatus = "lobby" | "playing" | "round_end" | "game_over";
 export type NetStatus = "connected" | "connecting" | "disconnected" | "error";
@@ -26,29 +26,18 @@ export interface SessionSlice {
 }
 
 export interface GameSlice {
+  game: GameState;
   roomStatus: RoomStatus;
-  gamePhase: GamePhase;
-  gameMode: GameState["gameMode"];
-  hostId: string | null;
-  players: Player[];
-  drawPileCount: number;
-  discardTop: Card | null;
-  hands: GameState["players"]; // will be normalized later
-  currentPlayerIndex: number;
-  drawnCard: Card | null;
-  drawSource: GameState["drawSource"];
-  lastMove: GameState["lastMove"] | null;
-  actionMessage: string;
-  timers?: { turnEndsAt?: number };
-  chatMessages: ChatMessage[];
-  setRoomState(state: Partial<GameSlice>): void;
+  gameVersion: number | null;
+  setGame(next: GameState, meta?: { version?: number | null; source?: "remote" | "local" }): void;
+  updateGame(updater: (prev: GameState) => GameState, meta?: { version?: number | null; source?: "remote" | "local" }): void;
   resetGameState(): void;
-  setHands(players: Player[]): void;
   setActionMessage(message: string): void;
-  setDrawnCard(card: Card | null, source: GameState["drawSource"]): void;
   setLastMove(move: GameState["lastMove"] | null): void;
   appendChat(message: ChatMessage): void;
   setChat(messages: ChatMessage[]): void;
+  setRoomStatus(status: RoomStatus): void;
+  setGameVersion(version: number | null): void;
 }
 
 export interface UISlice {
@@ -76,9 +65,4 @@ export interface NetSlice {
 
 export type AppState = SessionSlice & GameSlice & UISlice & NetSlice;
 
-export type SliceCreator<S> = StateCreator<
-  AppState,
-  [["zustand/devtools", never], ["zustand/subscribeWithSelector", never], ["zustand/persist", unknown?]],
-  [],
-  S
->;
+export type SliceCreator<S> = StateCreator<AppState, [], [], S>;

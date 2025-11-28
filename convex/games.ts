@@ -1,158 +1,96 @@
-import { mutation, query, action } from "./_generated/server";
-import { api } from "./_generated/api";
+import { query } from "./_generated/server";
 import { v } from "convex/values";
+import { GameState, GamePhase } from "./types";
 
-type Card = {
-  id: number;
-  value: number;
-  isSpecial: boolean;
-  specialAction?: "take_2" | "peek_1" | "swap_2";
-};
-
-const buildDeck = (): Card[] => {
-  // mirror client card generation for server authority
-  const cards: Card[] = [];
-  let id = 0;
-  for (let i = 0; i <= 9; i++) {
-    const count = i === 9 ? 9 : 4;
-    for (let j = 0; j < count; j++) {
-      cards.push({ id: id++, value: i, isSpecial: false });
-    }
-  }
-  const addSpecial = (value: number, specialAction: string) => {
-    for (let i = 0; i < 3; i++) {
-      cards.push({ id: id++, value, isSpecial: true, specialAction });
-    }
-  };
-  addSpecial(5, "take_2");
-  addSpecial(6, "peek_1");
-  addSpecial(7, "swap_2");
-  return cards;
-};
-
-const shuffle = (deck: Card[]) => {
-  const shuffled = [...deck];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-};
-
-export const setGameState = mutation({
-  args: {
-    roomId: v.string(),
-    state: v.any(), // GameState snapshot
-    version: v.optional(v.number()),
-    idempotencyKey: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query("games")
-      .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
-      .first();
-
-    // Idempotency guard
-    if (args.idempotencyKey) {
-      const idem = await ctx.db
-        .query("games")
-        .withIndex("by_idem", (q) => q.eq("idempotencyKey", args.idempotencyKey))
-        .first();
-      if (idem) return { success: true, skipped: "idempotent" };
-    }
-
-    const now = Date.now();
-    const incomingVersion = args.version ?? now;
-
-    if (existing && existing.version !== undefined && existing.version > incomingVersion) {
-      return { success: false, reason: "stale" };
-    }
-
-    if (existing) {
-      await ctx.db.patch(existing._id, {
-        state: args.state,
-        version: incomingVersion,
-        ...(args.idempotencyKey ? { idempotencyKey: args.idempotencyKey } : {}),
-        lastUpdated: now,
-      });
-    } else {
-      await ctx.db.insert("games", {
-        roomId: args.roomId,
-        state: args.state,
-        version: incomingVersion,
-        ...(args.idempotencyKey ? { idempotencyKey: args.idempotencyKey } : {}),
-        lastUpdated: now,
-      });
-    }
-
-    return { success: true };
-  },
-});
+// Helper to determine if we should reveal all cards
+const isRevealPhase = (phase: GamePhase) =>
+  phase === "round_end" || phase === "game_over";
 
 export const getGameState = query({
-  args: { roomId: v.string() },
+  args: { 
+    roomId: v.string(), 
+    playerId: v.optional(v.string()) 
+  },
   handler: async (ctx, args) => {
-    const game = await ctx.db
+    const gameRecord = await ctx.db
       .query("games")
       .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
       .first();
-    return game?.state ?? null;
-  },
-});
 
-export const startGame = action({
-  args: { roomId: v.string() },
-  handler: async (ctx, args) => {
-    const deck = shuffle(buildDeck());
-    const room = await ctx.runQuery(api.rooms.getRoom, { roomId: args.roomId });
-    if (!room) throw new Error("Room not found");
-    const players = await ctx.runQuery(api.rooms.getPlayers, { roomId: args.roomId });
-    if (!players || players.length < 2) throw new Error("Need at least 2 players");
+    if (!gameRecord) return null;
 
-    // deal 4 cards to each player
-    const hands: { playerId: string; hand: { card: Card; isFaceUp: boolean; hasBeenPeeked: boolean }[] }[] = players.map((p) => ({
-      playerId: p.playerId,
-      hand: [],
-    }));
+    const state = gameRecord.state as GameState;
+    const viewerId = args.playerId;
 
-    for (let r = 0; r < 4; r++) {
-      for (const hand of hands) {
-        const card = deck.shift();
-        if (card) {
-          hand.hand.push({ card, isFaceUp: false, hasBeenPeeked: false });
-        }
-      }
+    if (state.gameMode === "hotseat") {
+        return state;
     }
 
-    const discard: Card[] = [];
-    const drawPile: Card[] = deck;
+    // In lobby, fetch players from the 'players' table to get the live list
+    if (state.gamePhase === "lobby") {
+        const roomPlayers = await ctx.db
+            .query("players")
+            .withIndex("by_roomId", (q) => q.eq("roomId", args.roomId))
+            .collect();
+        
+        // Sort by seat
+        roomPlayers.sort((a, b) => (a.seat ?? 0) - (b.seat ?? 0));
 
-    const state = {
-      gameMode: room.mode ?? "online",
-      roomId: room.roomId,
-      hostId: room.hostId,
-      players: players.map((p) => ({
-        id: p.playerId,
-        name: p.name,
-        hand: hands.find((h) => h.playerId === p.playerId)?.hand ?? [],
-        score: p.score ?? 0,
-      })),
-      drawPile,
-      discardPile: discard,
-      currentPlayerIndex: 0,
-      gamePhase: "playing",
-      actionMessage: "Game started",
-      turnCount: 0,
-      chatMessages: [],
-    };
+        const lobbyPlayers = roomPlayers.map(p => ({
+            id: p.playerId,
+            name: p.name,
+            hand: [],
+            score: 0,
+        }));
 
-    await ctx.runMutation(api.games.setGameState, {
-      roomId: args.roomId,
-      state,
-      version: Date.now(),
-      idempotencyKey: `start-${args.roomId}`,
+        return {
+            ...state,
+            players: lobbyPlayers,
+        };
+    }
+
+    if (!viewerId) return null; // Must be authenticated to see state
+
+    const revealAll = isRevealPhase(state.gamePhase);
+
+    // SECURE FILTERING
+    const players = (state.players || []).map((player) => {
+      if (revealAll || player.id === viewerId) return player;
+
+      // Hide opponent cards
+      return {
+        ...player,
+        hand: player.hand.map((slot) => ({
+          ...slot,
+          // REDACT CARD DATA
+          // In "peeking" phase, isFaceUp is used for the owner to see, but opponents must NOT see it.
+          card: (slot.isFaceUp && state.gamePhase !== "peeking") ? slot.card : { 
+              id: -1, 
+              value: -1, 
+              isSpecial: false 
+          }, 
+          isFaceUp: slot.isFaceUp,
+          hasBeenPeeked: false, // Don't show peek status to opponents
+        })),
+      };
     });
 
-    return { success: true, state };
+    // Also redact draw pile?
+    const drawPile = (state.drawPile || []).map(c => ({ 
+        id: -1, 
+        value: -1, 
+        isSpecial: false 
+    }));
+
+    return {
+      ...state,
+      players,
+      drawPile, // Redacted
+      // We might want to redact `tempCards` if they are not for this player?
+      // If `gamePhase` is `action_take_2` and it's NOT my turn, I shouldn't see `tempCards`.
+      tempCards: (state.gamePhase === "action_take_2" && state.currentPlayerIndex !== state.players.findIndex(p => p.id === viewerId)) 
+        ? undefined 
+        : state.tempCards,
+    };
   },
 });

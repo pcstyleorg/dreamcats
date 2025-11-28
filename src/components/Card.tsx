@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useRef, useState } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import { Card as CardType } from "@/types";
 import { cn } from "@/lib/utils";
 import { getCardAsset, getCardBackAsset } from "@/lib/cardAssets";
@@ -10,10 +11,10 @@ interface CardProps {
   isFaceUp: boolean;
   onClick?: () => void;
   className?: string;
-  hasBeenPeeked?: boolean; // show a tiny, persistent glow to indicate "I have seen this"
-  isGlowing?: boolean; // external glow hint (e.g., legal to click)
+  hasBeenPeeked?: boolean;
+  isGlowing?: boolean;
   playSound?: (sound: SoundType) => void;
-  disableSpecialAnimation?: boolean; // e.g. discard pile, where we want cards static
+  disableSpecialAnimation?: boolean;
 }
 
 export const GameCard: React.FC<CardProps> = ({
@@ -26,31 +27,60 @@ export const GameCard: React.FC<CardProps> = ({
   playSound,
   disableSpecialAnimation,
 }) => {
-  // Detect "reveal moment" to flash special glow only when a special card turns face-up
-  const prevFaceUp = useRef<boolean>(isFaceUp);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const cardInnerRef = useRef<HTMLDivElement>(null);
   const [justRevealed, setJustRevealed] = useState(false);
-
-  useEffect(() => {
-    if (!prevFaceUp.current && isFaceUp) {
-      // flipped from face-down to face-up
+  
+  // Detect reveal for special flash
+  useGSAP(() => {
+    if (isFaceUp) {
       setJustRevealed(true);
       const t = setTimeout(() => setJustRevealed(false), 900);
       return () => clearTimeout(t);
     }
-    prevFaceUp.current = isFaceUp;
   }, [isFaceUp]);
 
-  const cardVariants = {
-    faceUp: { rotateY: 180 },
-    faceDown: { rotateY: 0 },
-  };
+  const { contextSafe } = useGSAP({ scope: containerRef });
 
-  const handleClick = () => {
+  const handleClick = contextSafe(() => {
     if (onClick) {
       if (playSound) playSound("flip");
       onClick();
     }
-  };
+  });
+
+  // Handle Flip Animation
+  useGSAP(() => {
+    if (!cardInnerRef.current) return;
+    
+    gsap.to(cardInnerRef.current, {
+      rotateY: isFaceUp ? 180 : 0,
+      duration: 0.6,
+      ease: "back.out(1.2)",
+    });
+  }, [isFaceUp]);
+
+  // Handle Special Glow Animation
+  useGSAP(() => {
+    if (!containerRef.current) return;
+    
+    const isSpecialFaceUp = Boolean(card?.isSpecial && isFaceUp && !disableSpecialAnimation);
+
+    if (isSpecialFaceUp) {
+      gsap.to(containerRef.current, {
+        filter: "drop-shadow(0 0 12px rgba(168,85,247,0.28))",
+        duration: 0.9,
+        repeat: -1,
+        yoyo: true,
+        ease: "power1.inOut"
+      });
+    } else {
+      gsap.to(containerRef.current, {
+        filter: "drop-shadow(0 0 0 rgba(0,0,0,0))",
+        duration: 0.2
+      });
+    }
+  }, [card, isFaceUp, disableSpecialAnimation]);
 
   const frontAsset = getCardAsset(card);
   const backAsset = getCardBackAsset();
@@ -62,10 +92,6 @@ export const GameCard: React.FC<CardProps> = ({
         : "Swap 2"
     : null;
 
-  // Compose subtle glow styles:
-  // - hasBeenPeeked: tiny, persistent glow indicating "I've seen this card"
-  // - justRevealed + special: brief stronger glow only at reveal moment
-  // - isGlowing: optional external hint (e.g., legal action)
   const peekGlow = hasBeenPeeked
     ? "shadow-[0_0_10px_rgba(168,85,247,0.22)]"
     : "";
@@ -77,14 +103,9 @@ export const GameCard: React.FC<CardProps> = ({
     ? "shadow-[0_0_18px_rgba(147,51,234,0.32)]"
     : "";
 
-  const isSpecialFaceUp = Boolean(
-    card?.isSpecial && isFaceUp && !disableSpecialAnimation,
-  );
-
-  // No rings at all. Rounded, image edge-to-edge. Soft depth shadow only.
   const outerClasses = cn(
     "group w-[18vw] max-w-24 sm:w-[15vw] sm:max-w-28 md:w-[10vw] md:max-w-32 lg:w-[8vw] lg:max-w-36 aspect-[2/3] perspective-1000 rounded-xl overflow-hidden",
-    "shadow-[0_12px_28px_rgba(0,0,0,0.35)]",
+    "shadow-[0_12px_28px_rgba(0,0,0,0.35)] border border-white/10",
     isFaceUp ? "ring-1 ring-white/5" : "ring-1 ring-black/20",
     (isGlowing || justRevealed) && isFaceUp ? "shadow-soft" : "",
     peekGlow,
@@ -94,26 +115,14 @@ export const GameCard: React.FC<CardProps> = ({
   );
 
   return (
-    <motion.div
+    <div
+      ref={containerRef}
       className={outerClasses}
       onClick={handleClick}
-      animate={
-        isSpecialFaceUp
-          ? { filter: "drop-shadow(0 0 12px rgba(168,85,247,0.28))" }
-          : { filter: "drop-shadow(0 0 0 rgba(0,0,0,0))" }
-      }
-      transition={
-        isSpecialFaceUp
-          ? { duration: 0.9, repeat: Infinity, repeatType: "mirror", ease: "easeInOut" }
-          : { duration: 0.2 }
-      }
-      initial={false}
     >
-      <motion.div
-        className="relative w-full h-full transform-style-3d"
-        variants={cardVariants}
-        animate={isFaceUp ? "faceUp" : "faceDown"}
-        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+      <div
+        ref={cardInnerRef}
+        className="relative w-full h-full transform-style-3d will-change-transform"
       >
         {/* Card Back */}
         <div className="absolute w-full h-full backface-hidden">
@@ -133,7 +142,6 @@ export const GameCard: React.FC<CardProps> = ({
           <div className="bg-transparent w-full h-full rounded-xl overflow-hidden relative">
             {card ? (
               <>
-                {/* Full image */}
                 <img
                   src={frontAsset}
                   alt={`Card ${card.isSpecial ? card.specialAction : card.value}`}
@@ -141,7 +149,6 @@ export const GameCard: React.FC<CardProps> = ({
                   draggable={false}
                 />
 
-                {/* Minimalistic number label (top-right), only when revealed */}
                 {isFaceUp && (
                   <div className="absolute top-2 right-2 sm:top-3 sm:right-3 md:top-3 md:right-3 z-10">
                     <span
@@ -155,7 +162,6 @@ export const GameCard: React.FC<CardProps> = ({
                   </div>
                 )}
 
-                {/* Full-size hover overlay for revealed cards (does not scale or animate the card) */}
                 {isFaceUp && (
                   <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                     <div className="absolute inset-0 bg-black/15 backdrop-blur-[1px]" />
@@ -184,7 +190,7 @@ export const GameCard: React.FC<CardProps> = ({
             )}
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };

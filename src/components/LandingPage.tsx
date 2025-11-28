@@ -30,7 +30,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
   const title = t('landing.title');
 
   const containerVariants = {
-    hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
@@ -68,7 +67,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
       {/* Background elements - theme-aware gradients */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--primary)/0.16)] via-[hsl(var(--accent)/0.08)] to-[hsl(var(--secondary)/0.2)]"
-        initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 2 }}
       />
@@ -96,7 +94,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
       <motion.div
         className="text-center z-10 flex flex-col items-center max-w-3xl mx-auto"
         variants={containerVariants}
-        initial="hidden"
         animate="visible"
       >
         <motion.h1

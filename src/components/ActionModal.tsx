@@ -1,5 +1,5 @@
 import React from "react";
-import { useGame } from "@/context/GameContext";
+import { useGame } from "@/state/useGame";
 import {
   Dialog,
   DialogContent,
@@ -14,9 +14,11 @@ import { useTranslation } from "react-i18next";
 
 export const ActionModal: React.FC = () => {
   const { t } = useTranslation();
-  const { state, broadcastAction } = useGame();
-  const { gamePhase, tempCards, lastRoundScores, gameWinnerName, players } =
+  const { state, broadcastAction, myPlayerId } = useGame();
+  const { gamePhase, tempCards, lastRoundScores, gameWinnerName, players, currentPlayerIndex } =
     state;
+
+  const isMyTurn = players[currentPlayerIndex]?.id === myPlayerId;
 
   const handleTake2Choose = (card: CardType) => {
     broadcastAction({ type: "ACTION_TAKE_2_CHOOSE", payload: { card } });
@@ -135,8 +137,10 @@ export const ActionModal: React.FC = () => {
     </>
   );
 
+
+
   const isOpen =
-    gamePhase === "action_take_2" ||
+    (gamePhase === "action_take_2" && isMyTurn) ||
     gamePhase === "round_end" ||
     gamePhase === "game_over";
 

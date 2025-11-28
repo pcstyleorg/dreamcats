@@ -1,13 +1,14 @@
-import React from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { toast } from "sonner";
+import React, { useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import { Player } from "@/types";
 import { GameCard } from "./Card";
-import { useGame } from "@/context/GameContext";
+import { useGame } from "@/state/useGame";
 import { cn } from "@/lib/utils";
 import { SoundType } from "@/hooks/use-sounds";
 import { getCardBackAsset } from "@/lib/cardAssets";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 interface PlayerHandProps {
   player: Player;
@@ -25,6 +26,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   const { t } = useTranslation();
   const { state, broadcastAction, myPlayerId } = useGame();
   const { gamePhase, gameMode, lastMove } = state;
+  const containerRef = useRef<HTMLDivElement>(null);
   const currentPlayer = state.players[state.currentPlayerIndex];
   const isMyTurn =
     gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
@@ -54,6 +56,64 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       return () => clearTimeout(animTimer);
     }
   }, [recentMoveForPlayer]);
+
+  // GSAP Animations
+  useGSAP(() => {
+    if (!containerRef.current) return;
+
+    // Staggered entrance for cards
+    gsap.from(".hand-card", {
+      y: 50,
+      opacity: 0,
+      duration: 0.5,
+      stagger: 0.05,
+      ease: "back.out(1.2)",
+      clearProps: "y,opacity,transform" // Only clear animated props to preserve zIndex
+    });
+
+    // Pulse effect for active player border
+    if (isMyTurn && isSpecialSelectionPhase) {
+      gsap.to(containerRef.current, {
+        boxShadow: "0 0 0 12px rgba(147, 51, 234, 0.08)",
+        duration: 1.1,
+        repeat: -1,
+        yoyo: true,
+        ease: "power1.inOut"
+      });
+    } else {
+      gsap.to(containerRef.current, {
+        boxShadow: "0 0 0 0px rgba(0,0,0,0)",
+        duration: 0.2
+      });
+    }
+  }, { scope: containerRef, dependencies: [player.hand.length, isMyTurn, isSpecialSelectionPhase] });
+
+  // Pulse effect for individual cards
+  useGSAP(() => {
+    if (!containerRef.current) return;
+    
+    // Kill existing tweens to prevent conflict
+    gsap.killTweensOf(".pulsing-card");
+
+    if (isMyTurn && isSpecialSelectionPhase) {
+       gsap.to(".pulsing-card", {
+        filter: "brightness(1.08)",
+        boxShadow: "0 0 0 10px rgba(147,51,234,0.14)",
+        duration: 1.6,
+        repeat: -1,
+        yoyo: true,
+        ease: "power1.inOut"
+      });
+    } else {
+       gsap.to(".pulsing-card", {
+        filter: "brightness(1)",
+        boxShadow: "0 0 0 0 rgba(0,0,0,0)",
+        duration: 0.2,
+        clearProps: "filter,boxShadow"
+      });
+    }
+  }, { scope: containerRef, dependencies: [isMyTurn, isSpecialSelectionPhase, player.hand] });
+
 
   const actionLabel = React.useMemo(() => {
     if (!recentMoveForPlayer) return null;
@@ -87,8 +147,21 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     state.players.findIndex((p) => p.id === player.id);
 
   const handleCardClick = (cardIndex: number) => {
+    // Block interaction with opponent cards during normal gameplay
+    // Only allow if it's a special action that explicitly targets opponents
+    const isSpecialActionAllowingOpponentTarget = 
+      (gamePhase === "action_peek_1" && isMyTurn) || 
+      ((gamePhase === "action_swap_2_select_1" || gamePhase === "action_swap_2_select_2") && isMyTurn);
+    
+    if (isOpponent && !isSpecialActionAllowingOpponentTarget) {
+      return; // Silently ignore clicks on opponent cards when not allowed
+    }
+
     // Peeking phase (only the peeking player)
     if (gamePhase === "peeking" && isPeekingTurn) {
+      // Double check it's my own hand (though isOpponent check above covers it)
+      if (player.id !== myPlayerId) return;
+      
       broadcastAction({
         type: "PEEK_CARD",
         payload: { playerId: player.id, cardIndex },
@@ -98,26 +171,24 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
 
     // Swapping card from hand after drawing (only the active player's own hand)
     if (gamePhase === "holding_card" && isCurrentPlayer && isMyTurn) {
+      if (isOpponent) return; // Should be covered, but safety first
       broadcastAction({ type: "SWAP_HELD_CARD", payload: { cardIndex } });
       return;
     }
 
     // 'Peek 1' special action (can target any hand while it's my turn)
     if (gamePhase === "action_peek_1" && isMyTurn) {
-      const card = player.hand[cardIndex]?.card;
-      if (card) {
-        const baseInfo = card.isSpecial
-          ? card.specialAction === "take_2"
-            ? t('cardInfo.take2')
-            : card.specialAction === "peek_1"
-              ? t('cardInfo.peek1')
-              : t('cardInfo.swap2')
-          : t('cardInfo.value', { value: card.value });
-        toast.info(t('cardInfo.youPeekedAt', { cardInfo: baseInfo }));
-      }
       broadcastAction({
         type: "ACTION_PEEK_1_SELECT",
         payload: { playerId: player.id, cardIndex },
+      }).then((card: any) => {
+          if (card) {
+              toast.success(t('game.peekResult', { value: card.value }), {
+                  description: card.isSpecial ? `Special: ${card.specialAction}` : "Number card",
+                  duration: 4000,
+                  icon: <div className="text-xl font-bold">{card.value}</div>
+              });
+          }
       });
       return;
     }
@@ -147,15 +218,15 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       state.peekingState &&
       state.peekingState.peekedCount < 2
     ) {
-      return "cursor-pointer hover:scale-105";
+      return "cursor-pointer";
     }
 
     if (gamePhase === "holding_card" && isCurrentPlayer && isMyTurn) {
-      return "cursor-pointer hover:scale-105";
+      return "cursor-pointer";
     }
 
     if (gamePhase === "action_peek_1" && isMyTurn) {
-      return "cursor-pointer hover:scale-105";
+      return "cursor-pointer";
     }
 
     if (
@@ -163,7 +234,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
         gamePhase === "action_swap_2_select_2") &&
       isMyTurn
     ) {
-      return "cursor-pointer hover:scale-105";
+      return "cursor-pointer";
     }
 
     // Not a legal move: keep static (overlay on revealed cards is handled in GameCard)
@@ -173,7 +244,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   const showYouTag = gameMode === "online" && myPlayerId === player.id;
 
   return (
-    <motion.div
+    <div
+      ref={containerRef}
       className={cn(
         "relative p-2 sm:p-2.5 md:p-3 lg:p-3.5 rounded-2xl border transition-all duration-300 bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.12)] backdrop-blur-md",
         "shadow-soft-lg",
@@ -183,16 +255,6 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
           ? "border-primary/40 shadow-[0_0_28px_hsl(var(--primary)/0.25)]"
           : "border-border/50",
       )}
-      animate={
-        isMyTurn && isSpecialSelectionPhase
-          ? { boxShadow: "0 0 0 12px rgba(147, 51, 234, 0.08)" }
-          : { boxShadow: "0 0 0 0px rgba(0,0,0,0)" }
-      }
-      transition={
-        isMyTurn && isSpecialSelectionPhase
-          ? { duration: 1.1, repeat: Infinity, ease: "easeInOut", repeatType: "mirror" }
-          : { duration: 0.18 }
-      }
     >
       <div className="flex flex-col items-center gap-1 sm:gap-1.5">
         <h3
@@ -209,42 +271,25 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
           )}
         </h3>
 
-        <AnimatePresence>
-          {actionLabel && (
-            <motion.div
-              key="action-label"
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              className="flex items-center gap-1 text-[0.65rem] sm:text-xs text-muted-foreground"
-            >
-              <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-              <span className="whitespace-nowrap">{actionLabel}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {actionLabel && (
+          <div className="flex items-center gap-1 text-[0.65rem] sm:text-xs text-muted-foreground animate-in fade-in slide-in-from-bottom-1 duration-300">
+            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            <span className="whitespace-nowrap">{actionLabel}</span>
+          </div>
+        )}
 
-        <div className={cn("flex gap-0.5 sm:gap-1 md:gap-2 justify-center w-full relative")}>
-          <AnimatePresence>
-            {recentMoveForPlayer?.action === "draw" && (
-              <motion.div
-                key="draw-floater"
-                initial={{ opacity: 0, y: -16, scale: 0.8 }}
-                animate={{ opacity: 1, y: -6, scale: 1 }}
-                exit={{ opacity: 0, y: -14, scale: 0.9 }}
-                transition={{ duration: 0.35 }}
-                className="absolute -top-8 right-1 flex items-center gap-1 px-2 py-1 rounded-full bg-primary/15 dark:bg-primary/30 text-[0.65rem] text-primary shadow-soft"
-              >
-                <img
-                  src={cardBackAsset}
-                  alt="Card back"
-                  className="w-6 h-8 rounded-md shadow-soft"
-                  draggable={false}
-                />
-                <span>{recentMoveForPlayer.source === "discard" ? t('actions.fromDiscard') : t('actions.fromDeck')}</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        <div className={cn("flex justify-center w-full relative px-4 gap-1 sm:gap-1.5 md:gap-2")}>
+          {recentMoveForPlayer?.action === "draw" && (
+            <div className="absolute -top-8 right-1 flex items-center gap-1 px-2 py-1 rounded-full bg-primary/15 dark:bg-primary/30 text-[0.65rem] text-primary shadow-soft animate-in fade-in zoom-in duration-300">
+              <img
+                src={cardBackAsset}
+                alt="Card back"
+                className="w-6 h-8 rounded-md shadow-soft"
+                draggable={false}
+              />
+              <span>{recentMoveForPlayer.source === "discard" ? t('actions.fromDiscard') : t('actions.fromDeck')}</span>
+            </div>
+          )}
           {player.hand.map((cardInHand, index) => {
             const isTargeted =
               recentMoveForPlayer &&
@@ -254,26 +299,15 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
               isMyTurn && isSpecialSelectionPhase && !cardInHand.isFaceUp;
 
             return (
-              <motion.div
+              <div
                 key={index}
-                className="relative"
-                animate={
-                  shouldPulseCard
-                    ? {
-                        filter: ["brightness(1)", "brightness(1.08)", "brightness(1)"],
-                        boxShadow: [
-                          "0 0 0 0 rgba(147,51,234,0.0)",
-                          "0 0 0 10px rgba(147,51,234,0.14)",
-                          "0 0 0 0 rgba(147,51,234,0.0)",
-                        ],
-                      }
-                    : { filter: "brightness(1)", boxShadow: "0 0 0 0 rgba(0,0,0,0)" }
-                }
-                transition={
-                  shouldPulseCard
-                    ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
-                    : { duration: 0.2 }
-                }
+                className={cn(
+                  "hand-card relative transition-all duration-300",
+                  shouldPulseCard ? "pulsing-card" : "",
+                  // Hover effect to lift card and show it fully
+                  "hover:-translate-y-4 hover:z-30 hover:scale-105"
+                )}
+                style={{ zIndex: index }} // Default stacking order
               >
                 {animatingIndex === index && (
                   <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-xs font-bold text-primary animate-bounce z-20 whitespace-nowrap pointer-events-none">
@@ -304,11 +338,11 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                     playSound={playSound}
                   />
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };

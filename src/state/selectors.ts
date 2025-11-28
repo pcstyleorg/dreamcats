@@ -21,16 +21,18 @@ export const useUiState = () =>
 export const useGameView = () =>
   useAppStore((state) => ({
     roomStatus: state.roomStatus,
-    gamePhase: state.gamePhase,
-    gameMode: state.gameMode,
-    players: state.players,
-    currentPlayerIndex: state.currentPlayerIndex,
-    drawPileCount: state.drawPileCount,
-    discardTop: state.discardTop,
-    drawnCard: state.drawnCard,
-    drawSource: state.drawSource,
-    lastMove: state.lastMove,
-    actionMessage: state.actionMessage,
+    gamePhase: state.game.gamePhase,
+    gameMode: state.game.gameMode,
+    players: state.game.players,
+    currentPlayerIndex: state.game.currentPlayerIndex,
+    drawPile: state.game.drawPile,
+    discardPile: state.game.discardPile,
+    drawnCard: state.game.drawnCard,
+    drawSource: state.game.drawSource,
+    lastMove: state.game.lastMove,
+    actionMessage: state.game.actionMessage,
+    roomId: state.game.roomId,
+    hostId: state.game.hostId,
   }));
 
 export const useNetStatus = () =>

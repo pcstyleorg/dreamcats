@@ -1,5 +1,7 @@
-import React from "react";
-import { useGame } from "@/context/GameContext";
+import React, { useEffect, useState, useRef } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { useGame } from "@/state/useGame";
 import { Player } from "@/types";
 import { PlayerHand } from "./PlayerHand";
 import { GameCard } from "./Card";
@@ -19,13 +21,13 @@ import {
 import { ChatBox } from "./ChatBox";
 import { GameActions } from "./GameActions";
 import { ScrollArea } from "./ui/scroll-area";
-import { AnimatePresence, motion } from "framer-motion";
 import { getGameBackgroundAsset } from "@/lib/cardAssets";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { usePlayersView } from "@/state/hooks";
+import { useNetStatus } from "@/state/selectors";
 
 interface GameboardProps {
   theme: "light" | "dark";
@@ -37,7 +39,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   const { state, myPlayerId, broadcastAction, playSound } = useGame();
   const {
     currentPlayerIndex,
-    drawPile,
     discardPile,
     gamePhase,
     actionMessage,
@@ -47,6 +48,9 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     lastMove,
   } = state;
   const players = usePlayersView();
+  const { netStatus } = useNetStatus();
+  const [isCompact, setIsCompact] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const currentPlayer = players[currentPlayerIndex];
 
@@ -67,21 +71,39 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     ];
   } else {
     // Online mode: show my player at bottom
-    bottomPlayer = players.find((p) => p.id === myPlayerId) || currentPlayer;
-    // Other players ordered by turn order relative to me
-    const myIndex = players.findIndex(p => p.id === bottomPlayer.id);
-    if (myIndex !== -1) {
-      otherPlayers = [
-        ...players.slice(myIndex + 1),
-        ...players.slice(0, myIndex),
-      ];
+    // If I'm not in the list (spectator or loading), default to current player
+    const myPlayer = players.find((p) => p.id === myPlayerId);
+    bottomPlayer = myPlayer || currentPlayer;
+    
+    if (bottomPlayer) {
+        // Other players ordered by turn order relative to bottom player
+        const bottomIndex = players.findIndex(p => p.id === bottomPlayer.id);
+        if (bottomIndex !== -1) {
+          otherPlayers = [
+            ...players.slice(bottomIndex + 1),
+            ...players.slice(0, bottomIndex),
+          ];
+        } else {
+          // Fallback if index not found (shouldn't happen if bottomPlayer is from players)
+          otherPlayers = players.filter(p => p.id !== bottomPlayer.id);
+        }
     } else {
-      otherPlayers = players.filter(p => p.id !== bottomPlayer.id);
+        // Extreme fallback if no players loaded yet
+        otherPlayers = [];
     }
   }
 
   const isMyTurn =
     gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
+
+  useEffect(() => {
+    const updateCompact = () => {
+      setIsCompact(window.innerHeight < 860 || window.innerWidth < 1100);
+    };
+    updateCompact();
+    window.addEventListener("resize", updateCompact);
+    return () => window.removeEventListener("resize", updateCompact);
+  }, []);
 
   const handleDrawFromDeck = () => {
     if (isMyTurn && gamePhase === "playing") {
@@ -103,8 +125,35 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   };
 
   const isPlayerActionable = isMyTurn && gamePhase === "playing";
-  const pileCardClass =
-    "!w-24 sm:!w-28 md:!w-32 lg:!w-28 xl:!w-32";
+  const pileCardClass = isCompact
+    ? "!w-[82px] sm:!w-[96px] md:!w-[104px] lg:!w-[108px]"
+    : "!w-24 sm:!w-28 md:!w-32 lg:!w-28 xl:!w-32";
+
+  const RoomInfoPill = ({ variant }: { variant: "desktop" | "mobile" }) => {
+    if (gameMode !== "online" || !roomId) return null;
+    const base =
+      variant === "desktop"
+        ? "flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-border/60 bg-card/80 backdrop-blur-sm shadow-soft text-xs sm:text-sm"
+        : "hidden"; // Mobile variant disabled
+
+    const dotClass =
+      netStatus === "connected"
+        ? "bg-emerald-500"
+        : netStatus === "connecting"
+          ? "bg-amber-400"
+          : "bg-rose-500";
+
+    return (
+      <div className={cn(base, "whitespace-nowrap")}>
+        <div className={`h-2.5 w-2.5 rounded-full ${dotClass}`} />
+        <Cloud className="w-4 h-4 text-secondary" />
+        <span className="font-mono text-sm text-foreground">{roomId}</span>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={copyRoomId}>
+          <Copy className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  };
 
   const SidePanelContent = () => (
     <>
@@ -191,6 +240,42 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     }
   }, [activeSpecialAction]);
 
+  // GSAP Animations
+  useGSAP(() => {
+    if (!containerRef.current) return;
+
+    // Recent Move Animation
+    if (recentMoveLabel) {
+      gsap.fromTo(".recent-move-label", 
+        { opacity: 0, y: -10 },
+        { opacity: 1, y: 0, duration: 0.25, ease: "power2.out" }
+      );
+    } else {
+      gsap.to(".recent-move-label", { opacity: 0, y: -10, duration: 0.25 });
+    }
+
+    // Aura Animation
+    if (specialAuraGradient) {
+      gsap.fromTo(".special-aura",
+        { opacity: 0.1, scale: 0.9 },
+        { opacity: 0.35, scale: 1, duration: 0.4, ease: "power2.out" }
+      );
+    } else {
+      gsap.to(".special-aura", { opacity: 0, scale: 0.95, duration: 0.4 });
+    }
+
+    // Drawn Card Animation
+    if (drawnCard && isMyTurn && gamePhase === "holding_card") {
+      gsap.fromTo(".drawn-card-container",
+        { opacity: 0, scale: 0.5, y: 20 },
+        { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: "back.out(1.7)" }
+      );
+    } else {
+      gsap.to(".drawn-card-container", { opacity: 0, scale: 0.5, y: 20, duration: 0.3 });
+    }
+
+  }, { scope: containerRef, dependencies: [recentMoveLabel, specialAuraGradient, drawnCard, isMyTurn, gamePhase] });
+
   if (players.length === 0) {
     return (
       <div className="w-full min-h-screen flex items-center justify-center font-heading">
@@ -201,7 +286,11 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
   return (
     <div
-      className="relative w-full min-h-[100svh] lg:min-h-[100dvh] lg:h-full text-foreground px-1 sm:px-2 md:px-4 lg:px-6 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 bg-cover bg-center overflow-hidden"
+      ref={containerRef}
+      className={cn(
+        "relative w-full min-h-[100svh] lg:min-h-[100dvh] lg:h-full text-foreground px-1 sm:px-2 md:px-4 lg:px-6 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 bg-cover bg-center overflow-hidden",
+        isCompact && "game-compact"
+      )}
       style={{
         backgroundImage,
       }}
@@ -213,28 +302,26 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
       <div className="absolute top-12 -right-24 w-72 h-72 rounded-full bg-[hsl(var(--accent)/0.2)] blur-3xl" />
       <div className="absolute bottom-10 left-1/3 w-64 h-64 rounded-full bg-[hsl(var(--secondary)/0.16)] blur-3xl" />
 
-      <AnimatePresence>
-        {recentMoveLabel && (
-          <motion.div
-            key="recent-move"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.25 }}
-            className="absolute top-16 sm:top-14 lg:top-6 left-1/2 -translate-x-1/2 z-30 pointer-events-none px-3 w-max"
-          >
-            <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-card/90 dark:bg-background/90 border border-border/60 shadow-soft">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-xs sm:text-sm font-medium whitespace-nowrap">
-                {recentMoveLabel}
-              </span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {recentMoveLabel && (
+        <div
+          className="recent-move-label absolute top-16 sm:top-14 lg:top-6 left-1/2 -translate-x-1/2 z-30 pointer-events-none px-3 w-max"
+        >
+          <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-card/90 dark:bg-background/90 border border-border/60 shadow-soft">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-xs sm:text-sm font-medium whitespace-nowrap">
+              {recentMoveLabel}
+            </span>
+          </div>
+        </div>
+      )}
 
       <main className="flex-grow flex flex-col relative z-10 min-h-0 gap-3 sm:gap-4 overflow-hidden">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 px-1 sm:px-3 md:px-4 py-3 sm:py-4 sticky top-0 z-20 backdrop-blur-md bg-background/70 border-b border-border/40">
+        <div
+          className={cn(
+            "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 px-1 sm:px-3 md:px-4 py-3 sm:py-4 sticky top-0 z-20 backdrop-blur-md bg-background/70 border-b border-border/40",
+            isCompact && "py-2 sm:py-3"
+          )}
+        >
           <div className="flex items-center gap-3 bg-card/70 border border-border/60 px-4 py-3 rounded-2xl shadow-soft backdrop-blur-lg">
             <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] flex items-center justify-center text-[hsl(var(--primary-foreground))] font-heading text-lg shadow-soft">
               {currentPlayer?.name?.charAt(0) ?? 'S'}
@@ -248,17 +335,9 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {gameMode === "online" && roomId && (
-              <div className="flex items-center gap-2 bg-card/70 px-3 py-2 rounded-xl border border-border/60 shadow-soft lg:hidden">
-                <Cloud className="w-4 h-4 text-secondary" />
-                <span className="font-mono text-sm text-foreground">{roomId}</span>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={copyRoomId}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-            <div className="hidden sm:flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <RoomInfoPill variant="desktop" />
+            <div className="hidden lg:flex items-center gap-2">
               <LanguageSwitcher />
               <ThemeToggle theme={theme} onToggle={toggleTheme} />
             </div>
@@ -266,9 +345,19 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         </div>
 
         {/* Opponents Area */}
-        <div className="flex justify-start sm:justify-center items-start mt-4 sm:mt-6 lg:mt-6 xl:mt-8 mb-1.5 sm:mb-2 md:mb-3 flex-shrink-0 w-full px-1 sm:px-2 overflow-x-auto">
+        <div
+          className={cn(
+            "flex justify-start sm:justify-center items-start mt-4 sm:mt-6 lg:mt-6 xl:mt-8 mb-1.5 sm:mb-2 md:mb-3 flex-shrink-0 w-full px-1 sm:px-2 overflow-x-auto",
+            isCompact && "mt-2 sm:mt-3 lg:mt-4 mb-1"
+          )}
+        >
           {otherPlayers.length > 0 ? (
-            <div className="flex flex-nowrap sm:flex-wrap justify-start sm:justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-10 w-full max-w-5xl mx-auto px-2 sm:px-3 py-2 sm:py-3 bg-card/70 border border-border/60 rounded-2xl shadow-soft-lg backdrop-blur-xl overflow-x-auto sm:overflow-visible">
+            <div
+              className={cn(
+                "flex flex-nowrap sm:flex-wrap justify-start sm:justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-10 w-full max-w-5xl mx-auto px-2 sm:px-3 py-2 sm:py-3 bg-card/70 border border-border/60 rounded-2xl shadow-soft-lg backdrop-blur-xl overflow-x-auto sm:overflow-visible",
+                isCompact && "gap-2 sm:gap-3 md:gap-3 lg:gap-4 py-2 sm:py-2.5"
+              )}
+            >
               {otherPlayers.map((player) => (
                 <div key={player.id} className="flex-shrink-0 min-w-0">
                   <PlayerHand
@@ -292,87 +381,96 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
         {/* Center Area */}
         <div
-          className="flex-grow flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 md:gap-7 lg:gap-9 my-2 sm:my-3 md:my-4 min-h-0 w-full"
+          className={cn(
+            "flex-grow flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 md:gap-7 lg:gap-9 my-2 sm:my-3 md:my-4 min-h-0 w-full",
+            isCompact && "gap-2 sm:gap-3 md:gap-5 my-1 sm:my-2"
+          )}
           data-tutorial-id="piles"
         >
           <div className="relative w-full flex justify-center">
-            <AnimatePresence>
-              {specialAuraGradient && (
-                <motion.div
-                  key={specialAuraGradient}
-                  className="absolute inset-[-10%] sm:inset-[-6%] blur-3xl rounded-[32px] pointer-events-none"
-                  style={{ background: specialAuraGradient }}
-                  initial={{ opacity: 0.1, scale: 0.9 }}
-                  animate={{ opacity: 0.35, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                />
+            {specialAuraGradient && (
+              <div
+                key={specialAuraGradient}
+                className="special-aura absolute inset-[-10%] sm:inset-[-6%] blur-3xl rounded-[32px] pointer-events-none"
+                style={{ background: specialAuraGradient }}
+              />
+            )}
+            
+            {/* Pile Mat */}
+            <div
+              className={cn(
+                "bg-black/40 border border-white/5 rounded-3xl px-6 sm:px-8 py-6 sm:py-8 shadow-2xl backdrop-blur-xl flex items-center gap-8 sm:gap-12 md:gap-16 relative z-10",
+                isCompact && "px-4 sm:px-5 py-4 sm:py-5 gap-4 sm:gap-6 md:gap-8 scale-[0.9]"
               )}
-            </AnimatePresence>
-            <div className="bg-card/70 border border-border/60 rounded-2xl px-3 sm:px-5 py-4 sm:py-5 shadow-soft-lg backdrop-blur-xl flex items-center gap-4 sm:gap-6 md:gap-8 relative z-10">
+            >
               <div
                 className="flex flex-col items-center w-full sm:w-auto"
                 data-tutorial-id="draw-pile"
               >
-                <GameCard
-                  card={null}
-                  isFaceUp={false}
-                  className={cn(
-                    isPlayerActionable ? "cursor-pointer" : "",
-                    pileCardClass,
-                  )}
-                  onClick={handleDrawFromDeck}
-                  isGlowing={isPlayerActionable}
-                  playSound={playSound}
-                />
-                <span className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base font-medium text-foreground text-center">
-                  {t('game.draw')} ({drawPile.length})
+                <div className="relative group">
+                    <div className="absolute inset-0 bg-white/5 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <GameCard
+                    card={null}
+                    isFaceUp={false}
+                    className={cn(
+                        isPlayerActionable ? "cursor-pointer" : "",
+                        pileCardClass,
+                        "shadow-2xl"
+                    )}
+                    onClick={handleDrawFromDeck}
+                    isGlowing={isPlayerActionable}
+                    playSound={playSound}
+                    />
+                </div>
+                <span className="mt-2 sm:mt-3 text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-widest text-center">
+                  {t('game.draw')}
                 </span>
               </div>
 
-              <AnimatePresence>
-                {drawnCard && isMyTurn && gamePhase === "holding_card" && (
-                  <motion.div
-                    className="flex flex-col items-center px-2"
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.5 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <p className="mb-2 text-sm sm:text-base font-semibold font-heading text-foreground">
-                      {t('game.yourCard')}
-                    </p>
-                    <GameCard
+              {drawnCard && isMyTurn && gamePhase === "holding_card" && (
+                <div
+                  className="drawn-card-container flex flex-col items-center px-2 absolute -top-24 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+                >
+                  <div className="relative">
+                      <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
+                      <GameCard
                       card={drawnCard}
                       isFaceUp={true}
                       isGlowing
-                      className={pileCardClass}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                      className={cn(pileCardClass, "scale-110 shadow-[0_0_30px_rgba(168,85,247,0.4)]")}
+                      />
+                  </div>
+                  <p className="mt-2 text-sm font-bold text-primary drop-shadow-md bg-black/60 px-3 py-1 rounded-full backdrop-blur-sm border border-primary/20">
+                    {t('game.yourCard')}
+                  </p>
+                </div>
+              )}
 
               <div
                 className="flex flex-col items-center w-full sm:w-auto"
                 data-tutorial-id="discard-pile"
               >
-                <GameCard
-                  card={
-                    discardPile.length > 0
-                      ? discardPile[discardPile.length - 1]
-                      : null
-                  }
-                  isFaceUp={true}
-                  className={cn(
-                    isPlayerActionable ? "cursor-pointer" : "",
-                    pileCardClass,
-                  )}
-                  onClick={handleDrawFromDiscard}
-                  isGlowing={isPlayerActionable && discardPile.length > 0}
-                  disableSpecialAnimation
-                  playSound={playSound}
-                />
-                <span className="mt-1 sm:mt-1.5 text-xs sm:text-sm md:text-base font-medium text-foreground text-center">
+                <div className="relative group">
+                    <div className="absolute inset-0 bg-white/5 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <GameCard
+                    card={
+                        discardPile.length > 0
+                        ? discardPile[discardPile.length - 1]
+                        : null
+                    }
+                    isFaceUp={true}
+                    className={cn(
+                        isPlayerActionable ? "cursor-pointer" : "",
+                        pileCardClass,
+                        "shadow-2xl"
+                    )}
+                    onClick={handleDrawFromDiscard}
+                    isGlowing={isPlayerActionable && discardPile.length > 0}
+                    disableSpecialAnimation
+                    playSound={playSound}
+                    />
+                </div>
+                <span className="mt-2 sm:mt-3 text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-widest text-center">
                   {t('game.discard')}
                 </span>
               </div>
@@ -382,8 +480,16 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
         {/* Bottom Player Area */}
         {bottomPlayer && (
-          <div className="mt-auto flex-shrink-0 pb-[calc(env(safe-area-inset-bottom)+16px)] sm:pb-3 lg:pb-2">
-            <div data-tutorial-id="player-hand">
+          <div
+            className={cn(
+              "mt-auto flex-shrink-0 pb-[calc(env(safe-area-inset-bottom)+16px)] sm:pb-3 lg:pb-2",
+              isCompact && "pb-[calc(env(safe-area-inset-bottom)+10px)]"
+            )}
+          >
+            <div
+              data-tutorial-id="player-hand"
+              className={cn(isCompact && "scale-[0.95] origin-bottom")}
+            >
               <PlayerHand
                 player={bottomPlayer}
                 isCurrentPlayer={currentPlayer.id === bottomPlayer.id}
@@ -391,7 +497,10 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
               />
             </div>
             <div
-              className="flex justify-center mt-1 sm:mt-2 md:mt-3 h-8 sm:h-10 md:h-12"
+              className={cn(
+                "flex justify-center mt-1 sm:mt-2 md:mt-3 h-8 sm:h-10 md:h-12",
+                isCompact && "mt-1 h-9 sm:h-10 md:h-10"
+              )}
               data-tutorial-id="game-actions"
             >
               <GameActions />
@@ -405,20 +514,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         <h2 className="text-3xl font-bold mb-3 text-center font-heading text-foreground">
           Sen
         </h2>
-        {gameMode === "online" && roomId && (
-          <div className="flex items-center justify-center gap-2 mb-2 text-sm text-muted-foreground">
-            <Cloud className="w-4 h-4" />
-            <span>{roomId}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={copyRoomId}
-            >
-              <Copy className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
         {gameMode === "hotseat" && (
           <div className="flex items-center justify-center gap-2 mb-2 text-sm text-muted-foreground">
             <Users className="w-4 h-4" />
@@ -452,6 +547,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         </Sheet>
       </div>
 
+      {/* <RoomInfoPill variant="mobile" />  Removed to prevent overlap */}
       <ActionModal />
     </div>
   );

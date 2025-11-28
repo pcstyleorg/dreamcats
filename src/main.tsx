@@ -4,17 +4,11 @@ import App from './App.tsx';
 import './index.css';
 import './i18n/config';
 import { ConvexClientProvider } from './ConvexProvider.tsx';
-import { GameProvider } from './context/GameContext.tsx';
-import { TutorialProvider } from './context/TutorialContext.tsx';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ConvexClientProvider>
-      <GameProvider>
-        <TutorialProvider>
-          <App />
-        </TutorialProvider>
-      </GameProvider>
+      <App />
     </ConvexClientProvider>
   </React.StrictMode>,
 );

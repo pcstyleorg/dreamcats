@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTutorial } from '@/context/TutorialContext';
-import { useGame } from '@/context/GameContext';
+import { useGame } from '@/state/useGame';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
 import { Popover, PopoverContent, PopoverAnchor } from './ui/popover';
 import { Button } from './ui/button';

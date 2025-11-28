@@ -3,7 +3,15 @@ import { convexTest, TestConvex } from "convex-test";
 import schema from "../schema";
 import { api } from "../_generated/api";
 
-const modules = import.meta.glob(["../*.ts", "../_generated/**/*.{ts,js}"]);
+const modules = {
+  "../rooms.ts": () => import("../rooms"),
+  "../games.ts": () => import("../games"),
+  "../chat.ts": () => import("../chat"),
+  "../presence.ts": () => import("../presence"),
+  "../cleanup.ts": () => import("../cleanup"),
+  "../_generated/api.js": () => import("../_generated/api.js"),
+  "../_generated/server.js": () => import("../_generated/server.js"),
+};
 const makeCtx = () => convexTest(schema, modules) as TestConvex<typeof schema>;
 
 describe("rooms.joinRoom", () => {
