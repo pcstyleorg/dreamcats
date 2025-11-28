@@ -162,8 +162,22 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           )
             return state;
           const { playerIndex, peekedCount } = state.peekingState;
+          
+          // Validate playerIndex and cardIndex bounds
+          if (playerIndex < 0 || playerIndex >= state.players.length) {
+            console.error("Invalid playerIndex in PEEK_CARD");
+            return state;
+          }
+          
           const players = [...state.players];
           const player = players[playerIndex];
+          
+          // Validate cardIndex
+          if (gameAction.payload.cardIndex < 0 || gameAction.payload.cardIndex >= player.hand.length) {
+            console.error("Invalid cardIndex in PEEK_CARD");
+            return state;
+          }
+          
           if (
             gameAction.payload.playerId !== player.id ||
             player.hand[gameAction.payload.cardIndex].isFaceUp
@@ -298,8 +312,21 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           if (state.gamePhase !== "holding_card" || !state.drawnCard)
             return state;
           const { cardIndex } = gameAction.payload;
+          
+          // Validate currentPlayerIndex and cardIndex bounds
+          if (state.currentPlayerIndex < 0 || state.currentPlayerIndex >= state.players.length) {
+            console.error("Invalid currentPlayerIndex in SWAP_HELD_CARD");
+            return state;
+          }
+          
           const players = [...state.players];
           const player = { ...players[state.currentPlayerIndex] };
+          
+          if (cardIndex < 0 || cardIndex >= player.hand.length) {
+            console.error("Invalid cardIndex in SWAP_HELD_CARD");
+            return state;
+          }
+          
           const newHand = [...player.hand];
           const cardToDiscard = newHand[cardIndex].card;
 
@@ -602,9 +629,33 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       : "skip",
   );
 
+  // Validate incoming remote state structure
+  const validateGameState = useCallback((state: unknown): state is GameState => {
+    if (!state || typeof state !== 'object') return false;
+    const s = state as Partial<GameState>;
+    
+    // Check required fields
+    if (!s.gameMode || !Array.isArray(s.players) || !Array.isArray(s.drawPile) || !Array.isArray(s.discardPile)) {
+      return false;
+    }
+    
+    // Validate players have required structure
+    if (!s.players.every(p => p && typeof p === 'object' && 'id' in p && 'name' in p && Array.isArray(p.hand))) {
+      return false;
+    }
+    
+    return true;
+  }, []);
+
   // Sync remote game state to local state
   useEffect(() => {
     if (!remoteGameState || state.gameMode !== "online") {
+      return;
+    }
+
+    // Validate remote state structure before processing
+    if (!validateGameState(remoteGameState)) {
+      console.error("Invalid remote game state received, ignoring");
       return;
     }
 
@@ -693,7 +744,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       dispatch({ type: "SET_STATE", payload: finalState });
       lastSyncedStateRef.current = finalState;
     }
-  }, [remoteGameState, state.gameMode, myPlayerId, dispatch]); // Removed state from deps to prevent loops
+  }, [remoteGameState, state.gameMode, myPlayerId, dispatch, validateGameState]); // Removed state from deps to prevent loops
 
   // Sync remote chat messages
   useEffect(() => {
@@ -914,7 +965,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         currentStateStr !== lastSyncedStr &&
         currentStateStr !== remoteStateStr
       ) {
-        // Debounce rapid updates
+        // Debounce rapid updates - use longer timeout to reduce conflicts
         const timeoutId = setTimeout(async () => {
           try {
             await setGameStateMutation({
@@ -925,7 +976,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           } catch (error) {
             console.error("Failed to sync game state:", error);
           }
-        }, 100);
+        }, 200); // Increased from 100ms to 200ms to reduce sync conflicts
 
         return () => clearTimeout(timeoutId);
       }
