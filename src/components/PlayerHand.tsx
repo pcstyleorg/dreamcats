@@ -27,7 +27,6 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   const { state, broadcastAction, myPlayerId } = useGame();
   const { gamePhase, gameMode, lastMove } = state;
   const containerRef = useRef<HTMLDivElement>(null);
-  const hasAnimatedRef = useRef(false);
   const currentPlayer = state.players[state.currentPlayerIndex];
   const isMyTurn =
     gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
@@ -69,20 +68,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     }
   }, [recentMoveForPlayer]);
 
-  // GSAP Animations - Entrance (only run once)
-  useGSAP(() => {
-    if (!containerRef.current || hasAnimatedRef.current) return;
-
-    hasAnimatedRef.current = true;
-    gsap.from(".hand-card", {
-      y: 50,
-      opacity: 0,
-      duration: 0.5,
-      stagger: 0.05,
-      ease: "back.out(1.2)",
-      clearProps: "y,opacity,transform"
-    });
-  }, { scope: containerRef, dependencies: [] }); // Only run on mount
+  // Entrance animation removed to avoid Safari/production opacity glitches.
+  // (hand cards were occasionally stuck at opacity:0 when GSAP failed to clear props)
 
   // GSAP Animations - Active Player Border
   useGSAP(() => {
@@ -330,18 +317,23 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
           </div>
         )}
 
+        {recentMoveForPlayer?.action === "draw" && (
+          <div className="flex items-center gap-2 mt-1 text-[0.7rem] sm:text-xs text-muted-foreground bg-primary/10 border border-primary/20 rounded-full px-3 py-1 shadow-soft animate-in fade-in zoom-in duration-300">
+            <img
+              src={cardBackAsset}
+              alt="Card back"
+              className="w-6 h-8 rounded-md shadow-soft"
+              draggable={false}
+            />
+            <span className="font-medium">
+              {recentMoveForPlayer.source === "discard"
+                ? t('actions.fromDiscard')
+                : t('actions.fromDeck')}
+            </span>
+          </div>
+        )}
+
         <div className={cn("flex justify-center w-full relative px-4 gap-1 sm:gap-1.5 md:gap-2")}>
-          {recentMoveForPlayer?.action === "draw" && (
-            <div className="absolute -top-8 right-1 flex items-center gap-1 px-2 py-1 rounded-full bg-primary/15 dark:bg-primary/30 text-[0.65rem] text-primary shadow-soft animate-in fade-in zoom-in duration-300">
-              <img
-                src={cardBackAsset}
-                alt="Card back"
-                className="w-6 h-8 rounded-md shadow-soft"
-                draggable={false}
-              />
-              <span>{recentMoveForPlayer.source === "discard" ? t('actions.fromDiscard') : t('actions.fromDeck')}</span>
-            </div>
-          )}
           {player.hand.map((cardInHand, index) => {
             const isTargeted =
               recentMoveForPlayer &&
