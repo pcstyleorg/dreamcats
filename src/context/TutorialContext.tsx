@@ -17,7 +17,7 @@ export { useTutorialStore } from '@/stores/tutorialStore';
 export type { TutorialStep } from '@/stores/tutorialStore';
 
 // Provide a legacy useTutorial hook for backward compatibility, delegating to the store
-export const useTutorialLegacy = useTutorialStore as unknown as (selector?: (s: any) => any) => any;
+export const useTutorialLegacy = useTutorialStore as (selector?: <T>(s: TutorialStore) => T) => TutorialStore;
 
 export const TutorialProvider = ({ children }: { children: ReactNode }) => {
   const step = useTutorialStore((s: TutorialStore) => s.step);

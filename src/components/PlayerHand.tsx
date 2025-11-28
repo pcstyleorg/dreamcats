@@ -81,8 +81,11 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     state.players.findIndex((p) => p.id === player.id);
 
   const handleCardClick = (cardIndex: number) => {
-    // Peeking phase (only the peeking player)
-    if (gamePhase === "peeking" && isPeekingTurn) {
+    // In online mode, only allow actions during my turn (except peeking own cards)
+    const isMyPlayer = gameMode === "online" ? player.id === myPlayerId : true;
+    
+    // Peeking phase (only the peeking player can peek their own cards)
+    if (gamePhase === "peeking" && isPeekingTurn && isMyPlayer) {
       broadcastAction({
         type: "PEEK_CARD",
         payload: { playerId: player.id, cardIndex },
@@ -91,7 +94,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     }
 
     // Swapping card from hand after drawing (only the active player's own hand)
-    if (gamePhase === "holding_card" && isCurrentPlayer && isMyTurn) {
+    if (gamePhase === "holding_card" && isCurrentPlayer && isMyTurn && isMyPlayer) {
       broadcastAction({ type: "SWAP_HELD_CARD", payload: { cardIndex } });
       return;
     }
