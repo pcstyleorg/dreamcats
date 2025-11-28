@@ -7,3 +7,8 @@ node_modules/
 dist/
 *.tsbuildinfo
 .claude/
+
+# Lock files - only keep bun.lock (project uses Bun)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

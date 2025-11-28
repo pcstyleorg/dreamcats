@@ -415,6 +415,20 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
         case "ACTION_PEEK_1_SELECT": {
           if (state.gamePhase !== "action_peek_1") return state;
           const { playerId, cardIndex } = gameAction.payload;
+          
+          // Find and validate the target player
+          const targetPlayer = state.players.find((p) => p.id === playerId);
+          if (!targetPlayer) {
+            console.error("Invalid player ID in ACTION_PEEK_1_SELECT");
+            return state;
+          }
+          
+          // Validate card index
+          if (cardIndex < 0 || cardIndex >= targetPlayer.hand.length) {
+            console.error("Invalid card index in ACTION_PEEK_1_SELECT");
+            return state;
+          }
+          
           const players = state.players.map((p) => {
             if (p.id === playerId) {
               const newHand = p.hand.map((c, i) =>
@@ -454,10 +468,27 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
 
             const player1Index = state.players.findIndex(
               (p) => p.id === card1.playerId,
-            )!;
+            );
             const player2Index = state.players.findIndex(
               (p) => p.id === card2.playerId,
-            )!;
+            );
+
+            // Validate player indices before proceeding
+            if (player1Index === -1 || player2Index === -1) {
+              console.error("Invalid player ID in ACTION_SWAP_2_SELECT");
+              return state;
+            }
+
+            // Validate card indices
+            if (
+              card1.cardIndex < 0 || 
+              card1.cardIndex >= state.players[player1Index].hand.length ||
+              card2.cardIndex < 0 || 
+              card2.cardIndex >= state.players[player2Index].hand.length
+            ) {
+              console.error("Invalid card index in ACTION_SWAP_2_SELECT");
+              return state;
+            }
 
             const newPlayers = JSON.parse(JSON.stringify(state.players));
             const cardToMove1 = newPlayers[player1Index].hand[card1.cardIndex];
@@ -484,6 +515,13 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           if (state.gamePhase !== "action_take_2" || !state.tempCards)
             return state;
           const chosenCard = gameAction.payload.card;
+          
+          // Validate the chosen card exists in tempCards
+          if (!state.tempCards.find((c) => c.id === chosenCard.id)) {
+            console.error("Invalid card choice in ACTION_TAKE_2_CHOOSE");
+            return state;
+          }
+          
           const otherCard = state.tempCards.find((c) => c.id !== chosenCard.id);
           const newDiscardPile = otherCard
             ? [...state.discardPile, otherCard]
