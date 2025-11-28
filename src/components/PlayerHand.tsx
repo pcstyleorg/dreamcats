@@ -295,6 +295,29 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       {isSwapTarget && (
         <div className="absolute -inset-1 rounded-2xl bg-gradient-to-t from-primary/20 via-primary/10 to-transparent pointer-events-none animate-pulse" />
       )}
+      {/* Floating status chips */}
+      {actionLabel && (
+        <div className="pointer-events-none absolute -top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 text-[0.7rem] sm:text-xs text-muted-foreground bg-background/80 border border-border/60 rounded-full px-3 py-1 shadow-soft backdrop-blur-md">
+          <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+          <span className="whitespace-nowrap">{actionLabel}</span>
+        </div>
+      )}
+      {recentMoveForPlayer?.action === "draw" && (
+        <div className="pointer-events-none absolute -top-4 right-3 z-20 flex items-center gap-2 text-[0.7rem] sm:text-xs text-muted-foreground bg-primary/10 border border-primary/20 rounded-full px-3 py-1 shadow-soft backdrop-blur-md">
+          <img
+            src={cardBackAsset}
+            alt="Card back"
+            className="w-6 h-8 rounded-md shadow-soft"
+            draggable={false}
+          />
+          <span className="font-medium">
+            {recentMoveForPlayer.source === "discard"
+              ? t('actions.fromDiscard')
+              : t('actions.fromDeck')}
+          </span>
+        </div>
+      )}
+
       <div className="flex flex-col items-center gap-1 sm:gap-1.5">
         <h3
           className={cn(
@@ -309,29 +332,6 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
             </span>
           )}
         </h3>
-
-        {actionLabel && (
-          <div className="flex items-center gap-1 text-[0.65rem] sm:text-xs text-muted-foreground animate-in fade-in slide-in-from-bottom-1 duration-300">
-            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-            <span className="whitespace-nowrap">{actionLabel}</span>
-          </div>
-        )}
-
-        {recentMoveForPlayer?.action === "draw" && (
-          <div className="flex items-center gap-2 mt-1 text-[0.7rem] sm:text-xs text-muted-foreground bg-primary/10 border border-primary/20 rounded-full px-3 py-1 shadow-soft animate-in fade-in zoom-in duration-300">
-            <img
-              src={cardBackAsset}
-              alt="Card back"
-              className="w-6 h-8 rounded-md shadow-soft"
-              draggable={false}
-            />
-            <span className="font-medium">
-              {recentMoveForPlayer.source === "discard"
-                ? t('actions.fromDiscard')
-                : t('actions.fromDeck')}
-            </span>
-          </div>
-        )}
 
         <div className={cn("flex justify-center w-full relative px-4 gap-1 sm:gap-1.5 md:gap-2")}>
           {player.hand.map((cardInHand, index) => {
