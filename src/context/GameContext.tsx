@@ -24,7 +24,10 @@ type ReducerAction =
   | { type: "ADD_CHAT_MESSAGE"; payload: ChatMessage }
   | { type: "SET_CHAT_MESSAGES"; payload: ChatMessage[] };
 
-const gameReducer = (state: GameState, action: ReducerAction): GameState => {
+export const gameReducer = (
+  state: GameState,
+  action: ReducerAction,
+): GameState => {
   switch (action.type) {
     case "SET_STATE":
       return action.payload;
@@ -41,6 +44,21 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
     case "PROCESS_ACTION": {
       const gameAction = action.payload.action;
       const currentPlayer = state.players[state.currentPlayerIndex];
+
+      const findTargetCard = (
+        target: { playerId: string; cardIndex: number },
+        players: Player[],
+      ) => {
+        const playerIndex = players.findIndex((p) => p.id === target.playerId);
+        if (playerIndex === -1) return null;
+        if (
+          target.cardIndex < 0 ||
+          target.cardIndex >= players[playerIndex].hand.length
+        )
+          return null;
+
+        return { playerIndex, player: players[playerIndex] };
+      };
 
       const advanceTurn = (s: GameState): GameState => {
         const nextPlayerIndex = (s.currentPlayerIndex + 1) % s.players.length;
@@ -415,8 +433,11 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
         case "ACTION_PEEK_1_SELECT": {
           if (state.gamePhase !== "action_peek_1") return state;
           const { playerId, cardIndex } = gameAction.payload;
-          const players = state.players.map((p) => {
-            if (p.id === playerId) {
+          const target = findTargetCard({ playerId, cardIndex }, state.players);
+          if (!target) return state;
+
+          const players = state.players.map((p, idx) => {
+            if (idx === target.playerIndex) {
               const newHand = p.hand.map((c, i) =>
                 i === cardIndex ? { ...c, hasBeenPeeked: true } : c,
               );
@@ -441,6 +462,12 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
         case "ACTION_SWAP_2_SELECT": {
           const { playerId, cardIndex } = gameAction.payload;
           if (state.gamePhase === "action_swap_2_select_1") {
+            const firstTarget = findTargetCard(
+              { playerId, cardIndex },
+              state.players,
+            );
+            if (!firstTarget) return state;
+
             return {
               ...state,
               gamePhase: "action_swap_2_select_2",
@@ -452,19 +479,22 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
             const { card1 } = state.swapState;
             const card2 = { playerId, cardIndex };
 
-            const player1Index = state.players.findIndex(
-              (p) => p.id === card1.playerId,
-            )!;
-            const player2Index = state.players.findIndex(
-              (p) => p.id === card2.playerId,
-            )!;
+            const firstTarget = findTargetCard(card1, state.players);
+            const secondTarget = findTargetCard(card2, state.players);
+            if (!firstTarget || !secondTarget) return state;
 
             const newPlayers = JSON.parse(JSON.stringify(state.players));
-            const cardToMove1 = newPlayers[player1Index].hand[card1.cardIndex];
-            const cardToMove2 = newPlayers[player2Index].hand[card2.cardIndex];
+            const cardToMove1 = newPlayers[firstTarget.playerIndex].hand[
+              card1.cardIndex
+            ];
+            const cardToMove2 = newPlayers[secondTarget.playerIndex].hand[
+              card2.cardIndex
+            ];
 
-            newPlayers[player1Index].hand[card1.cardIndex] = cardToMove2;
-            newPlayers[player2Index].hand[card2.cardIndex] = cardToMove1;
+            newPlayers[firstTarget.playerIndex].hand[card1.cardIndex] =
+              cardToMove2;
+            newPlayers[secondTarget.playerIndex].hand[card2.cardIndex] =
+              cardToMove1;
 
             return advanceTurn({
               ...state,
@@ -483,7 +513,11 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
         case "ACTION_TAKE_2_CHOOSE": {
           if (state.gamePhase !== "action_take_2" || !state.tempCards)
             return state;
-          const chosenCard = gameAction.payload.card;
+          const chosenCard = state.tempCards.find(
+            (card) => card.id === gameAction.payload.card.id,
+          );
+          if (!chosenCard) return state;
+
           const otherCard = state.tempCards.find((c) => c.id !== chosenCard.id);
           const newDiscardPile = otherCard
             ? [...state.discardPile, otherCard]
@@ -504,6 +538,7 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           };
         }
         case "CALL_POBUDKA": {
+          if (state.gamePhase !== "playing") return state;
           return endRoundWithScores(state, {
             reason: "pobudka",
             callerId: currentPlayer.id,
@@ -552,6 +587,89 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
     default:
       return state;
   }
+};
+
+export const sanitizeRemoteState = (
+  remoteState: GameState,
+  localState: GameState = initialState,
+  myPlayerId?: string | null,
+): GameState => {
+  let finalState = remoteState;
+  const playerId = myPlayerId ?? undefined;
+
+  // Merge our local visible cards with remote state for all phases
+  // This preserves cards we can see (either peeked or drawn) locally
+  if (playerId) {
+    const localPlayer = localState.players.find((p) => p.id === playerId);
+    const remotePlayer = remoteState.players.find((p) => p.id === playerId);
+
+    // Validate both players exist and have valid hands before merging
+    if (
+      localPlayer &&
+      remotePlayer &&
+      Array.isArray(localPlayer.hand) &&
+      Array.isArray(remotePlayer.hand) &&
+      localPlayer.hand.length === remotePlayer.hand.length
+    ) {
+      const hasLocalVisibleCards = localPlayer.hand.some((card) => card.isFaceUp);
+
+      if (hasLocalVisibleCards) {
+        const mergedHand = localPlayer.hand.map((localCard, index) => {
+          const remoteCard = remotePlayer.hand[index];
+          if (localCard.isFaceUp) {
+            return {
+              ...remoteCard,
+              isFaceUp: true,
+              hasBeenPeeked: localCard.hasBeenPeeked || remoteCard.hasBeenPeeked,
+            };
+          }
+          return remoteCard;
+        });
+
+        finalState = {
+          ...remoteState,
+          players: remoteState.players.map((p) =>
+            p.id === playerId ? { ...p, hand: mergedHand } : p,
+          ),
+        };
+      }
+    }
+  }
+
+  // Ensure opponent cards are never visible (defense in depth)
+  if (playerId && finalState.gamePhase !== "round_end" && finalState.gamePhase !== "game_over") {
+    finalState = {
+      ...finalState,
+      players: finalState.players.map((p) => {
+        if (p.id !== playerId) {
+          return {
+            ...p,
+            hand: p.hand.map((cardInHand) => ({
+              ...cardInHand,
+              isFaceUp: false,
+            })),
+          };
+        }
+        return p;
+      }),
+    };
+  }
+
+  if (playerId) {
+    const activePlayer = finalState.players[finalState.currentPlayerIndex];
+    const isMyTurn = activePlayer?.id === playerId;
+
+    if (!isMyTurn) {
+      finalState = {
+        ...finalState,
+        drawnCard: null,
+        drawSource: null,
+        tempCards: finalState.gamePhase === "action_take_2" ? undefined : finalState.tempCards,
+      };
+    }
+  }
+
+  return finalState;
 };
 
 interface GameContextType {
@@ -682,79 +800,11 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // Sanitize remote state to ensure we don't show opponent's cards
-    // But preserve our own local peeked/visible cards
-    const remoteState = remoteGameState as GameState;
-    let finalState = remoteState;
-
-    // Merge our local visible cards with remote state for all phases
-    // This preserves cards we can see (either peeked or drawn) locally
-    if (myPlayerId) {
-      const currentState = currentStateRef.current;
-      const localPlayer = currentState.players.find((p) => p.id === myPlayerId);
-      const remotePlayer = remoteState.players.find((p) => p.id === myPlayerId);
-
-      // Validate both players exist and have valid hands before merging
-      if (
-        localPlayer && 
-        remotePlayer && 
-        Array.isArray(localPlayer.hand) && 
-        Array.isArray(remotePlayer.hand) && 
-        localPlayer.hand.length === remotePlayer.hand.length
-      ) {
-        // Check if we have locally visible cards that should be preserved
-        const hasLocalVisibleCards = localPlayer.hand.some(
-          (card) => card.isFaceUp,
-        );
-
-        if (hasLocalVisibleCards) {
-          // Preserve our local visible cards (isFaceUp state)
-          const mergedHand = localPlayer.hand.map((localCard, index) => {
-            const remoteCard = remotePlayer.hand[index];
-            // If we can see this card locally, keep it visible
-            if (localCard.isFaceUp) {
-              // Merge: use remote card data but keep our local visibility state
-              return {
-                ...remoteCard,
-                isFaceUp: true,
-                hasBeenPeeked: localCard.hasBeenPeeked || remoteCard.hasBeenPeeked,
-              };
-            }
-            // Otherwise use remote state as-is
-            return remoteCard;
-          });
-
-          finalState = {
-            ...remoteState,
-            players: remoteState.players.map((p) =>
-              p.id === myPlayerId
-                ? { ...p, hand: mergedHand }
-                : p, // Opponent's cards should already be hidden by sender's sanitization
-            ),
-          };
-        }
-      }
-    }
-
-    // Ensure opponent cards are never visible (defense in depth)
-    if (myPlayerId && finalState.gamePhase !== "round_end" && finalState.gamePhase !== "game_over") {
-      finalState = {
-        ...finalState,
-        players: finalState.players.map((p) => {
-          if (p.id !== myPlayerId) {
-            // Force hide all opponent cards
-            return {
-              ...p,
-              hand: p.hand.map((cardInHand) => ({
-                ...cardInHand,
-                isFaceUp: false,
-              })),
-            };
-          }
-          return p;
-        }),
-      };
-    }
+    const finalState = sanitizeRemoteState(
+      remoteGameState as GameState,
+      currentStateRef.current,
+      myPlayerId,
+    );
 
     // Only dispatch if finalState is actually different from what we last synced
     const finalStateStr = JSON.stringify(finalState);
