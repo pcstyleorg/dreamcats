@@ -18,10 +18,11 @@ export type SoundType = keyof SoundFiles;
 // TODO: Add local sound files to /public/sounds/ directory
 
 export const useSounds = () => {
-  const playSound = useCallback((_sound: SoundType) => {
+  const playSound = useCallback((sound: SoundType) => {
     // Sounds disabled - CDN blocking requests
-    // Placeholder to avoid errors
-    void _sound;
+    // Parameter 'sound' is intentionally unused while sounds are disabled
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    void sound;
   }, []);
 
   return { playSound };
