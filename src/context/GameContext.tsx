@@ -41,9 +41,12 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
     case "PROCESS_ACTION": {
       const gameAction = action.payload.action;
       
-      // Validate current player index
-      if (state.currentPlayerIndex < 0 || state.currentPlayerIndex >= state.players.length) {
-        console.error("Invalid currentPlayerIndex in PROCESS_ACTION");
+      // Validate current player index only for actions that use it
+      // PEEK_CARD and FINISH_PEEKING don't use currentPlayer
+      const needsCurrentPlayer = gameAction.type !== "PEEK_CARD" && gameAction.type !== "FINISH_PEEKING";
+      
+      if (needsCurrentPlayer && (state.currentPlayerIndex < 0 || state.currentPlayerIndex >= state.players.length)) {
+        console.error("Invalid currentPlayerIndex in PROCESS_ACTION for action:", gameAction.type);
         return state;
       }
       
