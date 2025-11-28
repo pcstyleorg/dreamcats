@@ -162,8 +162,22 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           )
             return state;
           const { playerIndex, peekedCount } = state.peekingState;
+          
+          // Validate playerIndex and cardIndex bounds
+          if (playerIndex < 0 || playerIndex >= state.players.length) {
+            console.error("Invalid playerIndex in PEEK_CARD");
+            return state;
+          }
+          
           const players = [...state.players];
           const player = players[playerIndex];
+          
+          // Validate cardIndex
+          if (gameAction.payload.cardIndex < 0 || gameAction.payload.cardIndex >= player.hand.length) {
+            console.error("Invalid cardIndex in PEEK_CARD");
+            return state;
+          }
+          
           if (
             gameAction.payload.playerId !== player.id ||
             player.hand[gameAction.payload.cardIndex].isFaceUp
@@ -298,8 +312,21 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           if (state.gamePhase !== "holding_card" || !state.drawnCard)
             return state;
           const { cardIndex } = gameAction.payload;
+          
+          // Validate currentPlayerIndex and cardIndex bounds
+          if (state.currentPlayerIndex < 0 || state.currentPlayerIndex >= state.players.length) {
+            console.error("Invalid currentPlayerIndex in SWAP_HELD_CARD");
+            return state;
+          }
+          
           const players = [...state.players];
           const player = { ...players[state.currentPlayerIndex] };
+          
+          if (cardIndex < 0 || cardIndex >= player.hand.length) {
+            console.error("Invalid cardIndex in SWAP_HELD_CARD");
+            return state;
+          }
+          
           const newHand = [...player.hand];
           const cardToDiscard = newHand[cardIndex].card;
 
@@ -602,9 +629,44 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       : "skip",
   );
 
+  // Helper function to validate individual player structure
+  const validatePlayer = useCallback((p: unknown): boolean => {
+    if (!p || typeof p !== 'object') return false;
+    const player = p as Record<string, unknown>;
+    return (
+      typeof player.id === 'string' &&
+      typeof player.name === 'string' &&
+      Array.isArray(player.hand)
+    );
+  }, []);
+
+  // Validate incoming remote state structure
+  const validateGameState = useCallback((state: unknown): state is GameState => {
+    if (!state || typeof state !== 'object') return false;
+    const s = state as Partial<GameState>;
+    
+    // Check required fields exist and have correct types
+    if (!s.gameMode || !Array.isArray(s.players) || !Array.isArray(s.drawPile) || !Array.isArray(s.discardPile)) {
+      return false;
+    }
+    
+    // Validate all players have required structure
+    if (!s.players.every(validatePlayer)) {
+      return false;
+    }
+    
+    return true;
+  }, [validatePlayer]);
+
   // Sync remote game state to local state
   useEffect(() => {
     if (!remoteGameState || state.gameMode !== "online") {
+      return;
+    }
+
+    // Validate remote state structure before processing
+    if (!validateGameState(remoteGameState)) {
+      console.error("Invalid remote game state received, ignoring");
       return;
     }
 
@@ -620,33 +682,45 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // Sanitize remote state to ensure we don't show opponent's peeked cards
-    // But preserve our own local peeked cards
+    // Sanitize remote state to ensure we don't show opponent's cards
+    // But preserve our own local peeked/visible cards
     const remoteState = remoteGameState as GameState;
     let finalState = remoteState;
 
-    // During peeking phase, merge our local peeked cards with remote state
-    // Use ref to access current state without adding it to dependencies
-    if (remoteState.gamePhase === "peeking" && myPlayerId) {
+    // Merge our local visible cards with remote state for all phases
+    // This preserves cards we can see (either peeked or drawn) locally
+    if (myPlayerId) {
       const currentState = currentStateRef.current;
       const localPlayer = currentState.players.find((p) => p.id === myPlayerId);
       const remotePlayer = remoteState.players.find((p) => p.id === myPlayerId);
 
-      if (localPlayer && remotePlayer) {
-        // Check if we actually need to merge (if we have locally peeked cards)
-        const hasLocalPeekedCards = localPlayer.hand.some(
-          (card) => card.hasBeenPeeked && card.isFaceUp,
+      // Validate both players exist and have valid hands before merging
+      if (
+        localPlayer && 
+        remotePlayer && 
+        Array.isArray(localPlayer.hand) && 
+        Array.isArray(remotePlayer.hand) && 
+        localPlayer.hand.length === remotePlayer.hand.length
+      ) {
+        // Check if we have locally visible cards that should be preserved
+        const hasLocalVisibleCards = localPlayer.hand.some(
+          (card) => card.isFaceUp,
         );
 
-        if (hasLocalPeekedCards) {
-          // Preserve our local peeked cards (isFaceUp state)
+        if (hasLocalVisibleCards) {
+          // Preserve our local visible cards (isFaceUp state)
           const mergedHand = localPlayer.hand.map((localCard, index) => {
             const remoteCard = remotePlayer.hand[index];
-            // If we peeked this card locally, keep it face up
-            if (localCard.hasBeenPeeked && localCard.isFaceUp) {
-              return localCard;
+            // If we can see this card locally, keep it visible
+            if (localCard.isFaceUp) {
+              // Merge: use remote card data but keep our local visibility state
+              return {
+                ...remoteCard,
+                isFaceUp: true,
+                hasBeenPeeked: localCard.hasBeenPeeked || remoteCard.hasBeenPeeked,
+              };
             }
-            // Otherwise use remote state
+            // Otherwise use remote state as-is
             return remoteCard;
           });
 
@@ -655,11 +729,31 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
             players: remoteState.players.map((p) =>
               p.id === myPlayerId
                 ? { ...p, hand: mergedHand }
-                : p, // Opponent's cards are already sanitized from remote
+                : p, // Opponent's cards should already be hidden by sender's sanitization
             ),
           };
         }
       }
+    }
+
+    // Ensure opponent cards are never visible (defense in depth)
+    if (myPlayerId && finalState.gamePhase !== "round_end" && finalState.gamePhase !== "game_over") {
+      finalState = {
+        ...finalState,
+        players: finalState.players.map((p) => {
+          if (p.id !== myPlayerId) {
+            // Force hide all opponent cards
+            return {
+              ...p,
+              hand: p.hand.map((cardInHand) => ({
+                ...cardInHand,
+                isFaceUp: false,
+              })),
+            };
+          }
+          return p;
+        }),
+      };
     }
 
     // Only dispatch if finalState is actually different from what we last synced
@@ -668,7 +762,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       dispatch({ type: "SET_STATE", payload: finalState });
       lastSyncedStateRef.current = finalState;
     }
-  }, [remoteGameState, state.gameMode, myPlayerId, dispatch]); // Removed state from deps to prevent loops
+  }, [remoteGameState, state.gameMode, myPlayerId, dispatch, validateGameState]); // Removed state from deps to prevent loops
 
   // Sync remote chat messages
   useEffect(() => {
@@ -766,7 +860,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         }
       };
     }
-  }, [remotePlayers, state, myPlayerId, setGameStateMutation, dispatch]);
+  }, [remotePlayers, state, myPlayerId, setGameStateMutation, dispatch, setMyPlayerId]);
 
   // Update presence periodically
   useEffect(() => {
@@ -828,39 +922,36 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     [dispatch, playSound],
   );
 
-  // Sanitize game state for syncing - hide peeked cards from opponents
+  // Sanitize game state for syncing - hide opponent cards from being visible
   const sanitizeStateForSync = useCallback((gameState: GameState, currentPlayerId: string | null): GameState => {
-    if (gameState.gamePhase !== "peeking" || !currentPlayerId) {
+    if (!currentPlayerId) {
       return gameState;
     }
 
-    // During peeking phase, hide each player's peeked cards from other players
-    // Each player should only see their own peeked cards locally
+    // Only hide cards during phases where players shouldn't see all cards
+    const shouldSanitize = gameState.gamePhase !== "round_end" && gameState.gamePhase !== "game_over";
+    
+    if (!shouldSanitize) {
+      return gameState;
+    }
+
+    // Hide each player's face-up cards from other players (except during round_end/game_over)
+    // Each player should only see their own temporarily revealed cards locally
     const sanitizedPlayers = gameState.players.map((player) => {
+      // For the current player syncing, hide their temporarily visible cards
+      // so opponents don't see them
       if (player.id === currentPlayerId) {
-        // For the current player, hide their peeked cards when syncing
-        // (they see them locally, but opponent shouldn't)
         const sanitizedHand = player.hand.map((cardInHand) => {
-          // If card is peeked (hasBeenPeeked) but not permanently face up, hide it
-          if (cardInHand.hasBeenPeeked && cardInHand.isFaceUp) {
-            // This is a temporarily peeked card - hide it from opponent
-            return { ...cardInHand, isFaceUp: false };
-          }
-          return cardInHand;
-        });
-        return { ...player, hand: sanitizedHand };
-      } else {
-        // For opponents, ensure their peeked cards are hidden
-        const sanitizedHand = player.hand.map((cardInHand) => {
-          // Opponent's cards should never be visible during peeking unless permanently face up
-          if (cardInHand.hasBeenPeeked && cardInHand.isFaceUp) {
-            // Hide opponent's peeked cards
+          // Hide any temporarily visible card (during peeking or special actions)
+          if (cardInHand.isFaceUp) {
             return { ...cardInHand, isFaceUp: false };
           }
           return cardInHand;
         });
         return { ...player, hand: sanitizedHand };
       }
+      // For other players, their cards should already be hidden when received
+      return player;
     });
 
     return {
@@ -892,7 +983,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         currentStateStr !== lastSyncedStr &&
         currentStateStr !== remoteStateStr
       ) {
-        // Debounce rapid updates
+        // Debounce rapid updates - use longer timeout to reduce conflicts
         const timeoutId = setTimeout(async () => {
           try {
             await setGameStateMutation({
@@ -903,7 +994,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           } catch (error) {
             console.error("Failed to sync game state:", error);
           }
-        }, 100);
+        }, 200); // Increased from 100ms to 200ms to reduce sync conflicts
 
         return () => clearTimeout(timeoutId);
       }
