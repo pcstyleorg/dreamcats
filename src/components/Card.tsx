@@ -105,7 +105,7 @@ export const GameCard: React.FC<CardProps> = ({
 
   const outerClasses = cn(
     "group w-[18vw] max-w-24 sm:w-[15vw] sm:max-w-28 md:w-[10vw] md:max-w-32 lg:w-[8vw] lg:max-w-36 aspect-[2/3] perspective-1000 rounded-xl overflow-hidden",
-    "shadow-[0_12px_28px_rgba(0,0,0,0.35)] border border-white/10",
+    "shadow-[0_12px_28px_rgba(0,0,0,0.45)] border-2 border-white/20",
     isFaceUp ? "ring-1 ring-white/5" : "ring-1 ring-black/20",
     (isGlowing || justRevealed) && isFaceUp ? "shadow-soft" : "",
     peekGlow,
@@ -133,6 +133,8 @@ export const GameCard: React.FC<CardProps> = ({
               className="w-full h-full object-cover"
               draggable={false}
             />
+            {/* Vignette effect for depth */}
+            <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_center,transparent_0%,transparent_50%,rgba(0,0,0,0.25)_100%)]" />
             <div className="pointer-events-none absolute inset-0 rounded-xl mix-blend-soft-light bg-[radial-gradient(ellipse_at_50%_18%,rgba(255,255,255,0.08),transparent_42%),radial-gradient(ellipse_at_50%_62%,rgba(6,7,20,0.6),transparent_65%)]" />
           </div>
         </div>
@@ -178,6 +180,8 @@ export const GameCard: React.FC<CardProps> = ({
                     <div className="absolute inset-0 ring-0 md:ring-1 ring-white/30 rounded-xl" />
                   </div>
                 )}
+                {/* Vignette effect for depth */}
+                <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_center,transparent_0%,transparent_50%,rgba(0,0,0,0.25)_100%)]" />
                 <div className="pointer-events-none absolute inset-0 rounded-xl mix-blend-soft-light bg-[radial-gradient(ellipse_at_50%_18%,rgba(255,255,255,0.08),transparent_42%),radial-gradient(ellipse_at_50%_62%,rgba(6,7,20,0.6),transparent_65%)]" />
               </>
             ) : (

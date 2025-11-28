@@ -317,29 +317,56 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
       <main className="flex-grow flex flex-col relative z-10 min-h-0 gap-3 sm:gap-4 overflow-hidden">
         <div
+
           className={cn(
-            "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 px-1 sm:px-3 md:px-4 py-3 sm:py-4 sticky top-0 z-20 backdrop-blur-md bg-background/70 border-b border-border/40",
-            isCompact && "py-2 sm:py-3"
+            "flex flex-row items-center justify-between gap-2 sm:gap-4 px-2 sm:px-4 py-2 sm:py-3 sticky top-0 z-20 backdrop-blur-md bg-background/70 border-b border-border/40",
+            isCompact && "py-1.5 sm:py-2"
           )}
         >
-          <div className="flex items-center gap-3 bg-card/70 border border-border/60 px-4 py-3 rounded-2xl shadow-soft backdrop-blur-lg">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] flex items-center justify-center text-[hsl(var(--primary-foreground))] font-heading text-lg shadow-soft">
-              {currentPlayer?.name?.charAt(0) ?? 'S'}
+          {/* Left Side: Player Info + Actions + Room Code */}
+          <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar mask-linear-fade">
+            <div className="flex items-center gap-2 sm:gap-3 bg-card/70 border border-border/60 px-3 sm:px-4 py-2 sm:py-3 rounded-2xl shadow-soft backdrop-blur-lg flex-shrink-0">
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] flex items-center justify-center text-[hsl(var(--primary-foreground))] font-heading text-base sm:text-lg shadow-soft">
+                {currentPlayer?.name?.charAt(0) ?? 'S'}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[0.65rem] sm:text-xs uppercase tracking-[0.2em] text-muted-foreground hidden sm:block">
+                  {isMyTurn ? t('game.yourTurn') : t('game.playerTurn', { player: currentPlayer?.name ?? '' })}
+                </span>
+                <span className="text-xs sm:text-sm sm:text-base text-foreground font-semibold whitespace-nowrap">
+                  {actionMessage}
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                {isMyTurn ? t('game.yourTurn') : t('game.playerTurn', { player: currentPlayer?.name ?? '' })}
-              </span>
-              <span className="text-sm sm:text-base text-foreground font-semibold">
-                {actionMessage}
-              </span>
+
+            <div className="hidden sm:block">
+               <RoomInfoPill variant="desktop" />
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <RoomInfoPill variant="desktop" />
-            <div className="hidden lg:flex items-center gap-2">
-              <LanguageSwitcher />
-              <ThemeToggle theme={theme} onToggle={toggleTheme} />
+
+          {/* Right Side: Settings & Menu */}
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 bg-card/40 backdrop-blur-sm p-1 rounded-full border border-border/30">
+            <LanguageSwitcher />
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
+            
+            <div className="lg:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 hover:bg-primary/10 hover:text-primary transition-colors">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="bg-card/95 backdrop-blur-lg border-border/40">
+                  <SheetHeader>
+                    <SheetTitle className="font-heading text-2xl">
+                      {t('game.gameMenu')}
+                    </SheetTitle>
+                  </SheetHeader>
+                  <ScrollArea className="h-[calc(100%-4rem)] pr-4">
+                    <SidePanelContent />
+                  </ScrollArea>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
@@ -524,28 +551,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         <SidePanelContent />
       </aside>
 
-      {/* Side Panel Trigger - Mobile */}
-      <div className="lg:hidden absolute top-2 right-2 z-20 flex gap-2">
-        <LanguageSwitcher />
-        <ThemeToggle theme={theme} onToggle={toggleTheme} />
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="rounded-full h-10 w-10 border-border/60 bg-card/80 backdrop-blur-sm shadow-soft hover:scale-105 transition-transform">
-              <Menu />
-            </Button>
-          </SheetTrigger>
-          <SheetContent className="bg-card/95 backdrop-blur-lg border-border/40">
-            <SheetHeader>
-              <SheetTitle className="font-heading text-2xl">
-                {t('game.gameMenu')}
-              </SheetTitle>
-            </SheetHeader>
-            <ScrollArea className="h-[calc(100%-4rem)] pr-4">
-              <SidePanelContent />
-            </ScrollArea>
-          </SheetContent>
-        </Sheet>
-      </div>
+
 
       {/* <RoomInfoPill variant="mobile" />  Removed to prevent overlap */}
       <ActionModal />
