@@ -2,17 +2,17 @@ import { useCallback } from 'react';
 
 // Disable sounds for now since CDN is blocking requests
 // We'll use silent placeholders to prevent errors
-const soundFiles = {
-  flip: '',
-  draw: '',
-  click: '',
-  win: '',
-  lose: '',
-  chat: '',
-  pobudka: '',
+type SoundFiles = {
+  flip: string;
+  draw: string;
+  click: string;
+  win: string;
+  lose: string;
+  chat: string;
+  pobudka: string;
 };
 
-export type SoundType = keyof typeof soundFiles;
+export type SoundType = keyof SoundFiles;
 
 // Sounds disabled for now - CDN blocking requests
 // TODO: Add local sound files to /public/sounds/ directory
@@ -20,7 +20,8 @@ export type SoundType = keyof typeof soundFiles;
 export const useSounds = () => {
   const playSound = useCallback((_sound: SoundType) => {
     // Sounds disabled - CDN blocking requests
-    return;
+    // Placeholder to avoid errors
+    void _sound;
   }, []);
 
   return { playSound };
