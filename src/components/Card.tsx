@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import gsap from "gsap";
 import { Card as CardType } from "@/types";
 import { cn } from "@/lib/utils";
 import { getCardAsset, getCardBackAsset } from "@/lib/cardAssets";
@@ -29,6 +29,9 @@ export const GameCard: React.FC<CardProps> = ({
   // Detect "reveal moment" to flash special glow only when a special card turns face-up
   const prevFaceUp = useRef<boolean>(isFaceUp);
   const [justRevealed, setJustRevealed] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const innerRef = useRef<HTMLDivElement | null>(null);
+  const pulseTween = useRef<gsap.core.Tween | null>(null);
 
   useEffect(() => {
     if (!prevFaceUp.current && isFaceUp) {
@@ -39,11 +42,6 @@ export const GameCard: React.FC<CardProps> = ({
     }
     prevFaceUp.current = isFaceUp;
   }, [isFaceUp]);
-
-  const cardVariants = {
-    faceUp: { rotateY: 180 },
-    faceDown: { rotateY: 0 },
-  };
 
   const handleClick = () => {
     if (onClick) {
@@ -81,6 +79,51 @@ export const GameCard: React.FC<CardProps> = ({
     card?.isSpecial && isFaceUp && !disableSpecialAnimation,
   );
 
+  useLayoutEffect(() => {
+    if (!innerRef.current) return;
+    const ctx = gsap.context(() => {
+      gsap.set(innerRef.current, { rotateY: isFaceUp ? 180 : 0 });
+    }, innerRef);
+    return () => ctx.revert();
+  }, [isFaceUp]);
+
+  useEffect(() => {
+    if (!innerRef.current) return;
+    gsap.to(innerRef.current, {
+      rotateY: isFaceUp ? 180 : 0,
+      duration: 0.35,
+      ease: "power2.out",
+    });
+  }, [isFaceUp]);
+
+  useEffect(() => {
+    pulseTween.current?.kill();
+    if (!isSpecialFaceUp || !containerRef.current) {
+      pulseTween.current = null;
+      if (containerRef.current) {
+        gsap.to(containerRef.current, { scale: 1, rotateZ: 0, duration: 0.2 });
+      }
+      return;
+    }
+
+    pulseTween.current = gsap.to(containerRef.current, {
+      keyframes: [
+        { scale: 1, rotateZ: 0 },
+        { scale: 1.04, rotateZ: -1.2 },
+        { scale: 1, rotateZ: 1.2 },
+        { scale: 1, rotateZ: 0 },
+      ],
+      duration: 1.4,
+      ease: "easeInOut",
+      repeat: -1,
+    });
+
+    return () => {
+      pulseTween.current?.kill();
+      pulseTween.current = null;
+    };
+  }, [isSpecialFaceUp]);
+
   // No rings at all. Rounded, image edge-to-edge. Soft depth shadow only.
   const outerClasses = cn(
     "group w-[18vw] max-w-24 sm:w-[15vw] sm:max-w-28 md:w-[10vw] md:max-w-32 lg:w-[8vw] lg:max-w-36 aspect-[2/3] perspective-1000 rounded-xl overflow-hidden",
@@ -92,26 +135,16 @@ export const GameCard: React.FC<CardProps> = ({
   );
 
   return (
-    <motion.div
+    <div
+      ref={containerRef}
       className={outerClasses}
       onClick={handleClick}
-      animate={
-        isSpecialFaceUp
-          ? { scale: [1, 1.04, 1], rotateZ: [0, -1.2, 1.2, 0] }
-          : { scale: 1, rotateZ: 0 }
-      }
-      transition={
-        isSpecialFaceUp
-          ? { duration: 1.4, repeat: Infinity, ease: "easeInOut" }
-          : { duration: 0.2 }
-      }
-      initial={false}
+      style={{ willChange: "transform" }}
     >
-      <motion.div
+      <div
+        ref={innerRef}
         className="relative w-full h-full transform-style-3d"
-        variants={cardVariants}
-        animate={isFaceUp ? "faceUp" : "faceDown"}
-        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+        style={{ willChange: "transform" }}
       >
         {/* Card Back */}
         <div className="absolute w-full h-full backface-hidden">
@@ -180,7 +213,7 @@ export const GameCard: React.FC<CardProps> = ({
             )}
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };

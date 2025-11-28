@@ -159,7 +159,7 @@ See CODE_ANALYSIS.md for comprehensive test cases including:
 ### Future Improvements (Optional)
 These are NOT bugs but opportunities for enhancement:
 
-1. **Testing**: Add comprehensive test suite
+1. **Testing**: Expand new reducer guardrail suite into comprehensive unit and integration coverage
 2. **Performance**: Add memoization to reduce re-renders
 3. **Architecture**: Consider consolidating state management pattern
 4. **Features**: Add replay/history, analytics, error tracking
@@ -173,8 +173,8 @@ These are NOT bugs but opportunities for enhancement:
 ✅ No further action required
 
 ### Short Term (Optional)
-- Add unit and integration tests
-- Set up continuous integration
+- Broaden guardrail tests into integration and UI coverage
+- Maintain continuous integration for lint, build, and guardrail tests
 - Add error tracking (e.g., Sentry)
 
 ### Long Term (Optional)
