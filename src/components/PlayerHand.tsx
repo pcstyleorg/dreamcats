@@ -247,7 +247,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     <div
       ref={containerRef}
       className={cn(
-        "relative p-2 sm:p-2.5 md:p-3 lg:p-3.5 rounded-2xl border transition-all duration-300 bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.12)] backdrop-blur-md",
+        "relative p-3 sm:p-3.5 md:p-4 lg:p-4.5 rounded-2xl border transition-all duration-300 bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.12)] backdrop-blur-md",
         "shadow-soft-lg",
         isCurrentPlayer &&
           gamePhase !== "round_end" &&
@@ -259,8 +259,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       <div className="flex flex-col items-center gap-1 sm:gap-1.5">
         <h3
           className={cn(
-            "font-heading text-xs sm:text-sm md:text-base font-semibold text-center text-foreground",
-            isOpponent && "text-[0.7rem] sm:text-xs md:text-sm",
+            "font-heading text-sm sm:text-base md:text-lg font-bold text-center text-foreground tracking-wide",
+            isOpponent && "text-xs sm:text-sm md:text-base",
           )}
         >
           {player.name}{" "}
