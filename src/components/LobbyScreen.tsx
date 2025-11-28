@@ -77,7 +77,7 @@ export const LobbyScreen: React.FC = () => {
       toast.error(t('common:errors.enterAllNames'));
       return;
     }
-    startHotseatGame(hotseatPlayers);
+    startHotseatGame();
   };
 
   const handleAddHotseatPlayer = () => {
