@@ -1,50 +1,36 @@
 // Import new dreamy assets from assets root
-import card0 from "@/assets/0.png";
-import card1 from "@/assets/1.png";
-import card2 from "@/assets/2.png";
-import card3 from "@/assets/3.png";
-import card4 from "@/assets/4.png";
-import card5 from "@/assets/5.png";
-import card6 from "@/assets/6.png";
-import card7 from "@/assets/7.png";
-import card8 from "@/assets/8.png";
-import card9 from "@/assets/9.png";
-import cardBack from "@/assets/back.png";
-import peekCard from "@/assets/podjerzyj1.png";
-import swapCard from "@/assets/zamien2.png";
-import takeCard from "@/assets/wez2.png";
 import { Card } from "@/types";
 
 const normalCardAssets: Record<number, string> = {
-  0: card0,
-  1: card1,
-  2: card2,
-  3: card3,
-  4: card4,
-  5: card5,
-  6: card6,
-  7: card7,
-  8: card8,
-  9: card9,
+  0: "/assets/0.png",
+  1: "/assets/1.png",
+  2: "/assets/2.png",
+  3: "/assets/3.png",
+  4: "/assets/4.png",
+  5: "/assets/5.png",
+  6: "/assets/6.png",
+  7: "/assets/7.png",
+  8: "/assets/8.png",
+  9: "/assets/9.png",
 };
 
 const specialCardAssets: Record<string, string> = {
-  peek_1: peekCard,
-  swap_2: swapCard,
-  take_2: takeCard,
+  peek_1: "/assets/podjerzyj1.png",
+  swap_2: "/assets/zamien2.png",
+  take_2: "/assets/wez2.png",
 };
 
 export const getCardAsset = (card: Card | null | undefined): string => {
-  if (!card) return cardBack;
+  if (!card) return "/assets/back.png";
 
   if (card.isSpecial && card.specialAction) {
-    return specialCardAssets[card.specialAction] || cardBack;
+    return specialCardAssets[card.specialAction] || "/assets/back.png";
   }
 
-  return normalCardAssets[card.value] || cardBack;
+  return normalCardAssets[card.value] || "/assets/back.png";
 };
 
-export const getCardBackAsset = (): string => cardBack;
+export const getCardBackAsset = (): string => "/assets/back.png";
 
 export const getGameBackgroundAsset = (): string =>
   [
@@ -57,6 +43,6 @@ export const getGameBackgroundAsset = (): string =>
 export const cardAssets = {
   normal: normalCardAssets,
   special: specialCardAssets,
-  back: cardBack,
+  back: "/assets/back.png",
   background: getGameBackgroundAsset(),
 };
