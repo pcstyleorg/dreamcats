@@ -374,14 +374,14 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         {/* Opponents Area */}
         <div
           className={cn(
-            "flex justify-start sm:justify-center items-start mt-6 sm:mt-8 lg:mt-8 xl:mt-10 mb-1.5 sm:mb-2 md:mb-3 flex-shrink-0 w-full px-1 sm:px-2 overflow-x-auto",
+            "flex justify-center items-start mt-6 sm:mt-8 lg:mt-8 xl:mt-10 mb-1.5 sm:mb-2 md:mb-3 flex-shrink-0 w-full px-1 sm:px-2 overflow-x-auto",
             isCompact && "mt-2 sm:mt-3 lg:mt-4 mb-1"
           )}
         >
           {otherPlayers.length > 0 ? (
             <div
               className={cn(
-                "flex flex-nowrap sm:flex-wrap justify-start sm:justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-10 w-full max-w-5xl mx-auto px-2 sm:px-3 py-2 sm:py-3 bg-card/70 border border-border/60 rounded-2xl shadow-soft-lg backdrop-blur-xl overflow-x-auto sm:overflow-visible no-scrollbar",
+                "flex flex-nowrap sm:flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-10 w-full max-w-5xl mx-auto px-2 sm:px-3 py-2 sm:py-3 bg-card/70 border border-border/60 rounded-2xl shadow-soft-lg backdrop-blur-xl overflow-x-auto sm:overflow-visible no-scrollbar",
                 isCompact && "gap-2 sm:gap-3 md:gap-3 lg:gap-4 py-2 sm:py-2.5"
               )}
             >
@@ -449,33 +449,41 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                     playSound={playSound}
                     />
                 </div>
-                <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm">
+                <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm whitespace-nowrap">
                   <span className="text-xs sm:text-sm font-bold text-foreground/90 uppercase tracking-widest text-center">
                     {t('game.draw')}
                   </span>
                 </div>
               </div>
 
-              {/* Drawn Card - inline display when holding */}
-              {drawnCard && isMyTurn && gamePhase === "holding_card" && (
-                <div className="flex flex-col items-center w-full sm:w-auto">
-                  <div className="relative">
-                    <div className="absolute -inset-2 bg-primary/30 rounded-xl blur-md animate-pulse" />
-                    <GameCard
-                      card={drawnCard}
-                      isFaceUp={true}
-                      isGlowing
-                      className={cn(pileCardClass, "shadow-2xl ring-2 ring-primary/60")}
-                      playSound={playSound}
-                    />
-                  </div>
-                  <div className="mt-3 sm:mt-4 bg-primary/20 backdrop-blur-md px-3 py-1 rounded-full border border-primary/30 shadow-sm">
-                    <span className="text-xs sm:text-sm font-bold text-primary uppercase tracking-widest text-center">
-                      {t('game.yourCard')}
-                    </span>
-                  </div>
-                </div>
-              )}
+              {/* Drawn Card Slot - Always present to prevent layout shift */}
+              <div className="flex flex-col items-center w-full sm:w-auto">
+                {drawnCard && isMyTurn && gamePhase === "holding_card" ? (
+                  <>
+                    <div className="relative animate-in fade-in duration-300">
+                      <div className="absolute -inset-2 bg-primary/30 rounded-xl blur-md animate-pulse" />
+                      <GameCard
+                        card={drawnCard}
+                        isFaceUp={true}
+                        isGlowing
+                        className={cn(pileCardClass, "shadow-2xl ring-2 ring-primary/60")}
+                        playSound={playSound}
+                      />
+                    </div>
+                    <div className="mt-3 sm:mt-4 bg-primary/20 backdrop-blur-md px-3 py-1 rounded-full border border-primary/30 shadow-sm animate-in slide-in-from-top-2 duration-300 whitespace-nowrap">
+                      <span className="text-xs sm:text-sm font-bold text-primary uppercase tracking-widest text-center">
+                        {t('game.yourCard')}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  /* Placeholder to maintain layout stability */
+                  <>
+                    <div className={cn(pileCardClass, "opacity-0 pointer-events-none")} style={{ aspectRatio: "836/1214" }} />
+                    <div className="mt-3 sm:mt-4 h-[26px] sm:h-[30px] w-full opacity-0 pointer-events-none" />
+                  </>
+                )}
+              </div>
 
               <div
                 className="flex flex-col items-center w-full sm:w-auto"
@@ -501,7 +509,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                     playSound={playSound}
                     />
                 </div>
-                <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm">
+                <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm whitespace-nowrap">
                   <span className="text-xs sm:text-sm font-bold text-foreground/90 uppercase tracking-widest text-center">
                     {t('game.discard')}
                   </span>
@@ -521,13 +529,13 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
           >
             <div
               className={cn(
-                "flex justify-center mb-2 sm:mb-3 md:mb-4 h-8 sm:h-10 md:h-12",
-                isCompact && "mb-1.5 h-9 sm:h-10 md:h-10"
+                "flex justify-center mb-2 sm:mb-3 md:mb-4 w-full",
+                isCompact && "mb-1.5"
               )}
               data-tutorial-id="game-actions"
             >
               {/* Always render GameActions - no longer hiding for holding_card since card is inline */}
-              <div className="min-h-[60px] flex items-center justify-center">
+              <div className="min-h-[60px] w-full flex items-center justify-center">
                 <GameActions />
               </div>
             </div>

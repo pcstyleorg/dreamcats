@@ -66,7 +66,7 @@ export const ActionModal: React.FC = () => {
         </DialogDescription>
       </DialogHeader>
       <div className="py-3 sm:py-4 md:py-6">
-        <ul className="space-y-3 sm:space-y-4 bg-accent/30 rounded-lg p-3 sm:p-4">
+        <ul className="space-y-3 sm:space-y-4 bg-accent/30 rounded-lg p-3 sm:p-4 border border-border/30">
           {lastRoundScores?.map(({ playerId, score, penalty }) => {
             const player = players.find((p) => p.id === playerId);
             return (
@@ -113,13 +113,13 @@ export const ActionModal: React.FC = () => {
         <h4 className="font-bold mb-3 sm:mb-4 font-heading text-base sm:text-lg text-center">
           {t('modal.finalScores')}
         </h4>
-        <ul className="space-y-3 sm:space-y-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-3 sm:p-4 border-2 border-purple-200/50">
+        <ul className="space-y-3 sm:space-y-4 bg-accent/30 rounded-lg p-3 sm:p-4 border-2 border-border/50">
           {players
             .sort((a, b) => a.score - b.score)
             .map((player, index) => (
               <li
                 key={player.id}
-                className="flex justify-between items-center text-sm sm:text-base py-2 border-b border-purple-200/30 last:border-0"
+                className="flex justify-between items-center text-sm sm:text-base py-2 border-b border-border/30 last:border-0"
               >
                 <span className="flex items-center gap-2">
                   <span className="text-lg sm:text-xl">
@@ -146,7 +146,7 @@ export const ActionModal: React.FC = () => {
 
   return (
     <Dialog open={isOpen}>
-      <DialogContent className="bg-white/95 backdrop-blur-lg border-2 border-purple-100/50 shadow-dreamy max-w-[calc(100vw-2rem)] sm:max-w-md md:max-w-lg">
+      <DialogContent className="bg-background/95 backdrop-blur-lg border-2 border-border/50 shadow-dreamy max-w-[calc(100vw-2rem)] sm:max-w-md md:max-w-lg">
         {gamePhase === "action_take_2" && renderTake2Content()}
         {gamePhase === "round_end" && renderRoundEndContent()}
         {gamePhase === "game_over" && renderGameOverContent()}
