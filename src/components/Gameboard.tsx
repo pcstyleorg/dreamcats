@@ -49,7 +49,12 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   } = state;
   const players = usePlayersView();
   const { netStatus } = useNetStatus();
-  const [isCompact, setIsCompact] = useState(false);
+  const [isCompact, setIsCompact] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerHeight < 860 || window.innerWidth < 1100;
+    }
+    return false;
+  });
   const containerRef = useRef<HTMLDivElement>(null);
 
   const currentPlayer = players[currentPlayerIndex];
@@ -246,12 +251,15 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
     // Recent Move Animation
     if (recentMoveLabel) {
-      gsap.fromTo(".recent-move-label", 
+      gsap.fromTo(".recent-move-label",
         { opacity: 0, y: -10 },
         { opacity: 1, y: 0, duration: 0.25, ease: "power2.out" }
       );
     } else {
-      gsap.to(".recent-move-label", { opacity: 0, y: -10, duration: 0.25 });
+      const label = containerRef.current?.querySelector(".recent-move-label");
+      if (label) {
+        gsap.to(label, { opacity: 0, y: -10, duration: 0.25 });
+      }
     }
 
     // Aura Animation
@@ -261,69 +269,12 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         { opacity: 0.35, scale: 1, duration: 0.4, ease: "power2.out" }
       );
     } else {
-      gsap.to(".special-aura", { opacity: 0, scale: 0.95, duration: 0.4 });
+      const aura = containerRef.current?.querySelector(".special-aura");
+      if (aura) {
+        gsap.to(aura, { opacity: 0, scale: 0.95, duration: 0.4 });
+      }
     }
-
-    // Drawn Card Modal Animation with staggered elements
-    if (drawnCard && isMyTurn && gamePhase === "holding_card") {
-      // Create a timeline for coordinated animations
-      const tl = gsap.timeline();
-      
-      // Backdrop fade in
-      tl.fromTo(".drawn-card-backdrop",
-        { opacity: 0 },
-        { opacity: 1, duration: 0.3, ease: "power2.out" },
-        0
-      );
-      
-      // Label slides down first
-      tl.fromTo(".drawn-card-label",
-        { opacity: 0, y: -30 },
-        { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" },
-        0.1
-      );
-      
-      // Card scales up with bounce
-      tl.fromTo(".drawn-card-scale",
-        { opacity: 0, scale: 0.3, y: 40, rotateY: -15 },
-        { opacity: 1, scale: 1, y: 0, rotateY: 0, duration: 0.5, ease: "back.out(1.4)" },
-        0.15
-      );
-      
-      // Actions fade up
-      tl.fromTo(".drawn-card-actions",
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" },
-        0.35
-      );
-      
-      // Hint fades in last
-      tl.fromTo(".drawn-card-hint",
-        { opacity: 0 },
-        { opacity: 1, duration: 0.4, ease: "power2.out" },
-        0.5
-      );
-      
-      // Swap target hand glow pulse
-      tl.fromTo(".swap-target-hand",
-        { boxShadow: "0 0 20px rgba(147, 51, 234, 0.2)" },
-        { 
-          boxShadow: "0 0 50px rgba(147, 51, 234, 0.5), 0 0 100px rgba(147, 51, 234, 0.25)",
-          duration: 0.8, 
-          ease: "power1.inOut",
-          repeat: -1,
-          yoyo: true 
-        },
-        0.4
-      );
-    } else {
-      // Clean exit animation
-      gsap.to(".drawn-card-content", { opacity: 0, y: -20, duration: 0.25, ease: "power2.in" });
-      gsap.to(".drawn-card-backdrop", { opacity: 0, duration: 0.3 });
-      gsap.killTweensOf(".swap-target-hand");
-    }
-
-  }, { scope: containerRef, dependencies: [recentMoveLabel, specialAuraGradient, drawnCard, isMyTurn, gamePhase] });
+  }, { scope: containerRef, dependencies: [recentMoveLabel, specialAuraGradient] });
 
   if (players.length === 0) {
     return (
@@ -505,7 +456,26 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                 </div>
               </div>
 
-
+              {/* Drawn Card - inline display when holding */}
+              {drawnCard && isMyTurn && gamePhase === "holding_card" && (
+                <div className="flex flex-col items-center w-full sm:w-auto">
+                  <div className="relative">
+                    <div className="absolute -inset-2 bg-primary/30 rounded-xl blur-md animate-pulse" />
+                    <GameCard
+                      card={drawnCard}
+                      isFaceUp={true}
+                      isGlowing
+                      className={cn(pileCardClass, "shadow-2xl ring-2 ring-primary/60")}
+                      playSound={playSound}
+                    />
+                  </div>
+                  <div className="mt-3 sm:mt-4 bg-primary/20 backdrop-blur-md px-3 py-1 rounded-full border border-primary/30 shadow-sm">
+                    <span className="text-xs sm:text-sm font-bold text-primary uppercase tracking-widest text-center">
+                      {t('game.yourCard')}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               <div
                 className="flex flex-col items-center w-full sm:w-auto"
@@ -556,11 +526,8 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
               )}
               data-tutorial-id="game-actions"
             >
-              {/* Always render GameActions but hide during holding_card phase - prevents layout shift */}
-              <div className={cn(
-                "transition-opacity duration-200",
-                gamePhase === "holding_card" ? "opacity-0 pointer-events-none" : "opacity-100"
-              )}>
+              {/* Always render GameActions - no longer hiding for holding_card since card is inline */}
+              <div className="min-h-[60px] flex items-center justify-center">
                 <GameActions />
               </div>
             </div>
@@ -592,100 +559,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         <Separator />
         <SidePanelContent />
       </aside>
-
-
-
-      {/* Drawn Card Fullscreen Overlay - always mounted, visibility controlled via classes */}
-      <div 
-        className={cn(
-          "fixed inset-0 z-[100] flex flex-col transition-all duration-300",
-          drawnCard && isMyTurn && gamePhase === "holding_card"
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
-        )}
-      >
-        {/* Dark backdrop */}
-        <div 
-          className="drawn-card-backdrop absolute inset-0 bg-black/85 backdrop-blur-sm"
-        style={{
-          background: 'radial-gradient(ellipse 100% 100% at 50% 40%, rgba(10,0,20,0.9) 0%, rgba(0,0,0,0.95) 100%)'
-        }}
-        />
-        
-        {/* Ambient glow effects */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] sm:w-[400px] sm:h-[400px] bg-primary/25 rounded-full blur-[80px] sm:blur-[120px]" />
-          <div className="absolute top-1/3 left-1/4 w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] bg-accent/20 rounded-full blur-[60px] sm:blur-[80px]" />
-          <div className="absolute top-1/3 right-1/4 w-[150px] h-[150px] sm:w-[200px] sm:h-[200px] bg-violet-500/15 rounded-full blur-[60px] sm:blur-[80px]" />
-        </div>
-
-        {/* Main content area - card and actions */}
-        <div className="relative flex-1 flex flex-col items-center justify-center px-4 pt-16 sm:pt-20 pb-4">
-          <div className="drawn-card-content flex flex-col items-center gap-3 sm:gap-4">
-            
-            {/* Label */}
-            <div className="drawn-card-label">
-              <div className="relative">
-                <div className="absolute inset-0 bg-primary/30 blur-lg rounded-full" />
-                <div className="relative bg-gradient-to-r from-background/90 via-card/95 to-background/90 backdrop-blur-xl px-5 sm:px-7 py-2 sm:py-2.5 rounded-full border border-primary/30 shadow-lg">
-                  <span className="text-sm sm:text-base font-bold bg-gradient-to-r from-primary via-violet-400 to-accent bg-clip-text text-transparent tracking-[0.12em] uppercase">
-                    {t('game.yourCard')}
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Drawn card - only render the card when drawnCard exists */}
-            {drawnCard && (
-              <div className="drawn-card-wrapper relative py-2">
-                <div className="absolute -inset-8 sm:-inset-12 bg-primary/20 blur-2xl rounded-full" />
-                <div className="absolute -inset-4 sm:-inset-6 bg-primary/30 blur-xl rounded-2xl animate-pulse" />
-                
-                <div className="drawn-card-scale relative transform scale-110 sm:scale-125 md:scale-[1.35]">
-                  <GameCard
-                    card={drawnCard}
-                    isFaceUp={true}
-                    isGlowing
-                    className="shadow-[0_0_30px_rgba(168,85,247,0.4),0_15px_40px_rgba(0,0,0,0.5)]"
-                  />
-                </div>
-              </div>
-            )}
-            
-            {/* Action buttons */}
-            <div className="drawn-card-actions flex gap-3 sm:gap-4 mt-2">
-              <GameActions />
-            </div>
-
-            {/* Hint text */}
-            <div className="drawn-card-hint flex flex-col items-center gap-1 mt-2">
-              <div className="flex items-center gap-2">
-                <div className="h-px w-8 sm:w-10 bg-gradient-to-r from-transparent to-white/30" />
-                <p className="text-white/50 text-[0.65rem] sm:text-xs font-medium tracking-wider uppercase">
-                  {t('game.orSelectCardToSwap')}
-                </p>
-                <div className="h-px w-8 sm:w-10 bg-gradient-to-l from-transparent to-white/30" />
-              </div>
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-primary/60 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom area - player's hand inside overlay */}
-        {bottomPlayer && (
-          <div className="relative flex-shrink-0 bg-gradient-to-t from-black/60 via-black/40 to-transparent pt-4 pb-[calc(env(safe-area-inset-bottom)+12px)] sm:pb-4">
-            <div className="swap-target-hand rounded-xl mx-auto w-fit">
-              <PlayerHand
-                player={bottomPlayer}
-                isCurrentPlayer={currentPlayer.id === bottomPlayer.id}
-                playSound={playSound}
-              />
-            </div>
-          </div>
-        )}
-      </div>
 
       <ActionModal />
     </div>

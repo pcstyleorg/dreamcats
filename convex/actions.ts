@@ -36,9 +36,9 @@ const shuffle = (deck: Card[]) => {
   return shuffled;
 };
 
-// Helper to clone state for mutation (though we can mutate directly in Convex if we are careful, 
+// Helper to clone state for mutation (though we can mutate directly in Convex if we are careful,
 // but treating it immutably first is safer for logic porting)
-const clone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
+// const clone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
 
 export const performAction = mutation({
   args: {
@@ -59,7 +59,7 @@ export const performAction = mutation({
       throw new Error("Game not found");
     }
 
-    let state = gameRecord.state as GameState;
+    const state = gameRecord.state as GameState;
     
     // --- VALIDATION & LOGIC ---
     
@@ -388,7 +388,7 @@ export const performAction = mutation({
           
           // Discard the special card immediately (it's being used)
           const discardPile = [...state.discardPile, state.drawnCard];
-          let newState = { ...state, discardPile, drawnCard: null, drawSource: null as any };
+          const newState = { ...state, discardPile, drawnCard: null, drawSource: null };
 
           if (specialAction === "take_2") {
               // Draw 2 cards for selection
@@ -528,6 +528,10 @@ export const performAction = mutation({
                       playerId,
                       action: "swap_2",
                       timestamp: Date.now(),
+                      swap2Details: {
+                              card1,
+                              card2: { playerId: action.payload.playerId, cardIndex: action.payload.cardIndex },
+                          }
                   }
               }));
           }

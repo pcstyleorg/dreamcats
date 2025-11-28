@@ -1,5 +1,5 @@
 import i18n from "@/i18n/config";
-import { GameAction, GameState, Player } from "@/types";
+import { GameAction, GameState, Player, Card } from "@/types";
 
 export type ReducerAction =
   | { type: "SET_STATE"; payload: GameState }
@@ -368,6 +368,33 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
             return state;
 
           const specialAction = state.drawnCard.specialAction;
+
+          if (specialAction === "take_2") {
+            const drawPile = [...state.drawPile];
+            const tempCards: Card[] = [];
+            // Draw up to 2 cards
+            for (let i = 0; i < 2; i++) {
+              if (drawPile.length > 0) {
+                tempCards.push(drawPile.pop()!);
+              }
+            }
+
+            // Discard the used special card
+            const discardPile = [...state.discardPile, state.drawnCard];
+
+            return {
+              ...state,
+              gamePhase: "action_take_2",
+              drawPile,
+              discardPile,
+              drawnCard: null,
+              tempCards,
+              actionMessage: i18n.t("game.specialAction", {
+                action: specialAction,
+              }),
+            };
+          }
+
           const actionPhaseMap: Record<
             "take_2" | "peek_1" | "swap_2",
             GameState["gamePhase"]
@@ -428,9 +455,10 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
           const players = [...state.players];
 
           if (state.gamePhase === "action_swap_2_select_1") {
-            const currentPlayerId = state.players[state.currentPlayerIndex].id;
+            // BUG FIX: Use payload.playerId instead of currentPlayerId
+            // Swap 2 allows selecting ANY player's card, not just current player
             const card1 = {
-              playerId: currentPlayerId,
+              playerId: gameAction.payload.playerId,
               cardIndex: gameAction.payload.cardIndex,
             };
             return {
@@ -469,6 +497,12 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
 
           const discardPile = [...state.discardPile, state.drawnCard!];
 
+          // Build card2 details for swap2Details
+          const card2 = {
+            playerId: gameAction.payload.playerId,
+            cardIndex: gameAction.payload.cardIndex,
+          };
+
           return advanceTurn({
             ...state,
             players,
@@ -480,51 +514,42 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
               playerId: currentPlayer.id,
               action: "swap_2",
               timestamp: Date.now(),
+              swap2Details: {
+                card1,
+                card2,
+              },
             },
           });
         }
 
         case "ACTION_TAKE_2_CHOOSE": {
-          if (state.gamePhase !== "action_take_2" || !state.drawnCard)
+          if (state.gamePhase !== "action_take_2" || !state.tempCards)
             return state;
 
-          const players = [...state.players];
-          const current = { ...players[state.currentPlayerIndex] };
-          const hand = [...current.hand];
+          const chosenCard = gameAction.payload.card;
+          const otherCard = state.tempCards.find((c) => c.id !== chosenCard.id);
 
-          const tempCards = state.tempCards ?? [
-            { ...state.drawnCard },
-            { ...gameAction.payload.card },
-          ];
+          // Discard the one not chosen
+          const discardPile = otherCard
+            ? [...state.discardPile, otherCard]
+            : state.discardPile;
 
-          const replaceIndex = hand.findIndex(
-            (slot) => slot.card.id === gameAction.payload.card.id,
-          );
-          if (replaceIndex === -1) return state;
-
-          hand[replaceIndex] = {
-            card: tempCards[0],
-            isFaceUp: false,
-            hasBeenPeeked: false,
-          };
-          current.hand = hand;
-          players[state.currentPlayerIndex] = current;
-
-          const discardPile = [...state.discardPile, tempCards[1]];
-
-          return advanceTurn({
+          return {
             ...state,
-            players,
+            gamePhase: "holding_card",
+            drawnCard: chosenCard,
+            drawSource: "deck", // Treated as drawn from deck
             discardPile,
-            drawnCard: null,
-            drawSource: null,
             tempCards: undefined,
+            actionMessage: i18n.t("game.keptCard", {
+              player: currentPlayer.name,
+            }),
             lastMove: {
               playerId: currentPlayer.id,
               action: "take_2",
               timestamp: Date.now(),
             },
-          });
+          };
         }
 
         case "CALL_POBUDKA": {
