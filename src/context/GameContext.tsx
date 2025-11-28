@@ -629,23 +629,34 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       : "skip",
   );
 
+  // Helper function to validate individual player structure
+  const validatePlayer = useCallback((p: unknown): boolean => {
+    if (!p || typeof p !== 'object') return false;
+    const player = p as Record<string, unknown>;
+    return (
+      typeof player.id === 'string' &&
+      typeof player.name === 'string' &&
+      Array.isArray(player.hand)
+    );
+  }, []);
+
   // Validate incoming remote state structure
   const validateGameState = useCallback((state: unknown): state is GameState => {
     if (!state || typeof state !== 'object') return false;
     const s = state as Partial<GameState>;
     
-    // Check required fields
+    // Check required fields exist and have correct types
     if (!s.gameMode || !Array.isArray(s.players) || !Array.isArray(s.drawPile) || !Array.isArray(s.discardPile)) {
       return false;
     }
     
-    // Validate players have required structure
-    if (!s.players.every(p => p && typeof p === 'object' && 'id' in p && 'name' in p && Array.isArray(p.hand))) {
+    // Validate all players have required structure
+    if (!s.players.every(validatePlayer)) {
       return false;
     }
     
     return true;
-  }, []);
+  }, [validatePlayer]);
 
   // Sync remote game state to local state
   useEffect(() => {
@@ -683,7 +694,14 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       const localPlayer = currentState.players.find((p) => p.id === myPlayerId);
       const remotePlayer = remoteState.players.find((p) => p.id === myPlayerId);
 
-      if (localPlayer && remotePlayer && localPlayer.hand.length === remotePlayer.hand.length) {
+      // Validate both players exist and have valid hands before merging
+      if (
+        localPlayer && 
+        remotePlayer && 
+        Array.isArray(localPlayer.hand) && 
+        Array.isArray(remotePlayer.hand) && 
+        localPlayer.hand.length === remotePlayer.hand.length
+      ) {
         // Check if we have locally visible cards that should be preserved
         const hasLocalVisibleCards = localPlayer.hand.some(
           (card) => card.isFaceUp,
