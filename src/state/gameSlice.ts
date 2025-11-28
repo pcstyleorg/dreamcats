@@ -1,46 +1,72 @@
-import { SliceCreator, GameSlice } from "./types";
-import { GameState, Player, Card, ChatMessage } from "@/types";
+import { SliceCreator, GameSlice, RoomStatus } from "./types";
+import { GameState, ChatMessage } from "@/types";
+import { initialGameState } from "./initialGame";
 
-const initialGame: Omit<GameSlice, keyof GameState["players"] | "setRoomState" | "resetGameState" | "setHands" | "setActionMessage" | "setDrawnCard" | "setLastMove" | "appendChat" | "setChat"> = {
-  roomStatus: "lobby",
-  gamePhase: "lobby",
-  gameMode: "lobby",
-  hostId: null,
-  players: [],
-  drawPileCount: 0,
-  discardTop: null,
-  hands: [],
-  currentPlayerIndex: 0,
-  drawnCard: null,
-  drawSource: null,
-  lastMove: null,
-  actionMessage: "",
-  chatMessages: [],
-  timers: undefined,
+const cloneGameState = (state: GameState): GameState =>
+  JSON.parse(JSON.stringify(state));
+
+const deriveRoomStatus = (game: GameState): RoomStatus => {
+  switch (game.gamePhase) {
+    case "round_end":
+      return "round_end";
+    case "game_over":
+      return "game_over";
+    case "lobby":
+      return "lobby";
+    default:
+      return "playing";
+  }
 };
 
 export const createGameSlice: SliceCreator<GameSlice> = (set) => ({
-  ...initialGame,
+  game: cloneGameState(initialGameState),
+  roomStatus: "lobby",
+  gameVersion: null,
 
-  setRoomState: (partial) => set((state) => ({ ...state, ...partial })),
-
-  resetGameState: () => set({ ...initialGame }),
-
-  setHands: (players: Player[]) =>
-    set(() => ({
-      players,
-      hands: players,
+  setGame: (next, meta) =>
+    set((state) => ({
+      game: cloneGameState(next),
+      gameVersion: meta?.version ?? state.gameVersion ?? null,
+      roomStatus: deriveRoomStatus(next),
     })),
 
-  setActionMessage: (message: string) => set({ actionMessage: message }),
+  updateGame: (updater, meta) =>
+    set((state) => {
+      const next = updater(cloneGameState(state.game));
+      return {
+        game: cloneGameState(next),
+        gameVersion: meta?.version ?? state.gameVersion ?? null,
+        roomStatus: deriveRoomStatus(next),
+      };
+    }),
 
-  setDrawnCard: (card: Card | null, source: GameState["drawSource"]) =>
-    set({ drawnCard: card, drawSource: source }),
+  resetGameState: () =>
+    set(() => ({
+      game: cloneGameState(initialGameState),
+      roomStatus: "lobby",
+      gameVersion: null,
+    })),
 
-  setLastMove: (move: GameState["lastMove"] | null) => set({ lastMove: move }),
+  setActionMessage: (message: string) =>
+    set((state) => ({
+      game: { ...state.game, actionMessage: message },
+    })),
+
+  setLastMove: (move: GameState["lastMove"] | null) =>
+    set((state) => ({ game: { ...state.game, lastMove: move } })),
 
   appendChat: (message: ChatMessage) =>
-    set((state) => ({ chatMessages: [...state.chatMessages, message] })),
+    set((state) => ({
+      game: {
+        ...state.game,
+        chatMessages: [...(state.game.chatMessages ?? []), message],
+      },
+    })),
 
-  setChat: (messages: ChatMessage[]) => set({ chatMessages: messages }),
+  setChat: (messages: ChatMessage[]) =>
+    set((state) => ({ game: { ...state.game, chatMessages: messages } })),
+
+  setRoomStatus: (status) => set({ roomStatus: status }),
+
+  setGameVersion: (version) => set({ gameVersion: version }),
 });

@@ -36,6 +36,16 @@
 - **Error/blocked:** Shake + amber outline on CTA.
 - **Success:** Brief sparkle on completed action (draw/discard/special).
 
+## Motion & Layout Guardrails (live)
+- Transform/opacity-only animations; no width/height/position transitions to avoid reflow.
+- `game-scroll-lock` applied during gameplay + `100dvh` shell; compact mode tightens spacing below 1100px width or 860px height so split-view stays non-scrollable.
+- Honors `prefers-reduced-motion`; core durations capped ≈200ms ease-out.
+- Single primary CTA per view; room info pill (desktop) / tray (mobile) to avoid duplicate controls.
+
+## State & Sync (live)
+- React Context removed; Zustand slices (`session`, `game`, `ui`, `net`) with selectors to minimize rerenders.
+- `ConvexSync` bridges live queries/mutations; sanitizes peek visibility per viewer; falls back if older Convex deployment rejects idempotency/version fields (deploy updated functions to drop fallback).
+
 ## Mobile Strategy
 - Single-column flow; opponent rail scrollable; center well keeps 2-card stacks at readable size.
 - Sticky top rail and bottom action bar; avoid viewport jumps by using CSS `dvh/svh`.

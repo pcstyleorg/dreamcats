@@ -6,7 +6,7 @@ import { createUiSlice } from "./uiSlice";
 import { createNetSlice } from "./netSlice";
 import { AppState } from "./types";
 
-const persistKeys = (state: AppState) => ({
+const persistKeys = (state: AppState): Partial<AppState> => ({
   playerId: state.playerId,
   playerName: state.playerName,
   roomId: state.roomId,
@@ -18,7 +18,7 @@ const persistKeys = (state: AppState) => ({
 export const useAppStore = create<AppState>()(
   devtools(
     subscribeWithSelector(
-      persist(
+      persist<AppState>(
         (set, get, api) => ({
           ...createSessionSlice(set, get, api),
           ...createGameSlice(set, get, api),
@@ -27,7 +27,7 @@ export const useAppStore = create<AppState>()(
         }),
         {
           name: "sen-app-store",
-          partialize: persistKeys,
+          partialize: (state) => persistKeys(state) as unknown as AppState,
           version: 1,
         },
       ),

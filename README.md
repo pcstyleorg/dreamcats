@@ -69,8 +69,9 @@ You can inspect your Convex deployment using the Convex MCP:
 
 ## Project Structure
 
-- `src/components/` - React components
-- `src/context/` - React context providers (GameContext, TutorialContext)
+- `src/components/` - React components (shadcn/ui + custom game views)
+- `src/state/` - Zustand store, selectors, ConvexSync bridge
+- `src/context/` - Tutorial-only context
 - `src/lib/` - Game logic and utilities
 - `convex/` - Convex backend functions and schema
  
@@ -90,3 +91,25 @@ To deploy this project to Vercel:
     npx convex deploy --cmd 'npm run build'
     ```
     This ensures your Convex functions are deployed before the frontend is built.
+
+### Convex Deploy (manual)
+
+Set your deployment and run:
+```bash
+export CONVEX_DEPLOYMENT=dev:your-project-name
+npx convex deploy
+```
+This pushes the updated functions (including `idempotencyKey/version` support) before serving the app.
+
+## Motion & Layout Guardrails
+
+- Animations are transform/opacity-only; no width/height transitions to avoid reflow.
+- Gameplay locks scroll via `game-scroll-lock` and uses `min-h/100dvh`; compact mode tightens spacing below 1100px width or 860px height to stay non-scrollable in split view.
+- Honors `prefers-reduced-motion`; core durations capped at ~200ms ease-out.
+- Room info shows as a single pill (desktop) or bottom tray (mobile); one primary CTA per view.
+
+## Testing
+
+- Unit (Convex functions): `bun run test:run`
+- Lint: `bun run lint`
+- Build: `bun run build`

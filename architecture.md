@@ -9,11 +9,11 @@
 ## Client State (Zustand v5)
 - Store lives in `/src/state`; slices are combined with `create`:
   - `sessionSlice`: playerId, name, auth token, roomId, locale, theme, persisted via `persist`.
-  - `gameSlice`: room phase, deck/discard, hands, turn index, lastMove, timers, drawnCard, drawSource; derived selectors for `isMyTurn`, `canDraw`, `canSpecial`, `cta`.
+  - `gameSlice`: canonical `GameState` (deck/discard, hands, turn index, peek/swap/take2 phases, chat, lastMove), plus `roomStatus` and version marker.
   - `uiSlice`: dialogs/sheets, toasts, safeArea insets, reduced-motion flag.
   - `netSlice`: ws status, latency, reconnect attempts.
 - Middlewares: `devtools` (last), `persist` (selective), `subscribeWithSelector` for fine-grained updates.
-- Feature flag: `useNewState` to allow staged rollout while old context remains.
+- `ConvexSync` component (mounted in `App`) owns live queries for game/chat/players, pushes updates into the store, and heartbeats presence. Old `GameContext` is removed; components read via selectors/hooks (`useGame`, `usePlayersView`).
 
 ## Data Model & DTOs (client/server contract)
 - `Room`: id, code, mode ("online" | "hotseat"), hostId, status ("lobby" | "playing" | "round_end" | "game_over"), createdAt, updatedAt.
