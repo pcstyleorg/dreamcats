@@ -374,7 +374,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         {/* Opponents Area */}
         <div
           className={cn(
-            "flex justify-start sm:justify-center items-start mt-4 sm:mt-6 lg:mt-6 xl:mt-8 mb-1.5 sm:mb-2 md:mb-3 flex-shrink-0 w-full px-1 sm:px-2 overflow-x-auto",
+            "flex justify-start sm:justify-center items-start mt-6 sm:mt-8 lg:mt-8 xl:mt-10 mb-1.5 sm:mb-2 md:mb-3 flex-shrink-0 w-full px-1 sm:px-2 overflow-x-auto",
             isCompact && "mt-2 sm:mt-3 lg:mt-4 mb-1"
           )}
         >
@@ -409,7 +409,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         {/* Center Area */}
         <div
           className={cn(
-            "flex-grow flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 md:gap-7 lg:gap-9 my-2 sm:my-3 md:my-4 min-h-0 w-full",
+            "flex-grow flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 md:gap-8 lg:gap-10 my-6 sm:my-8 md:my-10 min-h-0 w-full",
             isCompact && "gap-2 sm:gap-3 md:gap-5 my-1 sm:my-2"
           )}
           data-tutorial-id="piles"
@@ -449,9 +449,11 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                     playSound={playSound}
                     />
                 </div>
-                <span className="mt-2 sm:mt-3 text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-widest text-center">
-                  {t('game.draw')}
-                </span>
+                <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm">
+                  <span className="text-xs sm:text-sm font-bold text-foreground/90 uppercase tracking-widest text-center">
+                    {t('game.draw')}
+                  </span>
+                </div>
               </div>
 
               {drawnCard && isMyTurn && gamePhase === "holding_card" && (
@@ -497,9 +499,11 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                     playSound={playSound}
                     />
                 </div>
-                <span className="mt-2 sm:mt-3 text-xs sm:text-sm font-medium text-muted-foreground uppercase tracking-widest text-center">
-                  {t('game.discard')}
-                </span>
+                <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm">
+                  <span className="text-xs sm:text-sm font-bold text-foreground/90 uppercase tracking-widest text-center">
+                    {t('game.discard')}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

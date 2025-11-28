@@ -56,7 +56,8 @@ export const GameActions = () => {
       <Button
         onClick={handleFinishPeeking}
         disabled={peekingState?.peekedCount !== 2}
-        className="w-auto min-w-[160px] sm:min-w-[180px] min-h-[52px] sm:min-h-[56px] text-base sm:text-lg font-semibold bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-soft-lg hover:shadow-dreamy"
+        variant="secondary"
+        className="w-auto min-w-[160px] sm:min-w-[180px] min-h-[52px] sm:min-h-[56px] text-base sm:text-lg font-semibold shadow-sm hover:bg-secondary/80"
         size="lg"
       >
         {t('game.finishPeeking')}
