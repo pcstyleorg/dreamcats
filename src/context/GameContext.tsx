@@ -62,6 +62,28 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
         };
       };
 
+      // Helper function to validate player exists
+      const validatePlayerExists = (playerId: string): number => {
+        const index = state.players.findIndex((p) => p.id === playerId);
+        if (index === -1) {
+          console.error(`Invalid player ID: ${playerId}`);
+        }
+        return index;
+      };
+
+      // Helper function to validate card index
+      const validateCardIndex = (playerIndex: number, cardIndex: number): boolean => {
+        if (playerIndex < 0 || playerIndex >= state.players.length) {
+          return false;
+        }
+        const player = state.players[playerIndex];
+        if (cardIndex < 0 || cardIndex >= player.hand.length) {
+          console.error(`Invalid card index: ${cardIndex} for player at index ${playerIndex}`);
+          return false;
+        }
+        return true;
+      };
+
       const endRoundWithScores = (
         s: GameState,
         options: { reason: "pobudka" | "deck_exhausted"; callerId?: string },
@@ -424,15 +446,13 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
           const { playerId, cardIndex } = gameAction.payload;
           
           // Find and validate the target player
-          const targetPlayer = state.players.find((p) => p.id === playerId);
-          if (!targetPlayer) {
-            console.error("Invalid player ID in ACTION_PEEK_1_SELECT");
+          const targetPlayerIndex = validatePlayerExists(playerId);
+          if (targetPlayerIndex === -1) {
             return state;
           }
           
           // Validate card index
-          if (cardIndex < 0 || cardIndex >= targetPlayer.hand.length) {
-            console.error("Invalid card index in ACTION_PEEK_1_SELECT");
+          if (!validateCardIndex(targetPlayerIndex, cardIndex)) {
             return state;
           }
           
@@ -473,27 +493,17 @@ const gameReducer = (state: GameState, action: ReducerAction): GameState => {
             const { card1 } = state.swapState;
             const card2 = { playerId, cardIndex };
 
-            const player1Index = state.players.findIndex(
-              (p) => p.id === card1.playerId,
-            );
-            const player2Index = state.players.findIndex(
-              (p) => p.id === card2.playerId,
-            );
+            const player1Index = validatePlayerExists(card1.playerId);
+            const player2Index = validatePlayerExists(card2.playerId);
 
-            // Validate player indices before proceeding
+            // Validate both player indices
             if (player1Index === -1 || player2Index === -1) {
-              console.error("Invalid player ID in ACTION_SWAP_2_SELECT");
               return state;
             }
 
-            // Validate card indices
-            if (
-              card1.cardIndex < 0 || 
-              card1.cardIndex >= state.players[player1Index].hand.length ||
-              card2.cardIndex < 0 || 
-              card2.cardIndex >= state.players[player2Index].hand.length
-            ) {
-              console.error("Invalid card index in ACTION_SWAP_2_SELECT");
+            // Validate both card indices
+            if (!validateCardIndex(player1Index, card1.cardIndex) || 
+                !validateCardIndex(player2Index, card2.cardIndex)) {
               return state;
             }
 
