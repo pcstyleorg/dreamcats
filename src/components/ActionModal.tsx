@@ -15,10 +15,11 @@ import { useTranslation } from "react-i18next";
 export const ActionModal: React.FC = () => {
   const { t } = useTranslation();
   const { state, broadcastAction, myPlayerId } = useGame();
-  const { gamePhase, tempCards, lastRoundScores, gameWinnerName, players, currentPlayerIndex } =
+  const { gamePhase, tempCards, lastRoundScores, gameWinnerName, players, currentPlayerIndex, hostId } =
     state;
 
   const isMyTurn = players[currentPlayerIndex]?.id === myPlayerId;
+  const isHost = hostId === myPlayerId;
 
   const handleTake2Choose = (card: CardType) => {
     broadcastAction({ type: "ACTION_TAKE_2_CHOOSE", payload: { card } });
@@ -91,10 +92,11 @@ export const ActionModal: React.FC = () => {
       </div>
       <Button
         onClick={handleNewRound}
+        disabled={!isHost}
         className="w-full min-h-[52px] text-base sm:text-lg font-semibold"
         size="lg"
       >
-        {t('modal.startNextRound')}
+        {isHost ? t('modal.startNextRound') : t('modal.waitingForHost')}
       </Button>
     </>
   );
@@ -114,7 +116,7 @@ export const ActionModal: React.FC = () => {
           {t('modal.finalScores')}
         </h4>
         <ul className="space-y-3 sm:space-y-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-3 sm:p-4 border-2 border-purple-200/50">
-          {players
+          {[...players]
             .sort((a, b) => a.score - b.score)
             .map((player, index) => (
               <li

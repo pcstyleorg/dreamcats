@@ -106,6 +106,7 @@
     "choose": "Wybierz",
     "roundOverTitle": "Koniec Rundy!",
     "startNextRound": "Rozpocznij Następną Rundę",
+    "waitingForHost": "Oczekiwanie na gospodarza...",
     "gameOverTitle": "Koniec Gry!",
     "winsTheGame": "🎉 {{player}} wygrywa grę! 🎉",
     "finalScores": "Końcowe Wyniki"

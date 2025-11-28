@@ -115,7 +115,7 @@ export const useGame = () => {
   );
 
   const startHotseatGame = useCallback(
-    (_playerNames: string[]) => {
+    () => {
        toast.error("Hotseat mode is temporarily disabled for refactoring.");
        // We need to implement local hotseat logic using the same actions if we want to support it.
        // For now, disabling to focus on online fix.

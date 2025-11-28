@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { Player } from "@/types";
+import { Player, Card } from "@/types";
 import { GameCard } from "./Card";
 import { useGame } from "@/state/useGame";
 import { cn } from "@/lib/utils";
@@ -193,7 +193,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       broadcastAction({
         type: "ACTION_PEEK_1_SELECT",
         payload: { playerId: player.id, cardIndex },
-      }).then((card: any) => {
+      }).then((card: Card | null) => {
           if (card) {
               toast.success(t('game.peekResult', { value: card.value }), {
                   description: card.isSpecial ? `Special: ${card.specialAction}` : "Number card",

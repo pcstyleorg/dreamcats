@@ -98,8 +98,7 @@ describe("game actions", () => {
 
     // Fast forward through peeking (hacky state patch or just actions)
     // Let's just patch state to 'playing' to test draw
-    const game = await t.query(api.games.getGameState, { roomId, playerId: "host" });
-    // We can't easily patch state from outside without a backdoor or running actions.
+    // Note: We can't easily patch state from outside without a backdoor or running actions.
     // Let's just rely on the fact that START_NEW_ROUND puts us in 'peeking'.
     // To test 'DRAW', we need to be in 'playing'.
     // We would need to send 'FINISH_PEEKING' for all players.

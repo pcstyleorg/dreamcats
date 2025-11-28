@@ -106,6 +106,7 @@
     "choose": "Choose",
     "roundOverTitle": "Round Over!",
     "startNextRound": "Start Next Round",
+    "waitingForHost": "Waiting for host...",
     "gameOverTitle": "Game Over!",
     "winsTheGame": "🎉 {{player}} wins the game! 🎉",
     "finalScores": "Final Scores"

@@ -38,7 +38,7 @@ const shuffle = (deck: Card[]) => {
 
 // Helper to clone state for mutation (though we can mutate directly in Convex if we are careful, 
 // but treating it immutably first is safer for logic porting)
-const clone = <T>(obj: T): T => JSON.parse(JSON.stringify(obj));
+// Note: clone helper removed as it was unused
 
 export const performAction = mutation({
   args: {
@@ -59,7 +59,7 @@ export const performAction = mutation({
       throw new Error("Game not found");
     }
 
-    let state = gameRecord.state as GameState;
+    const state = gameRecord.state as GameState;
     
     // --- VALIDATION & LOGIC ---
     
@@ -388,7 +388,7 @@ export const performAction = mutation({
           
           // Discard the special card immediately (it's being used)
           const discardPile = [...state.discardPile, state.drawnCard];
-          let newState = { ...state, discardPile, drawnCard: null, drawSource: null as any };
+          const newState: GameState = { ...state, discardPile, drawnCard: null, drawSource: null };
 
           if (specialAction === "take_2") {
               // Draw 2 cards for selection
@@ -397,8 +397,27 @@ export const performAction = mutation({
               for (let i = 0; i < 2; i++) {
                   if (drawPile.length > 0) tempCards.push(drawPile.pop()!);
               }
-              // If deck ran out, we might have 0 or 1 card. Handle gracefully?
-              // For now assume deck has cards or we reshuffle (not implemented yet).
+              
+              // Handle edge case: if deck is empty, end the round
+              if (tempCards.length === 0) {
+                  await saveState(endRoundWithScores(newState, { reason: "deck_exhausted" }));
+                  return;
+              }
+              
+              // If only 1 card was drawn, auto-select it (no choice needed)
+              if (tempCards.length === 1) {
+                  const keptCard = tempCards[0];
+                  await saveState({
+                      ...newState,
+                      drawPile,
+                      tempCards: undefined,
+                      drawnCard: keptCard,
+                      drawSource: "deck",
+                      gamePhase: "holding_card",
+                      actionMessage: `${currentPlayer.name} drew the last card`,
+                  });
+                  return;
+              }
               
               await saveState({
                   ...newState,
@@ -446,14 +465,11 @@ export const performAction = mutation({
               return { ...p, hand };
           });
           
-          const discardPile = [...state.discardPile, state.drawnCard!];
-          
+          // Note: drawnCard was already discarded in USE_SPECIAL_ACTION, so we don't add it again
           await saveState(advanceTurn({
               ...state,
               players,
-              discardPile,
-              drawnCard: null,
-              drawSource: null,
+              // discardPile already has the special card from USE_SPECIAL_ACTION
               lastMove: {
                   playerId,
                   action: "peek",
@@ -515,14 +531,11 @@ export const performAction = mutation({
                   players[playerBIndex] = { ...playerB, hand: newHandB };
               }
               
-              const discardPile = [...state.discardPile, state.drawnCard!];
-              
+              // Note: drawnCard was already discarded in USE_SPECIAL_ACTION, so we don't add it again
               await saveState(advanceTurn({
                   ...state,
                   players,
-                  discardPile,
-                  drawnCard: null,
-                  drawSource: null,
+                  // discardPile already has the special card from USE_SPECIAL_ACTION
                   swapState: undefined,
                   lastMove: {
                       playerId,
@@ -573,6 +586,9 @@ export const performAction = mutation({
       case "START_NEW_ROUND": {
           // Allow starting from lobby or round_end
           if (state.gamePhase !== "round_end" && state.gamePhase !== "lobby") throw new Error("Invalid phase");
+          
+          // Only the host can start a new round
+          if (state.hostId && playerId !== state.hostId) throw new Error("Only the host can start a new round");
           
           const deck = shuffle(buildDeck());
           
