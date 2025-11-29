@@ -388,8 +388,10 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                     hasBeenPeeked={cardInHand.hasBeenPeeked}
                     onClick={() => handleCardClick(index)}
                     className={cn(
+                      "!w-[15vw] sm:!w-[13vw] md:!w-[11vw] lg:!w-[9.5vw] xl:!w-[9vw]",
+                      "max-w-[112px] sm:max-w-[124px] md:max-w-[134px] lg:max-w-[138px] xl:max-w-[142px]",
                       isOpponent &&
-                      "!w-16 sm:!w-20 md:!w-24 lg:!w-16 xl:!w-20",
+                      "!w-[13vw] sm:!w-[11vw] md:!w-[10vw] lg:!w-[9vw] xl:!w-[8.5vw] max-w-[108px]",
                       getCardInteractionClass(index),
                     )}
                     playSound={playSound}

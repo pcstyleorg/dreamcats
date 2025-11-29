@@ -52,10 +52,12 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   const { netStatus } = useNetStatus();
   const [isCompact, setIsCompact] = useState(() => {
     if (typeof window !== 'undefined') {
-      return window.innerHeight < 860 || window.innerWidth < 1100;
+      // Treat 14" laptops and short viewports as compact to tighten layout
+      return window.innerHeight < 900 || window.innerWidth < 1400;
     }
     return false;
   });
+  const [boardScale, setBoardScale] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const currentPlayer = players[currentPlayerIndex];
@@ -103,12 +105,21 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
 
   useEffect(() => {
-    const updateCompact = () => {
-      setIsCompact(window.innerHeight < 860 || window.innerWidth < 1100);
+    const updateLayout = () => {
+      const h = window.innerHeight;
+      const w = window.innerWidth;
+      setIsCompact(h < 900 || w < 1400);
+
+      let scale = 1;
+      if (h < 900) scale = 0.92;
+      if (h < 820) scale = 0.86;
+      if (h < 760) scale = 0.8;
+      if (w < 1300) scale = Math.min(scale, 0.9);
+      setBoardScale(scale);
     };
-    updateCompact();
-    window.addEventListener("resize", updateCompact);
-    return () => window.removeEventListener("resize", updateCompact);
+    updateLayout();
+    window.addEventListener("resize", updateLayout);
+    return () => window.removeEventListener("resize", updateLayout);
   }, []);
 
   const handleDrawFromDeck = () => {
@@ -132,8 +143,8 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
   const isPlayerActionable = isMyTurn && gamePhase === "playing";
   const pileCardClass = isCompact
-    ? "!w-[82px] sm:!w-[96px] md:!w-[104px] lg:!w-[108px]"
-    : "!w-24 sm:!w-28 md:!w-32 lg:!w-28 xl:!w-32";
+    ? "!w-[76px] sm:!w-[90px] md:!w-[98px] lg:!w-[104px]"
+    : "!w-20 sm:!w-24 md:!w-28 lg:!w-24 xl:!w-28";
 
   const RoomInfoPill = ({ variant }: { variant: "desktop" | "mobile" }) => {
     if (gameMode !== "online" || !roomId) return null;
@@ -316,7 +327,16 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         </div>
       )}
 
-      <main className="flex-grow flex flex-col relative z-10 min-h-0 gap-3 sm:gap-4 overflow-hidden">
+      <div
+        className="flex-grow flex flex-col relative z-10 min-h-0"
+        style={{
+          transform: `scale(${boardScale})`,
+          transformOrigin: "top center",
+          width: `${Math.round((1 / boardScale) * 100)}%`,
+          maxWidth: `${Math.round((1 / boardScale) * 100)}%`,
+        }}
+      >
+      <main className="flex-grow flex flex-col min-h-0 gap-3 sm:gap-4 overflow-hidden">
         <div
 
           className={cn(
@@ -383,7 +403,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
             <div
               className={cn(
                 "flex flex-nowrap sm:flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-10 w-full max-w-5xl mx-auto px-2 sm:px-3 py-2 sm:py-3 bg-card/70 border border-border/60 rounded-2xl shadow-soft-lg backdrop-blur-xl overflow-x-auto sm:overflow-visible no-scrollbar",
-                isCompact && "gap-2 sm:gap-3 md:gap-3 lg:gap-4 py-2 sm:py-2.5"
+                isCompact && "gap-1.5 sm:gap-2.5 md:gap-3 lg:gap-4 max-w-4xl px-2 py-2 sm:py-2.5"
               )}
             >
               {otherPlayers.map((player) => (
@@ -411,7 +431,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         <div
           className={cn(
             "flex-grow flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 md:gap-8 lg:gap-10 my-6 sm:my-8 md:my-10 min-h-0 w-full",
-            isCompact && "gap-2 sm:gap-3 md:gap-5 my-1 sm:my-2"
+            isCompact && "gap-2 sm:gap-3 md:gap-4 my-2 sm:my-3 px-2"
           )}
           data-tutorial-id="piles"
         >
@@ -550,6 +570,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
           </div>
         )}
       </main>
+      </div>
 
       {/* Side Panel - Desktop */}
       <aside className="hidden lg:flex w-full lg:w-80 lg:max-w-xs flex-shrink-0 bg-card/95 backdrop-blur-lg p-5 rounded-xl border border-border/40 shadow-soft-lg flex-col relative z-10">
