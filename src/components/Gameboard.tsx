@@ -456,7 +456,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
             {/* Pile Mat */}
             <div
               className={cn(
-                "bg-black/40 border border-white/5 rounded-3xl px-4 sm:px-6 md:px-8 py-5 sm:py-7 md:py-8 shadow-2xl backdrop-blur-xl flex items-center gap-6 sm:gap-10 md:gap-14 relative z-10 w-full max-w-4xl",
+                "bg-black/40 border border-white/5 rounded-3xl px-4 sm:px-6 md:px-8 py-5 sm:py-7 md:py-8 shadow-2xl backdrop-blur-xl inline-flex items-center justify-center gap-6 sm:gap-10 md:gap-14 relative z-10 mx-auto",
                 isCompact && "px-3 sm:px-4 py-4 sm:py-5 gap-4 sm:gap-6 md:gap-8"
               )}
             >
