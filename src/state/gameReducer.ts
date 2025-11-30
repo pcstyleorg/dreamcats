@@ -323,7 +323,8 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
             state.gamePhase !== "holding_card" ||
             !state.drawnCard ||
             !state.drawSource ||
-            state.drawSource === "discard"
+            state.drawSource === "discard" ||
+            state.drawSource === "take2"
           )
             return state;
 
@@ -392,18 +393,17 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
             return state;
 
           const specialAction = state.drawnCard.specialAction;
+          if (state.drawSource !== "deck" && state.drawSource !== "take2") return state;
 
           if (specialAction === "take_2") {
             const drawPile = [...state.drawPile];
             const tempCards: Card[] = [];
-            // Draw up to 2 cards
             for (let i = 0; i < 2; i++) {
               if (drawPile.length > 0) {
                 tempCards.push(drawPile.pop()!);
               }
             }
 
-            // Discard the used special card
             const discardPile = [...state.discardPile, state.drawnCard];
 
             return {
@@ -419,11 +419,8 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
             };
           }
 
-          const actionPhaseMap: Record<
-            "take_2" | "peek_1" | "swap_2",
-            GameState["gamePhase"]
-          > = {
-            take_2: "action_take_2",
+          // For peek_1 and swap_2, keep the special card as drawnCard so action handler can discard once
+          const actionPhaseMap: Record<"peek_1" | "swap_2", GameState["gamePhase"]> = {
             peek_1: "action_peek_1",
             swap_2: "action_swap_2_select_1",
           };
@@ -452,7 +449,8 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
             return { ...player, hand };
           });
 
-          const discardPile = [...state.discardPile, state.drawnCard!];
+          if (!state.drawnCard) return state; // safety
+          const discardPile = [...state.discardPile, state.drawnCard];
 
           return advanceTurn({
             ...state,
@@ -519,7 +517,8 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
           players[playerAIndex] = setCard(playerA, card1.cardIndex, cardB);
           players[playerBIndex] = setCard(playerB, gameAction.payload.cardIndex, cardA);
 
-          const discardPile = [...state.discardPile, state.drawnCard!];
+          if (!state.drawnCard) return state;
+          const discardPile = [...state.discardPile, state.drawnCard];
 
           // Build card2 details for swap2Details
           const card2 = {
@@ -562,7 +561,7 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
             ...state,
             gamePhase: "holding_card",
             drawnCard: chosenCard,
-            drawSource: "deck", // Treat as drawn from deck for button visibility
+            drawSource: "take2", // Force swap/use; discard not allowed
             discardPile,
             tempCards: undefined,
             actionMessage: i18n.t("game.keptCard", {

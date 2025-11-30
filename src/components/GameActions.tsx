@@ -39,9 +39,9 @@ export const GameActions = () => {
   const canUseSpecial =
     drawnCard?.isSpecial &&
     gamePhase === "holding_card" &&
-    drawSource === "deck";
+    (drawSource === "deck" || drawSource === "take2");
   const mustSwap =
-    gamePhase === "holding_card" && !!drawnCard && drawSource === "discard";
+    gamePhase === "holding_card" && !!drawnCard && (drawSource === "discard" || drawSource === "take2");
 
   if (
     (gameMode === "hotseat" || amICurrentPeeker) &&
@@ -83,7 +83,7 @@ export const GameActions = () => {
   if (gamePhase === "holding_card" && isMyTurn) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 w-full">
-        <div className="flex items-center justify-center gap-3 sm:gap-4 w-full">
+        <div className="flex items-center justify-center gap-3 sm:gap-4 w-full flex-wrap sm:flex-nowrap">
           <Button
             variant="outline"
             onClick={() => broadcastAction({ type: "DISCARD_HELD_CARD" })}
@@ -92,6 +92,16 @@ export const GameActions = () => {
             size="lg"
           >
             {t('game.discard')}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => { /* Swap is done by tapping a hand card; button exists to make option visible */ }}
+            disabled
+            className="flex-1 sm:flex-none min-w-[110px] sm:min-w-[150px] h-12 sm:h-[54px] text-sm sm:text-lg rounded-full bg-muted/60 text-foreground/80 border border-border/60"
+            size="lg"
+            data-testid="swap-hint-button"
+          >
+            {t('game.swap')}
           </Button>
           <Button
             onClick={() => broadcastAction({ type: "USE_SPECIAL_ACTION" })}
@@ -103,13 +113,11 @@ export const GameActions = () => {
             {t('game.action')}
           </Button>
         </div>
-        {(mustSwap || true) && (
-          <p className="text-xs sm:text-sm text-muted-foreground text-center px-2">
-            {mustSwap
-              ? t('game.mustSwapCard')
-              : t('game.orTapCardToSwap')}
-          </p>
-        )}
+        <p className="text-xs sm:text-sm text-muted-foreground text-center px-2">
+          {mustSwap
+            ? t('game.mustSwapCard')
+            : t('game.orTapCardToSwap')}
+        </p>
       </div>
     );
   }

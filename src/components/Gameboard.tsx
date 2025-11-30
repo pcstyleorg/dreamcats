@@ -341,7 +341,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         style={{
           transform: `scale(${boardScale})`,
           transformOrigin: "top center",
-          // Keep the scaled board within its container to avoid overflow/zoomed look on smaller viewports
           width: "100%",
           maxWidth: "100%",
         }}
@@ -457,8 +456,8 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
             {/* Pile Mat */}
             <div
               className={cn(
-                "bg-black/40 border border-white/5 rounded-3xl px-6 sm:px-8 py-6 sm:py-8 shadow-2xl backdrop-blur-xl flex items-center gap-8 sm:gap-12 md:gap-16 relative z-10",
-                isCompact && "px-4 sm:px-5 py-4 sm:py-5 gap-4 sm:gap-6 md:gap-8 scale-[0.9]"
+                "bg-black/40 border border-white/5 rounded-3xl px-4 sm:px-6 md:px-8 py-5 sm:py-7 md:py-8 shadow-2xl backdrop-blur-xl flex items-center gap-6 sm:gap-10 md:gap-14 relative z-10 w-full max-w-4xl",
+                isCompact && "px-3 sm:px-4 py-4 sm:py-5 gap-4 sm:gap-6 md:gap-8"
               )}
             >
               <div
@@ -487,7 +486,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                 <div className={cn(
                   "mt-2 sm:mt-2.5 px-2 py-1 rounded-full border text-xs font-semibold whitespace-nowrap",
                   state.drawPile.length < 3
-                    ? "bg-red-500/20 border-red-500/40 text-red-200"
+                    ? "bg-red-500/20 border-red-500/40 text-red-200 animate-pulse"
                     : state.drawPile.length < 10
                     ? "bg-yellow-500/20 border-yellow-500/40 text-yellow-200"
                     : "bg-green-500/20 border-green-500/40 text-green-200"
@@ -545,6 +544,13 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                         pileCardClass,
                         "shadow-2xl"
                       )}
+                      valueBadge={
+                        discardPile.length > 1 ? (
+                          <div className="px-2 py-1 rounded-full bg-background/80 border border-border/60 text-[11px] font-semibold shadow-sm">
+                            +{Math.min(discardPile.length - 1, 9)}
+                          </div>
+                        ) : null
+                      }
                     />
                 </div>
                 <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm whitespace-nowrap">

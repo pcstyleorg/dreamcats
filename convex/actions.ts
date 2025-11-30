@@ -345,7 +345,7 @@ export const performAction = mutation({
         if (!isMyTurn) throw new Error("Not your turn");
         if (state.gamePhase !== "holding_card") throw new Error("Invalid phase");
         if (!state.drawnCard || !state.drawSource) throw new Error("No card held");
-        if (state.drawSource === "discard") throw new Error("Cannot discard card taken from discard pile");
+        if (state.drawSource === "discard" || state.drawSource === "take2") throw new Error("Cannot discard card taken from discard pile or keep-from-take2");
 
         const discardPile = [...state.discardPile, state.drawnCard];
         
@@ -407,15 +407,15 @@ export const performAction = mutation({
           if (!isMyTurn) throw new Error("Not your turn");
           if (state.gamePhase !== "holding_card") throw new Error("Invalid phase");
           if (!state.drawnCard?.isSpecial) throw new Error("Not a special card");
-          if (state.drawSource !== "deck") throw new Error("Can only use special cards drawn from deck");
+          if (state.drawSource !== "deck" && state.drawSource !== "take2") throw new Error("Can only use special cards drawn from deck or kept from take2");
           
           const specialAction = state.drawnCard.specialAction!;
           
-          // Discard the special card immediately (it's being used)
-          const discardPile = [...state.discardPile, state.drawnCard];
-          const newState = { ...state, discardPile, drawnCard: null, drawSource: null };
-
           if (specialAction === "take_2") {
+              // Discard immediately and proceed to Take 2 flow
+              const discardPile = [...state.discardPile, state.drawnCard];
+              const newState = { ...state, discardPile, drawnCard: null, drawSource: null };
+
               // Draw 2 cards for selection
               const drawPile = [...state.drawPile];
               const tempCards: Card[] = [];
@@ -433,14 +433,17 @@ export const performAction = mutation({
                   actionMessage: `${currentPlayer.name} is choosing from 2 cards...`,
               });
           } else if (specialAction === "peek_1") {
+              // Keep drawnCard until action completes; discard once in action handler
               await saveState({
-                  ...newState,
+                  ...state,
+                  drawSource: null,
                   gamePhase: "action_peek_1",
                   actionMessage: `${currentPlayer.name} is peeking at a card...`,
               });
           } else if (specialAction === "swap_2") {
               await saveState({
-                  ...newState,
+                  ...state,
+                  drawSource: null,
                   gamePhase: "action_swap_2_select_1",
                   actionMessage: `${currentPlayer.name} is swapping 2 cards...`,
               });
@@ -471,7 +474,8 @@ export const performAction = mutation({
               return { ...p, hand };
           });
           
-          const discardPile = [...state.discardPile, state.drawnCard!];
+          if (!state.drawnCard) throw new Error("Missing special card to discard");
+          const discardPile = [...state.discardPile, state.drawnCard];
           
           await saveState(advanceTurn({
               ...state,
@@ -540,7 +544,8 @@ export const performAction = mutation({
                   players[playerBIndex] = { ...playerB, hand: newHandB };
               }
               
-              const discardPile = [...state.discardPile, state.drawnCard!];
+              if (!state.drawnCard) throw new Error("Missing special card to discard");
+              const discardPile = [...state.discardPile, state.drawnCard];
               
               await saveState(advanceTurn({
                   ...state,
@@ -584,7 +589,7 @@ export const performAction = mutation({
               discardPile,
               tempCards: undefined,
               drawnCard: keptCard,
-              drawSource: "deck", // Treated as if drawn from deck
+              drawSource: "take2", // Force swap/use; discard disabled
               gamePhase: "holding_card",
               actionMessage: `${currentPlayer.name} kept a card`,
           });
