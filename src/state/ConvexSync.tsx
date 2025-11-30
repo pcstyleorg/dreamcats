@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAppStore } from "./store";
@@ -7,6 +7,7 @@ import { GameState, ChatMessage } from "@/types";
 export const ConvexSync: React.FC = () => {
   const roomId = useAppStore((s) => s.roomId);
   const playerId = useAppStore((s) => s.playerId);
+  const playerName = useAppStore((s) => s.playerName);
   const gameMode = useAppStore((s) => s.game.gameMode);
   const setGame = useAppStore((s) => s.setGame);
   const setChat = useAppStore((s) => s.setChat);
@@ -16,6 +17,8 @@ export const ConvexSync: React.FC = () => {
   const setRoom = useAppStore((s) => s.setRoom);
 
   const updatePresenceMutation = useMutation(api.rooms.updatePlayerPresence);
+  const joinRoomMutation = useMutation(api.rooms.joinRoom);
+  const hasRejoined = useRef(false);
 
   const remoteGame = useQuery(
     api.games.getGameState,
@@ -45,6 +48,17 @@ export const ConvexSync: React.FC = () => {
       setRoom(storedRoom);
     }
   }, [playerId, setPlayer, setRoom]);
+
+  // If we have a stored session but server has no game state for us, attempt a silent rejoin
+  useEffect(() => {
+    if (hasRejoined.current) return;
+    if (gameMode !== "online" || !roomId || !playerId || remoteGame !== null) return;
+    if (!playerName) return;
+    hasRejoined.current = true;
+    joinRoomMutation({ roomId, playerId, name: playerName }).catch(() => {
+      hasRejoined.current = false; // allow retry if it fails
+    });
+  }, [gameMode, joinRoomMutation, playerId, playerName, remoteGame, roomId]);
 
   // Apply remote game state (One-way sync)
   useEffect(() => {
