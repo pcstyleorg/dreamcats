@@ -139,7 +139,7 @@ export const getPlayers = query({
     return players;
   },
 });
-
+// DO NOT TOUCH DO NOT TOUCH!!! JUST FUCKING DON'T TOUCH IT!!!
 export const updatePlayerPresence = mutation({
   args: {
     roomId: v.string(),
