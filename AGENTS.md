@@ -1,18 +1,23 @@
 # AGENTS.md
 
+This file provides guidance to Qoder (qoder.com) when working with code in this repository.
+
 ## Commands
-- **Build**: `bun run build` (preferred) or `npm run build` (runs TypeScript check then Vite build)
-- **Lint**: `bun run lint` (preferred) or `npm run lint` (ESLint for TypeScript/React files)
-- **Dev**: `npm run dev` (Vite development server)
-- **Preview**: `npm run preview` (preview production build)
+- **Build**: `bun run build` (preferred) (runs TypeScript check then Vite build)
+- **Lint**: `bun lint` (preferred) (ESLint for TypeScript/React files)
+- **Dev**: `bun dev` (Vite development server)
+
+## Task Management
+- **Always follow tasks.md**: If `tasks.md` exists (planmd format), it tracks the active migration/implementation plan
+- **Always read PLAN.MD**: When following `tasks.md` you should grep or read only a set amount of lines of the `PLAN.MD` unless you have trouble finding something then and only then you can read the whole file
+- Work on tasks sequentially: tackle only one major phase/task at a time
+- Update task checkboxes as you complete work: `[ ]` → `[x]`
+- When a task is complete, verify against the "Verification" checklist at the end of each phase
+- Never skip ahead or work out of order unless explicitly instructed
 
 ## Agent/MCP Notes
-- Subagent MCP server is disabled; do not rely on parallel Claude subagents.
-- Use Context7 for library/framework docs when needed; otherwise work directly in the repo.
-- Use Voice Codex MCP only when the `.use-voice` file exists with content set to `true`; if the file is missing or has any other content, avoid Voice Codex unless explicitly asked.
-- If Voice MCP is enabled (via `.use-voice` or explicit request), first read `agent-voice.md` for voice tool usage and follow it.
-- Follow `tasks.md`: tackle only one major task at a time in order, mark checkboxes as you complete them, and proceed step-by-step.
-
+- Subagent MCP server is disabled; do not rely on parallel Claude subagents
+- Use Context7 for library/framework docs when working with any frameworks/libs; otherwise work directly in the repo
 ## Code Style Guidelines
 
 ### Imports & Structure
