@@ -16,8 +16,16 @@ export const GameActions = () => {
   } = state;
 
   const currentPlayer = state.players[currentPlayerIndex];
+  // Determine active player (hotseat uses peekingState during peeks)
+  const activeHotseatPlayerId =
+    gameMode === "hotseat" && gamePhase === "peeking" && peekingState
+      ? state.players[peekingState.playerIndex]?.id
+      : currentPlayer?.id;
+
   const isMyTurn =
-    gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
+    gameMode === "online"
+      ? currentPlayer?.id === myPlayerId
+      : currentPlayer?.id === activeHotseatPlayerId;
   const amICurrentPeeker =
     gamePhase === "peeking" &&
     peekingState &&
@@ -43,14 +51,12 @@ export const GameActions = () => {
   const mustSwap =
     gamePhase === "holding_card" && !!drawnCard && (drawSource === "discard" || drawSource === "take2");
 
+  const isPeekingPhase =
+    gamePhase === "peeking" && peekingState !== undefined;
+
   if (
-    (gameMode === "hotseat" || amICurrentPeeker) &&
-    gamePhase === "peeking" &&
-    peekingState &&
-    peekingState.playerIndex ===
-      state.players.findIndex(
-        (p) => p.id === state.players[peekingState.playerIndex].id,
-      )
+    isPeekingPhase &&
+    (gameMode === "hotseat" || amICurrentPeeker)
   ) {
     return (
       <Button

@@ -18,7 +18,9 @@ export const ActionModal: React.FC = () => {
   const { gamePhase, tempCards, lastRoundScores, gameWinnerName, players, currentPlayerIndex } =
     state;
 
-  const isMyTurn = players[currentPlayerIndex]?.id === myPlayerId;
+  const isMyTurn =
+    state.gameMode === "hotseat" ||
+    players[currentPlayerIndex]?.id === myPlayerId;
 
   const handleTake2Choose = (card: CardType) => {
     broadcastAction({ type: "ACTION_TAKE_2_CHOOSE", payload: { card } });

@@ -20,6 +20,12 @@ export const getVisibleStateForViewer = (
   if (!viewerId) return state;
   const revealAll = isRevealPhase(state.gamePhase);
 
+  // Redact drawnCard for other players (online only)
+  const safeDrawnCard =
+    state.drawnCard && state.players[state.currentPlayerIndex]?.id !== viewerId
+      ? null
+      : state.drawnCard;
+
   const players = state.players.map((player) => {
     if (revealAll || player.id === viewerId) return player;
 
@@ -33,7 +39,7 @@ export const getVisibleStateForViewer = (
     };
   });
 
-  return { ...state, players };
+  return { ...state, players, drawnCard: safeDrawnCard };
 };
 
 export const gameReducer = (state: GameState, action: ReducerAction): GameState => {
@@ -196,26 +202,13 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
           };
           players[playerIndex] = { ...player, hand: newHand };
 
-          const newPeekedCount = peekedCount + 1;
-          if (newPeekedCount >= 2) {
-            // Clear peekingState immediately when transitioning to playing phase
-            return {
-              ...state,
-              players,
-              gamePhase: "playing",
-              currentPlayerIndex: (playerIndex + 1) % players.length,
-              turnCount: state.turnCount + 1,
-              peekingState: undefined,
-              actionMessage: i18n.t("game.playerTurn", {
-                player: players[(playerIndex + 1) % players.length].name,
-              }),
-            };
-          }
-
           return {
             ...state,
             players,
-            peekingState: { ...state.peekingState, peekedCount: newPeekedCount },
+            peekingState: {
+              ...state.peekingState,
+              peekedCount: Math.min(peekedCount + 1, 2),
+            },
           };
         }
 
@@ -227,19 +220,35 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
           )
             return state;
 
+          const playerIndex = state.peekingState.playerIndex;
+          const nextPlayerIndex = (playerIndex + 1) % state.players.length;
+
+          // All players peeked, start the game
+          if (nextPlayerIndex === 0) {
+            const resetPlayers = state.players.map((p) => ({
+              ...p,
+              hand: p.hand.map((h) => ({ ...h, isFaceUp: false })),
+            }));
+
+            return {
+              ...state,
+              players: resetPlayers,
+              gamePhase: "playing",
+              currentPlayerIndex: 0,
+              turnCount: 0,
+              peekingState: undefined,
+              actionMessage: i18n.t("game.playerTurn", {
+                player: state.players[0]?.name ?? "",
+              }),
+            };
+          }
+
           return {
             ...state,
-            gamePhase: "playing",
-            currentPlayerIndex:
-              (state.peekingState.playerIndex + 1) % state.players.length,
-            actionMessage: i18n.t("game.playerTurn", {
-              player:
-                state.players[
-                  (state.peekingState.playerIndex + 1) % state.players.length
-                ].name,
+            peekingState: { playerIndex: nextPlayerIndex, peekedCount: 0 },
+            actionMessage: i18n.t("game.peekTwoCards", {
+              player: state.players[nextPlayerIndex]?.name ?? "",
             }),
-            turnCount: state.turnCount + 1,
-            peekingState: undefined,
           };
         }
 
@@ -277,9 +286,12 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
             discardPile,
             drawnCard,
             drawSource: "deck",
-            gamePhase: drawnCard.isSpecial ? "action_take_2" : "holding_card",
+            // Match server: remain in holding_card; special actions are triggered via USE_SPECIAL_ACTION
+            gamePhase: "holding_card",
             actionMessage: drawnCard.isSpecial
-              ? i18n.t("game.drewSpecial", { action: drawnCard.specialAction ?? "Unknown" })
+              ? i18n.t("game.drewSpecial", {
+                  action: drawnCard.specialAction ?? "Unknown",
+                })
               : i18n.t("game.drewCard"),
             lastMove: {
               playerId: currentPlayer.id,

@@ -1,0 +1,134 @@
+.
+├── AGENTS.md
+├── BUG_AUDIT.md
+├── CLAUDE.md
+├── README.md
+├── RULES.md
+├── bun.lock
+├── convex
+│   ├── README.md
+│   ├── TESTING.md
+│   ├── _generated
+│   │   ├── api.d.ts
+│   │   ├── api.js
+│   │   ├── dataModel.d.ts
+│   │   ├── server.d.ts
+│   │   └── server.js
+│   ├── actions.ts
+│   ├── chat.ts
+│   ├── cleanup.ts
+│   ├── crons.ts
+│   ├── games.ts
+│   ├── presence.ts
+│   ├── rooms.ts
+│   ├── schema.ts
+│   ├── tsconfig.json
+│   └── types.ts
+├── eslint.config.js
+├── index.html
+├── out.txt
+├── package.json
+├── postcss.config.js
+├── public
+│   ├── _headers
+│   ├── assets
+│   │   ├── 0.png
+│   │   ├── 1.png
+│   │   ├── 2.png
+│   │   ├── 3.png
+│   │   ├── 4.png
+│   │   ├── 5.png
+│   │   ├── 6.png
+│   │   ├── 7.png
+│   │   ├── 8.png
+│   │   ├── 9.png
+│   │   ├── back.png
+│   │   ├── podjerzyj1.png
+│   │   ├── wez2.png
+│   │   └── zamien2.png
+│   └── locales
+│       ├── en
+│       │   ├── common.json
+│       │   └── translation.json
+│       └── pl
+│           ├── common.json
+│           └── translation.json
+├── src
+│   ├── App.css
+│   ├── App.tsx
+│   ├── ConvexProvider.tsx
+│   ├── components
+│   │   ├── ActionModal.tsx
+│   │   ├── Card.tsx
+│   │   ├── ChatBox.tsx
+│   │   ├── GameActions.tsx
+│   │   ├── Gameboard.tsx
+│   │   ├── LandingPage.tsx
+│   │   ├── LanguageSwitcher.tsx
+│   │   ├── LobbyScreen.tsx
+│   │   ├── PileCard.tsx
+│   │   ├── PlayerHand.tsx
+│   │   ├── Scoreboard.tsx
+│   │   ├── ThemeToggle.tsx
+│   │   ├── Tutorial.tsx
+│   │   ├── icons.tsx
+│   │   └── ui
+│   │       ├── button.tsx
+│   │       ├── buttonVariants.ts
+│   │       ├── card.tsx
+│   │       ├── dialog.tsx
+│   │       ├── input.tsx
+│   │       ├── label.tsx
+│   │       ├── popover.tsx
+│   │       ├── scroll-area.tsx
+│   │       ├── separator.tsx
+│   │       ├── sheet.tsx
+│   │       ├── sonner.tsx
+│   │       ├── table.tsx
+│   │       ├── toast.tsx
+│   │       └── toaster.tsx
+│   ├── context
+│   │   ├── TutorialContext.tsx
+│   │   └── tutorialExports.ts
+│   ├── hooks
+│   │   ├── use-sounds.ts
+│   │   └── use-toast.ts
+│   ├── i18n
+│   │   └── config.ts
+│   ├── index.css
+│   ├── lib
+│   │   ├── cardAssets.ts
+│   │   ├── game-logic.ts
+│   │   └── utils.ts
+│   ├── main.tsx
+│   ├── state
+│   │   ├── ConvexSync.tsx
+│   │   ├── featureFlag.ts
+│   │   ├── gameReducer.ts
+│   │   ├── gameSlice.ts
+│   │   ├── hooks.ts
+│   │   ├── initialGame.ts
+│   │   ├── netSlice.ts
+│   │   ├── selectors.ts
+│   │   ├── sessionSlice.ts
+│   │   ├── store.ts
+│   │   ├── types.ts
+│   │   ├── uiSlice.ts
+│   │   └── useGame.ts
+│   ├── stores
+│   │   ├── gameStore.ts
+│   │   └── tutorialStore.ts
+│   ├── types
+│   │   └── index.ts
+│   └── vite-env.d.ts
+├── tailwind.config.js
+├── tsconfig.app.json
+├── tsconfig.app.tsbuildinfo
+├── tsconfig.json
+├── tsconfig.node.json
+├── tsconfig.node.tsbuildinfo
+├── vercel.json
+├── vite.config.ts
+└── vitest.config.mts
+
+18 directories, 114 files

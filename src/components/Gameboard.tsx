@@ -63,41 +63,38 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   const currentPlayer = players[currentPlayerIndex];
 
   // Determine player positions
-  // Bottom player is always "me" (online) or current player (hotseat)
-  // Other players are distributed around the top area
+  // Compute active player for hotseat (during peeking use peekingState)
+  const activeHotseatPlayerId =
+    gameMode === "hotseat"
+      ? gamePhase === "peeking" && state.peekingState
+        ? players[state.peekingState.playerIndex]?.id
+        : players[state.currentPlayerIndex]?.id
+      : null;
 
+  // Bottom player is fixed in hotseat (player 1) and is "me" in online.
+  // We keep seating static for hotseat so players can sit on opposite sides.
   let bottomPlayer: Player;
   let otherPlayers: Player[] = [];
 
   if (gameMode === "hotseat") {
-    // In hotseat, the current player is always at the bottom
-    bottomPlayer = currentPlayer;
-    // Other players are everyone else, ordered by turn order relative to current player
-    otherPlayers = [
-      ...players.slice(currentPlayerIndex + 1),
-      ...players.slice(0, currentPlayerIndex),
-    ];
+    bottomPlayer = players[0] || currentPlayer;
+    otherPlayers = players.slice(1);
   } else {
-    // Online mode: show my player at bottom
-    // If I'm not in the list (spectator or loading), default to current player
     const myPlayer = players.find((p) => p.id === myPlayerId);
     bottomPlayer = myPlayer || currentPlayer;
-    
+
     if (bottomPlayer) {
-        // Other players ordered by turn order relative to bottom player
-        const bottomIndex = players.findIndex(p => p.id === bottomPlayer.id);
-        if (bottomIndex !== -1) {
-          otherPlayers = [
-            ...players.slice(bottomIndex + 1),
-            ...players.slice(0, bottomIndex),
-          ];
-        } else {
-          // Fallback if index not found (shouldn't happen if bottomPlayer is from players)
-          otherPlayers = players.filter(p => p.id !== bottomPlayer.id);
-        }
+      const bottomIndex = players.findIndex((p) => p.id === bottomPlayer.id);
+      if (bottomIndex !== -1) {
+        otherPlayers = [
+          ...players.slice(bottomIndex + 1),
+          ...players.slice(0, bottomIndex),
+        ];
+      } else {
+        otherPlayers = players.filter((p) => p.id !== bottomPlayer.id);
+      }
     } else {
-        // Extreme fallback if no players loaded yet
-        otherPlayers = [];
+      otherPlayers = [];
     }
   }
 
@@ -415,16 +412,28 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                 isCompact && "gap-1.5 sm:gap-2.5 md:gap-3 lg:gap-4 max-w-4xl px-2 py-2 sm:py-2.5"
               )}
             >
-              {otherPlayers.map((player) => (
+              {otherPlayers.map((player) => {
+                const isHotseatCurrent =
+                  gameMode === "hotseat" && activeHotseatPlayerId === player.id;
+                return (
                 <div key={player.id} className="flex-shrink-0 min-w-0">
                   <PlayerHand
                     player={player}
-                    isCurrentPlayer={currentPlayer.id === player.id}
-                    isOpponent={true}
+                    isCurrentPlayer={
+                      gameMode === "hotseat"
+                        ? activeHotseatPlayerId === player.id
+                        : currentPlayer.id === player.id
+                    }
+                    isOpponent={
+                      gameMode === "hotseat"
+                        ? !isHotseatCurrent
+                        : true
+                    }
                     playSound={playSound}
                   />
                 </div>
-              ))}
+              );
+              })}
             </div>
           ) : (
             <div className="flex items-center justify-center h-20 sm:h-24 w-full max-w-md rounded-lg bg-primary/10 border-2 border-dashed border-border/60 mx-auto shadow-soft">
@@ -608,7 +617,16 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
             >
               <PlayerHand
                 player={bottomPlayer}
-                isCurrentPlayer={currentPlayer.id === bottomPlayer.id}
+                isCurrentPlayer={
+                  gameMode === "hotseat"
+                    ? activeHotseatPlayerId === bottomPlayer.id
+                    : currentPlayer.id === bottomPlayer.id
+                }
+                isOpponent={
+                  gameMode === "hotseat"
+                    ? activeHotseatPlayerId !== bottomPlayer.id
+                    : false
+                }
                 playSound={playSound}
               />
             </div>

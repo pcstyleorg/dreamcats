@@ -29,7 +29,9 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const currentPlayer = state.players[state.currentPlayerIndex];
   const isMyTurn =
-    gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
+    gameMode === "online"
+      ? currentPlayer?.id === myPlayerId
+      : currentPlayer?.id === player.id;
   const isSwap2Phase =
     gamePhase === "action_swap_2_select_1" ||
     gamePhase === "action_swap_2_select_2";
@@ -182,7 +184,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     gamePhase === "holding_card" &&
     isMyTurn &&
     !isOpponent &&
-    player.id === myPlayerId;
+    (gameMode === "hotseat" || player.id === myPlayerId);
 
   const handleCardClick = (cardIndex: number) => {
     // Block interaction with opponent cards during normal gameplay
@@ -197,9 +199,9 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
 
     // Peeking phase (only the peeking player)
     if (gamePhase === "peeking" && isPeekingTurn) {
-      // Double check it's my own hand (though isOpponent check above covers it)
-      if (player.id !== myPlayerId) return;
-      
+      // Online: gate to the viewing player; hotseat allows the active peeker.
+      if (gameMode === "online" && player.id !== myPlayerId) return;
+
       broadcastAction({
         type: "PEEK_CARD",
         payload: { playerId: player.id, cardIndex },
