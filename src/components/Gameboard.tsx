@@ -341,8 +341,9 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         style={{
           transform: `scale(${boardScale})`,
           transformOrigin: "top center",
-          width: `${Math.round((1 / boardScale) * 100)}%`,
-          maxWidth: `${Math.round((1 / boardScale) * 100)}%`,
+          // Keep the scaled board within its container to avoid overflow/zoomed look on smaller viewports
+          width: "100%",
+          maxWidth: "100%",
         }}
       >
       <main className="flex-grow flex flex-col min-h-0 gap-3 sm:gap-4 overflow-hidden">
