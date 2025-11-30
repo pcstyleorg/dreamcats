@@ -39,6 +39,7 @@ export const LobbyScreen: React.FC = () => {
   }, [state.roomId, state.gameMode, state.hostId, myPlayerId, state.gamePhase, t]);
 
   const handleCreateRoom = async () => {
+    if (isLoading) return;
     if (!playerName.trim()) {
       toast.error(t('common:errors.enterName'));
       return;
@@ -55,6 +56,7 @@ export const LobbyScreen: React.FC = () => {
   };
 
   const handleJoinRoom = async () => {
+    if (isLoading) return;
     if (!playerName.trim()) {
       toast.error(t('common:errors.enterName'));
       return;
@@ -104,6 +106,7 @@ export const LobbyScreen: React.FC = () => {
   };
 
   const handleStartOnlineGame = async () => {
+    if (isLoading) return;
     if (state.players.length < 2) {
       toast.error(t('common:errors.needTwoPlayers'));
       return;

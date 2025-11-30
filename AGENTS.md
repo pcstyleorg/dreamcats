@@ -11,11 +11,15 @@
 - **Preview production build**: `bun run preview`
 - **Convex deploy**: `npx convex deploy` (requires `CONVEX_DEPLOYMENT` env var); Vercel runs `npx convex deploy --cmd 'bun run build'` per `vercel.json`
 
+## Graphite CLI (gt)
+- `gt create [name]` stacks a new branch on the current one and commits staged changes; use `-am "<message>"` (alias of `gt c -am`) to stage-all and commit in one step.
+- `gt log short` (alias `gt ls`) shows tracked stacks/branches in compact form; `gt log` is more verbose and `gt log long` prints full ancestry.
+- `gt submit --stack` (alias `gt ss`) submits/updates PRs for all branches in the current stack; add `--update-only` (`-u`) to skip creating new PRs.
+- `gt sync` restacks and syncs tracked branches with remote; `gt move`, `gt up`, `gt down`, and `gt checkout` help navigate and rebase stacks.
+- Get command help via `gt --help`, `gt <command> --help`, or `gt --help --all` for the full list; enable shell completion with `gt completion`.
+
 ## Agent/MCP Notes
-- Subagent MCP server is disabled; do not rely on parallel Claude subagents.
 - Use Context7 whenever correctness depends on third-party docs (React, Convex, Vite, etc.); otherwise work directly in the repo.
-- Use Voice Codex MCP only when the `.use-voice` file exists and contains `true`; if missing or different, avoid Voice Codex unless explicitly requested.
-- If Voice MCP becomes enabled, read `agent-voice.md` before using it.
 - `CLAUDE.md` holds a deep dive on architecture, Convex state flow, and common patterns—consult it before making major design or state changes.
 - `RULES.md` is the authoritative game specification (deck composition, turn flow, scoring)—use it for gameplay logic work.
 - The repo does not currently ship `tasks.md`; proceed with one major task at a time and capture progress verbally instead of checking boxes.

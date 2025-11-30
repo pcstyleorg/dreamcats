@@ -10,6 +10,43 @@ import i18n from "@/i18n/config";
 import { gameReducer } from "./gameReducer";
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const retryMutation = async <T>({
+  attempt,
+  maxAttempts = 3,
+  baseDelayMs = 120,
+  fn,
+}: {
+  attempt?: number;
+  maxAttempts?: number;
+  baseDelayMs?: number;
+  fn: () => Promise<T>;
+}): Promise<T> => {
+  let tries = attempt ?? 0;
+  while (true) {
+    try {
+      return await fn();
+    } catch (error) {
+      const errMsg =
+        error instanceof Error ? error.message : "Unexpected error occurred";
+
+      // Do not retry for user/action errors
+      const nonRetriable =
+        errMsg.includes("Not your turn") ||
+        errMsg.includes("Invalid phase") ||
+        errMsg.includes("Room not found");
+
+      if (nonRetriable || tries >= maxAttempts - 1) {
+        throw error;
+      }
+
+      const delay = baseDelayMs * Math.pow(2, tries);
+      await sleep(delay);
+      tries += 1;
+    }
+  }
+};
 
 const buildDeck = (): Card[] => {
   const cards: Card[] = [];
@@ -272,15 +309,19 @@ export const useGame = () => {
       if (!game.roomId || !playerId) return;
 
       try {
-        const result = await performActionMutation({
-          roomId: game.roomId,
-          playerId,
-          action,
+        const result = await retryMutation({
+          fn: () =>
+            performActionMutation({
+              roomId: game.roomId!,
+              playerId,
+              action,
+            }),
         });
         return result;
       } catch (error) {
-        console.error("Action failed:", error);
-        toast.error("Action failed. It might not be your turn.");
+        const message =
+          error instanceof Error ? error.message : "Action failed.";
+        toast.error(message);
         return null;
       }
     },
@@ -300,14 +341,21 @@ export const useGame = () => {
       playSound("chat");
 
       try {
-        await sendMessageMutation({
-          roomId: game.roomId,
-          senderId: playerId,
-          senderName: me.name,
-          message,
+        await retryMutation({
+          fn: () =>
+            sendMessageMutation({
+              roomId: game.roomId!,
+              senderId: playerId,
+              senderName: me.name,
+              message,
+            }),
         });
       } catch (error) {
-        console.error("Failed to send chat message:", error);
+        const msg =
+          error instanceof Error
+            ? error.message
+            : "Failed to send chat message.";
+        toast.error(msg);
       }
     },
     [game.gameMode, game.players, game.roomId, playerId, playSound, sendMessageMutation],

@@ -99,7 +99,9 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   }
 
   const isMyTurn =
-    gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
+    gameMode === "online"
+      ? currentPlayer?.id === myPlayerId
+      : activeHotseatPlayerId === myPlayerId;
 
   useEffect(() => {
     const updateLayout = () => {
