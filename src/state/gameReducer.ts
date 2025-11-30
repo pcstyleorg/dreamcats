@@ -83,6 +83,7 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
           ? scores.find((entry) => entry.player.id === options.callerId)
           : undefined;
         const callerScore = callerScoreEntry?.score;
+        // Per RULES §6: If caller ties for lowest, no penalty is applied (callerScore <= minScore)
         const callerHasLowest =
           options.reason === "pobudka" &&
           callerScore !== undefined &&
@@ -116,6 +117,7 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
         );
         const gameOver = playersWithNewScores.some((p) => p.score >= 100);
 
+        // Check for game over first - this takes precedence over deck exhaustion
         if (gameOver) {
           const gameWinner = playersWithNewScores.reduce((prev, curr) =>
             prev.score < curr.score ? prev : curr,
@@ -196,6 +198,7 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
 
           const newPeekedCount = peekedCount + 1;
           if (newPeekedCount >= 2) {
+            // Clear peekingState immediately when transitioning to playing phase
             return {
               ...state,
               players,
@@ -242,21 +245,41 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
 
         case "DRAW_FROM_DECK": {
           if (state.gamePhase !== "playing") return state;
-          if (state.drawPile.length === 0) {
-            return endRoundWithScores(state, { reason: "deck_exhausted" });
+
+          let drawPile = [...state.drawPile];
+          let discardPile = state.discardPile;
+
+          // If deck is empty, reshuffle discard pile back into deck
+          if (drawPile.length === 0) {
+            // Keep the top card of discard pile, shuffle rest back
+            if (state.discardPile.length > 1) {
+              const discardClone = [...state.discardPile];
+              const topDiscardCard = discardClone.pop()!;
+              const deckRebuilt = discardClone.sort(() => Math.random() - 0.5);
+              drawPile = deckRebuilt;
+              discardPile = [topDiscardCard];
+
+              // If still no cards after reshuffle, end round
+              if (drawPile.length === 0) {
+                return endRoundWithScores(state, { reason: "deck_exhausted" });
+              }
+            } else {
+              // Can't reshuffle with only 0-1 cards in discard pile, end round
+              return endRoundWithScores(state, { reason: "deck_exhausted" });
+            }
           }
 
-          const drawPile = [...state.drawPile];
           const drawnCard = drawPile.pop()!;
 
           return {
             ...state,
             drawPile,
+            discardPile,
             drawnCard,
             drawSource: "deck",
             gamePhase: drawnCard.isSpecial ? "action_take_2" : "holding_card",
             actionMessage: drawnCard.isSpecial
-              ? i18n.t("game.drewSpecial", { action: drawnCard.specialAction })
+              ? i18n.t("game.drewSpecial", { action: drawnCard.specialAction ?? "Unknown" })
               : i18n.t("game.drewCard"),
             lastMove: {
               playerId: currentPlayer.id,
@@ -299,7 +322,8 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
           if (
             state.gamePhase !== "holding_card" ||
             !state.drawnCard ||
-            !state.drawSource
+            !state.drawSource ||
+            state.drawSource === "discard"
           )
             return state;
 
@@ -421,7 +445,7 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
 
             const hand = player.hand.map((card, idx) =>
               idx === gameAction.payload.cardIndex
-                ? { ...card, isFaceUp: true, hasBeenPeeked: true }
+                ? { ...card, isFaceUp: false, hasBeenPeeked: true } // Keep face-down, only mark as peeked
                 : card,
             );
 
@@ -538,7 +562,7 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
             ...state,
             gamePhase: "holding_card",
             drawnCard: chosenCard,
-            drawSource: "deck", // Treated as drawn from deck
+            drawSource: "deck", // Treat as drawn from deck for button visibility
             discardPile,
             tempCards: undefined,
             actionMessage: i18n.t("game.keptCard", {
@@ -563,9 +587,33 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
 
         case "START_NEW_ROUND": {
           if (state.gamePhase !== "round_end") return state;
-          const deck = [...state.drawPile, ...state.discardPile];
-          if (deck.length < state.players.length * 4) return state;
-          const shuffled = deck.sort(() => Math.random() - 0.5);
+          const playerCards = state.players.flatMap((player) =>
+            player.hand.map((handSlot) => handSlot.card)
+          );
+          const pendingCards = [
+            ...(state.tempCards ?? []),
+            ...(state.drawnCard ? [state.drawnCard] : []),
+          ];
+          const deck = [
+            ...state.drawPile,
+            ...state.discardPile,
+            ...playerCards,
+            ...pendingCards,
+          ];
+
+          // Hand validation: ensure deck has enough cards for all players plus one for discard
+          const requiredCards = state.players.length * 4 + 1;
+          if (deck.length < requiredCards) {
+            console.error(`Not enough cards to deal. Need ${requiredCards}, have ${deck.length}`);
+            return state;
+          }
+
+          // Fisher-Yates shuffle for better randomness (client-side fallback)
+          const shuffled = [...deck];
+          for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+          }
 
           const players = state.players.map((p) => ({
             ...p,

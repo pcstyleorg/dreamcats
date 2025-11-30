@@ -15,6 +15,10 @@ export const createDeck = (): Card[] => {
   }
 
   // Special cards (3 copies each)
+  // Per RULES.md §2: Special card values are typically 5, 6, 7
+  // These values are shown in corner but are only used for scoring if the special card
+  // is picked up from discard pile (in which case it's treated as a regular number card).
+
   // Take 2 (value 5)
   cards.push(
     ...Array(3)

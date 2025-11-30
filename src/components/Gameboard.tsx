@@ -52,8 +52,8 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   const { netStatus } = useNetStatus();
   const [isCompact, setIsCompact] = useState(() => {
     if (typeof window !== 'undefined') {
-      // Treat 14" laptops and short viewports as compact to tighten layout
-      return window.innerHeight < 900 || window.innerWidth < 1400;
+      // Improved compact mode detection for better mobile and small screen support
+      return window.innerHeight < 860 || window.innerWidth < 1300;
     }
     return false;
   });
@@ -108,13 +108,21 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     const updateLayout = () => {
       const h = window.innerHeight;
       const w = window.innerWidth;
-      setIsCompact(h < 900 || w < 1400);
+      setIsCompact(h < 860 || w < 1300);
 
+      // Improved scaling algorithm for better fit on various screen sizes
       let scale = 1;
-      if (h < 900) scale = 0.92;
-      if (h < 820) scale = 0.86;
-      if (h < 760) scale = 0.8;
-      if (w < 1300) scale = Math.min(scale, 0.9);
+      if (h < 950) scale = 0.95;
+      if (h < 860) scale = 0.9;
+      if (h < 780) scale = 0.85;
+      if (h < 700) scale = 0.8;
+      if (h < 620) scale = 0.75;
+
+      // Adjust for narrow screens
+      if (w < 1300) scale = Math.min(scale, 0.92);
+      if (w < 1100) scale = Math.min(scale, 0.88);
+      if (w < 900) scale = Math.min(scale, 0.82);
+
       setBoardScale(scale);
     };
     updateLayout();
@@ -201,8 +209,9 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
   const backgroundImage = getGameBackgroundAsset();
 
+  // Consistent 3 second timing for recent move display across all clients
   const recentMove =
-    lastMove && Date.now() - lastMove.timestamp < 2600 ? lastMove : null;
+    lastMove && Date.now() - lastMove.timestamp < 3000 ? lastMove : null;
   const recentPlayer =
     recentMove && players.find((p) => p.id === recentMove.playerId);
   const recentMoveLabel = React.useMemo(() => {
@@ -474,6 +483,16 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                     {t('game.draw')}
                   </span>
                 </div>
+                <div className={cn(
+                  "mt-2 sm:mt-2.5 px-2 py-1 rounded-full border text-xs font-semibold whitespace-nowrap",
+                  state.drawPile.length < 3
+                    ? "bg-red-500/20 border-red-500/40 text-red-200"
+                    : state.drawPile.length < 10
+                    ? "bg-yellow-500/20 border-yellow-500/40 text-yellow-200"
+                    : "bg-green-500/20 border-green-500/40 text-green-200"
+                )}>
+                  {state.drawPile.length} {t('game.cards')}
+                </div>
               </div>
 
               {/* Drawn Card Slot - Always present to prevent layout shift */}
@@ -532,6 +551,11 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                     {t('game.discard')}
                   </span>
                 </div>
+                {state.discardPile.length > 0 && (
+                  <div className="mt-2 sm:mt-2.5 px-2 py-1 rounded-full border border-white/20 bg-white/5 text-xs font-semibold text-foreground/70 whitespace-nowrap">
+                    {state.discardPile.length} {t('game.cards')}
+                  </div>
+                )}
               </div>
             </div>
           </div>

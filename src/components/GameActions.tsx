@@ -82,26 +82,54 @@ export const GameActions = () => {
 
   if (gamePhase === "holding_card" && isMyTurn) {
     return (
-      <div className="flex items-center justify-center gap-3 sm:gap-4 w-full">
-        <Button
-          variant="outline"
-          onClick={() => broadcastAction({ type: "DISCARD_HELD_CARD" })}
-          disabled={mustSwap}
-          className="flex-1 sm:flex-none min-w-[100px] sm:min-w-[140px] h-12 sm:h-[54px] text-sm sm:text-lg rounded-full border-border/70 bg-card/70 shadow-sm"
-          size="lg"
-        >
-          {t('game.discard')}
-        </Button>
-        <Button
-          onClick={() => broadcastAction({ type: "USE_SPECIAL_ACTION" })}
-          disabled={!canUseSpecial}
-          className="flex-1 sm:flex-none min-w-[110px] sm:min-w-[150px] h-12 sm:h-[54px] text-sm sm:text-lg rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-[hsl(var(--primary-foreground))] shadow-soft-lg disabled:opacity-60"
-          size="lg"
-        >
-          <Wand2 className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-          {t('game.action')}
-        </Button>
+      <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 w-full">
+        <div className="flex items-center justify-center gap-3 sm:gap-4 w-full">
+          <Button
+            variant="outline"
+            onClick={() => broadcastAction({ type: "DISCARD_HELD_CARD" })}
+            disabled={mustSwap}
+            className="flex-1 sm:flex-none min-w-[100px] sm:min-w-[140px] h-12 sm:h-[54px] text-sm sm:text-lg rounded-full border-border/70 bg-card/70 shadow-sm"
+            size="lg"
+          >
+            {t('game.discard')}
+          </Button>
+          <Button
+            onClick={() => broadcastAction({ type: "USE_SPECIAL_ACTION" })}
+            disabled={!canUseSpecial}
+            className="flex-1 sm:flex-none min-w-[110px] sm:min-w-[150px] h-12 sm:h-[54px] text-sm sm:text-lg rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-[hsl(var(--primary-foreground))] shadow-soft-lg disabled:opacity-60"
+            size="lg"
+          >
+            <Wand2 className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+            {t('game.action')}
+          </Button>
+        </div>
+        {(mustSwap || true) && (
+          <p className="text-xs sm:text-sm text-muted-foreground text-center px-2">
+            {mustSwap
+              ? t('game.mustSwapCard')
+              : t('game.orTapCardToSwap')}
+          </p>
+        )}
       </div>
+    );
+  }
+
+  // Contextual instructions for special action phases
+  if (gamePhase === "action_peek_1" && isMyTurn) {
+    return (
+      <p className="text-sm sm:text-base text-center text-primary font-medium px-4 py-2 bg-primary/10 rounded-full border border-primary/30">
+        {t('game.usedPeek1')}
+      </p>
+    );
+  }
+
+  if ((gamePhase === "action_swap_2_select_1" || gamePhase === "action_swap_2_select_2") && isMyTurn) {
+    return (
+      <p className="text-sm sm:text-base text-center text-pink-400 font-medium px-4 py-2 bg-pink-500/10 rounded-full border border-pink-400/30">
+        {gamePhase === "action_swap_2_select_1"
+          ? t('game.usedSwap2SelectFirst')
+          : t('game.selectSecondCard')}
+      </p>
     );
   }
 
