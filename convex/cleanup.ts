@@ -4,6 +4,9 @@ import { internalMutation } from "./_generated/server";
 // Rooms inactive for more than 1 hour will be deleted
 const ROOM_TIMEOUT_MS = 60 * 60 * 1000; // 1 hour
 
+// AFK timeout: if a player doesn't move for 30 seconds during peeking phase, auto-advance
+const AFK_TIMEOUT_MS = 30 * 1000; // 30 seconds
+
 export const cleanupOldRooms = internalMutation({
   args: {},
   handler: async (ctx) => {
@@ -84,5 +87,56 @@ export const cleanupOldRooms = internalMutation({
       deletedPresence,
       timestamp: now,
     };
+  },
+});
+
+// Auto-advance players who are AFK during peeking phase
+export const autoAdvanceAFKPeeking = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const afkCutoff = now - AFK_TIMEOUT_MS;
+
+    const allRooms = await ctx.db.query("rooms").collect();
+    let advancedCount = 0;
+
+    for (const room of allRooms) {
+      if (room.status !== "playing") continue;
+
+      const games = await ctx.db
+        .query("games")
+        .withIndex("by_roomId", (q) => q.eq("roomId", room.roomId))
+        .collect();
+
+      for (const game of games) {
+        const state = game.state as any; // GameState type
+
+        // Only auto-advance if we're in peeking phase
+        if (state.gamePhase !== "peeking" || !state.peekingState) continue;
+
+        // Check if last move is too old
+        if (state.lastMove && state.lastMove.timestamp < afkCutoff) {
+          // Auto-advance to next player
+          const nextPlayerIndex =
+            (state.peekingState.playerIndex + 1) % state.players.length;
+
+          const newState = {
+            ...state,
+            peekingState: { playerIndex: nextPlayerIndex, peekedCount: 0 },
+            actionMessage: `${state.players[nextPlayerIndex].name} is peeking (auto-advanced due to AFK)`,
+          };
+
+          await ctx.db.patch(game._id, {
+            state: newState,
+            lastUpdated: now,
+            version: (game.version || 0) + 1,
+          });
+
+          advancedCount++;
+        }
+      }
+    }
+
+    return { advancedCount, timestamp: now };
   },
 });

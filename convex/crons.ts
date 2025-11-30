@@ -12,5 +12,12 @@ crons.hourly(
   internal.cleanup.cleanupOldRooms,
 );
 
+// Run AFK advancement check every 10 seconds to catch stalled peeking phases
+crons.interval(
+  "auto-advance AFK players during peeking",
+  { seconds: 10 },
+  internal.cleanup.autoAdvanceAFKPeeking,
+);
+
 export default crons;
 

@@ -41,18 +41,24 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     null,
   );
 
+  // Consistent timing for recent move highlights
   const recentMoveForPlayer =
     lastMove &&
       lastMove.playerId === player.id &&
-      Date.now() - lastMove.timestamp < 3200
+      Date.now() - lastMove.timestamp < 3000
       ? lastMove
       : null;
 
   // Check if this player has a card that was involved in a recent swap_2
+  // Using consistent 3000ms duration for better cross-network reliability
   const swap2HighlightIndex = React.useMemo(() => {
     if (!lastMove || lastMove.action !== "swap_2" || !lastMove.swap2Details) return null;
-    if (Date.now() - lastMove.timestamp > 3200) return null;
-    
+
+    // Use server timestamp for consistent timing across all clients
+    const age = Date.now() - lastMove.timestamp;
+    const HIGHLIGHT_DURATION = 3000; // Consistent 3 second highlight
+    if (age > HIGHLIGHT_DURATION) return null;
+
     const { card1, card2 } = lastMove.swap2Details;
     if (card1.playerId === player.id) return card1.cardIndex;
     if (card2.playerId === player.id) return card2.cardIndex;
@@ -100,22 +106,22 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     };
   }, { scope: containerRef, dependencies: [isMyTurn, isSpecialSelectionPhase] });
 
-  // Pulse effect for individual cards
+  // Enhanced pulse effect for individual cards with better visual feedback
   useGSAP(() => {
     if (!containerRef.current) return;
-    
+
     // Kill existing tweens to prevent conflict
     const cards = containerRef.current.querySelectorAll(".hand-card");
     cards.forEach(card => gsap.killTweensOf(card));
 
     if (isMyTurn && isSpecialSelectionPhase) {
-       // Only animate if elements exist
+       // Enhanced animation with more visible effects
        const pulsingCards = containerRef.current.querySelectorAll(".pulsing-card");
        if (pulsingCards.length > 0) {
          gsap.to(pulsingCards, {
-          filter: "brightness(1.08)",
-          boxShadow: "0 0 0 10px rgba(147,51,234,0.14)",
-          duration: 1.6,
+          filter: "brightness(1.15) drop-shadow(0 0 8px rgba(147,51,234,0.4))",
+          boxShadow: "0 0 0 4px rgba(147,51,234,0.3), 0 0 20px rgba(147,51,234,0.2)",
+          duration: 1.4,
           repeat: -1,
           yoyo: true,
           ease: "power1.inOut"
@@ -130,7 +136,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
         });
        }
     }
-    
+
     return () => {
       if (containerRef.current) {
         const allCards = containerRef.current.querySelectorAll(".hand-card");
@@ -211,18 +217,25 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     // 'Peek 1' special action (can target any hand while it's my turn)
     if (gamePhase === "action_peek_1" && isMyTurn) {
       broadcastAction({
-      type: "ACTION_PEEK_1_SELECT",
-      payload: { playerId: player.id, cardIndex },
-    }).then((card) => {
-        if (card) {
-            const c = card as Card;
-            toast.success(t('game.peekResult', { value: c.value }), {
-                description: c.isSpecial ? `Special: ${c.specialAction}` : "Number card",
-                duration: 4000,
-                icon: <div className="text-xl font-bold">{c.value}</div>
-            });
+        type: "ACTION_PEEK_1_SELECT",
+        payload: { playerId: player.id, cardIndex },
+      }).then((card) => {
+        if (card && typeof card === "object") {
+          const c = card as Card;
+          toast.success(t("game.peekResult", { value: c.value }), {
+            description: c.isSpecial
+              ? `Special: ${c.specialAction}`
+              : "Number card",
+            duration: 4000,
+            icon: <div className="text-xl font-bold">{c.value}</div>,
+          });
+        } else {
+          toast.error("Failed to peek card");
         }
-    });
+      }).catch((error) => {
+        console.error("Peek action failed:", error);
+        toast.error("Peek failed, check your connection");
+      });
       return;
     }
 
@@ -365,11 +378,14 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                     {t('actions.placed')}
                   </span>
                 )}
-                {/* Swap 2 indicator badge */}
+                {/* Enhanced Swap 2 indicator with more prominent visual feedback */}
                 {swap2HighlightIndex === index && (
-                  <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[0.6rem] sm:text-xs font-bold text-pink-400 animate-pulse z-20 whitespace-nowrap pointer-events-none bg-pink-500/20 px-2 py-0.5 rounded-full border border-pink-500/40">
-                    {t('actions.swappedTwo')}
-                  </span>
+                  <div className="absolute inset-0 z-20 pointer-events-none">
+                    <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-pink-500/30 via-pink-400/20 to-transparent animate-pulse" />
+                    <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[0.65rem] sm:text-xs font-bold text-pink-300 z-30 whitespace-nowrap bg-pink-600/40 px-2.5 py-1 rounded-full border border-pink-400/60 shadow-lg backdrop-blur-sm animate-bounce">
+                      {t('actions.swappedTwo')}
+                    </span>
+                  </div>
                 )}
                 <div
                   className={cn(
