@@ -1,10 +1,16 @@
 # AGENTS.md
+# Sen Web Application - Agent Guidelines
 
-This file provides guidance to Qoder (qoder.com) when working with code in this repository.
+
+## IMPORTANT: Context7 Usage
+**ALWAYS use Context7 for library/framework documentation** - This is your primary source of truth for any external libraries including React, Radix UI, Convex, Zustand, etc. Never guess API usage or rely on memory.
 
 ## Commands
 - **Build**: `bun run build` (preferred) (runs TypeScript check then Vite build)
 - **Lint**: `bun lint` (preferred) (ESLint for TypeScript/React files)
+- **Test**: `bun test` (vitest watch mode)
+- **Test single**: `bun test path/to/test.test.ts` (run specific test file)
+- **Test run**: `bun run test:run` (run all tests once)
 - **Dev**: `bun dev` (Vite development server)
 
 ## Task Management
@@ -17,7 +23,8 @@ This file provides guidance to Qoder (qoder.com) when working with code in this 
 
 ## Agent/MCP Notes
 - Subagent MCP server is disabled; do not rely on parallel Claude subagents
-- Use Context7 for library/framework docs when working with any frameworks/libs; otherwise work directly in the repo
+- **ALWAYS use Context7 for library/framework docs** - This is the primary source of truth for any external libraries (React, Radix UI, Convex, etc.)
+- Only work directly in the repo for internal code logic; never guess API usage
 ## Code Style Guidelines
 
 ### Imports & Structure
@@ -43,3 +50,8 @@ This file provides guidance to Qoder (qoder.com) when working with code in this 
 - Use camelCase for variables and functions
 - Use descriptive names for game logic functions
 - Follow React hooks naming conventions (use*)
+
+### Testing
+- Tests located in `convex/__tests__/` directory
+- Use vitest for testing with globals enabled
+- Test files end with `.test.ts` extension
