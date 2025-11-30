@@ -49,6 +49,8 @@ export const LobbyScreen: React.FC = () => {
     } catch {
       toast.error(t('common:errors.createRoomFailed'));
       setIsLoading(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -68,6 +70,7 @@ export const LobbyScreen: React.FC = () => {
       const message =
         error instanceof Error ? error.message : t('common:errors.joinRoomFailed');
       toast.error(message);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -110,6 +113,7 @@ export const LobbyScreen: React.FC = () => {
       await startGame();
     } catch {
       toast.error(t('common:errors.startGameFailed'));
+    } finally {
       setIsLoading(false);
     }
   };

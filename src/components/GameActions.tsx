@@ -25,7 +25,7 @@ export const GameActions = () => {
   const isMyTurn =
     gameMode === "online"
       ? currentPlayer?.id === myPlayerId
-      : currentPlayer?.id === activeHotseatPlayerId;
+      : activeHotseatPlayerId === myPlayerId;
   const amICurrentPeeker =
     gamePhase === "peeking" &&
     peekingState &&
