@@ -1,5 +1,6 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, ReactNode, useEffect } from "react";
-import { useTutorialStore, TutorialStep, TutorialStore } from "@/stores/tutorialStore";
+import { useTutorialStore, TutorialStore, TutorialStep } from "@/stores/tutorialStore";
 
 // Small local interface to avoid importing store types all over the app
 interface LocalTutorialContextType {
@@ -12,14 +13,7 @@ interface LocalTutorialContextType {
 
 const TutorialContext = createContext<LocalTutorialContextType | undefined>(undefined);
 
-// Re-export hook for consumers to continue using the same API
-export { useTutorialStore } from '@/stores/tutorialStore';
-export type { TutorialStep } from '@/stores/tutorialStore';
-
-// Provide a legacy hook that mirrors the previous signature while staying typed
-export const useTutorialLegacy = <T = TutorialStore>(
-  selector?: (state: TutorialStore) => T,
-) => useTutorialStore(selector ?? ((s) => s as unknown as T));
+// Re-export moved to tutorialExports to keep this file component-only for fast refresh
 
 export const TutorialProvider = ({ children }: { children: ReactNode }) => {
   const step = useTutorialStore((s: TutorialStore) => s.step);
