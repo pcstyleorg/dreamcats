@@ -21,7 +21,7 @@ import {
 import { ChatBox } from "./ChatBox";
 import { GameActions } from "./GameActions";
 import { ScrollArea } from "./ui/scroll-area";
-import { getGameBackgroundAsset } from "@/lib/cardAssets";
+import { getGameBackgroundAsset, getCardAsset } from "@/lib/cardAssets";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
@@ -529,6 +529,20 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                 data-tutorial-id="discard-pile"
               >
                 <div className="relative group">
+                    {/* mini-fan of recent discards for quick history */}
+                    {discardPile.length > 1 && (
+                      <div className="absolute -left-10 -top-4 flex gap-1 opacity-70 pointer-events-none">
+                        {discardPile.slice(-3, -1).map((card, idx) => (
+                          <img
+                            key={card.id ?? idx}
+                            src={getCardAsset(card)}
+                            alt={`Discarded card ${card.value}`}
+                            className="w-10 sm:w-12 rounded-md shadow-lg border border-white/10 rotate-[-4deg]"
+                            style={{ transform: `translateY(${idx * 6}px)` }}
+                          />
+                        ))}
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-white/5 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <PileCard
                       card={
