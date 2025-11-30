@@ -49,7 +49,10 @@
     "waitingForOpponents": "Waiting for opponents...",
     "draw": "Draw",
     "discard": "Discard",
+    "cards": "cards",
     "yourCard": "Your Card",
+    "mustSwapCard": "Must swap with a card in your hand",
+    "orTapCardToSwap": "Or tap a card in your hand to swap",
     "orSelectCardToSwap": "Or tap a card below to swap",
     "yourTurn": "Your Turn",
     "you": "You",
@@ -141,6 +144,9 @@
     "take2": "Take 2 (value 5)",
     "peek1": "Peek 1 (value 6)",
     "swap2": "Swap 2 (value 7)",
+    "actionTake2": "Take 2",
+    "actionPeek1": "Peek 1",
+    "actionSwap2": "Swap 2",
     "value": "Value {{value}}",
     "youPeekedAt": "You peeked at a card: {{cardInfo}}."
   }

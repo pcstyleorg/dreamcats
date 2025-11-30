@@ -5,6 +5,7 @@ import { Card as CardType } from "@/types";
 import { cn } from "@/lib/utils";
 import { getCardAsset, getCardBackAsset } from "@/lib/cardAssets";
 import { SoundType } from "@/hooks/use-sounds";
+import { useTranslation } from "react-i18next";
 
 interface CardProps {
   card: CardType | null;
@@ -30,10 +31,23 @@ export const GameCard: React.FC<CardProps> = ({
   disableSpecialAnimation,
   staticMode,
 }) => {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const cardInnerRef = useRef<HTMLDivElement>(null);
   const [justRevealed, setJustRevealed] = useState(false);
-  
+
+  // Feature detection for CSS 3D transforms to prevent rendering issues
+  const [supports3D, setSupports3D] = useState(true);
+
+  React.useEffect(() => {
+    // Check if CSS 3D transforms are supported
+    if (typeof window !== 'undefined' && 'CSS' in window && 'supports' in window.CSS) {
+      const has3DSupport = CSS.supports('transform', 'rotateY(1deg)') &&
+                           CSS.supports('transform-style', 'preserve-3d');
+      setSupports3D(has3DSupport);
+    }
+  }, []);
+
   // Detect reveal for special flash
   useGSAP(() => {
     if (isFaceUp) {
@@ -98,10 +112,10 @@ export const GameCard: React.FC<CardProps> = ({
   const backAsset = getCardBackAsset();
   const actionLabel = card?.isSpecial
     ? card.specialAction === "peek_1"
-      ? "Peek 1"
+      ? t("cardInfo.actionPeek1")
       : card.specialAction === "take_2"
-        ? "Take 2"
-        : "Swap 2"
+        ? t("cardInfo.actionTake2")
+        : t("cardInfo.actionSwap2")
     : null;
 
   const peekGlow = hasBeenPeeked
@@ -126,8 +140,11 @@ export const GameCard: React.FC<CardProps> = ({
     className,
   );
 
+  // Use static mode if explicitly requested OR if 3D transforms aren't supported
+  const useStaticMode = staticMode || !supports3D;
+
   // Fallback static rendering (no 3D / GSAP) to avoid GPU/backface glitches in production
-  if (staticMode) {
+  if (useStaticMode) {
     const staticSrc = isFaceUp && card ? frontAsset : backAsset;
     return (
       <div
