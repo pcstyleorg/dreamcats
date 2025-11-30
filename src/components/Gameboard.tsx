@@ -52,8 +52,8 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   const { netStatus } = useNetStatus();
   const [isCompact, setIsCompact] = useState(() => {
     if (typeof window !== 'undefined') {
-      // Treat 14" laptops and short viewports as compact to tighten layout
-      return window.innerHeight < 900 || window.innerWidth < 1400;
+      // Improved compact mode detection for better mobile and small screen support
+      return window.innerHeight < 860 || window.innerWidth < 1300;
     }
     return false;
   });
@@ -108,13 +108,21 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     const updateLayout = () => {
       const h = window.innerHeight;
       const w = window.innerWidth;
-      setIsCompact(h < 900 || w < 1400);
+      setIsCompact(h < 860 || w < 1300);
 
+      // Improved scaling algorithm for better fit on various screen sizes
       let scale = 1;
-      if (h < 900) scale = 0.92;
-      if (h < 820) scale = 0.86;
-      if (h < 760) scale = 0.8;
-      if (w < 1300) scale = Math.min(scale, 0.9);
+      if (h < 950) scale = 0.95;
+      if (h < 860) scale = 0.9;
+      if (h < 780) scale = 0.85;
+      if (h < 700) scale = 0.8;
+      if (h < 620) scale = 0.75;
+
+      // Adjust for narrow screens
+      if (w < 1300) scale = Math.min(scale, 0.92);
+      if (w < 1100) scale = Math.min(scale, 0.88);
+      if (w < 900) scale = Math.min(scale, 0.82);
+
       setBoardScale(scale);
     };
     updateLayout();
@@ -201,8 +209,9 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
   const backgroundImage = getGameBackgroundAsset();
 
+  // Consistent 3 second timing for recent move display across all clients
   const recentMove =
-    lastMove && Date.now() - lastMove.timestamp < 2600 ? lastMove : null;
+    lastMove && Date.now() - lastMove.timestamp < 3000 ? lastMove : null;
   const recentPlayer =
     recentMove && players.find((p) => p.id === recentMove.playerId);
   const recentMoveLabel = React.useMemo(() => {
@@ -332,8 +341,8 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         style={{
           transform: `scale(${boardScale})`,
           transformOrigin: "top center",
-          width: `${Math.round((1 / boardScale) * 100)}%`,
-          maxWidth: `${Math.round((1 / boardScale) * 100)}%`,
+          width: "100%",
+          maxWidth: "100%",
         }}
       >
       <main className="flex-grow flex flex-col min-h-0 gap-3 sm:gap-4 overflow-hidden">
@@ -447,8 +456,8 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
             {/* Pile Mat */}
             <div
               className={cn(
-                "bg-black/40 border border-white/5 rounded-3xl px-6 sm:px-8 py-6 sm:py-8 shadow-2xl backdrop-blur-xl flex items-center gap-8 sm:gap-12 md:gap-16 relative z-10",
-                isCompact && "px-4 sm:px-5 py-4 sm:py-5 gap-4 sm:gap-6 md:gap-8 scale-[0.9]"
+                "bg-black/40 border border-white/5 rounded-3xl px-4 sm:px-6 md:px-8 py-5 sm:py-7 md:py-8 shadow-2xl backdrop-blur-xl flex items-center gap-6 sm:gap-10 md:gap-14 relative z-10 w-full max-w-4xl",
+                isCompact && "px-3 sm:px-4 py-4 sm:py-5 gap-4 sm:gap-6 md:gap-8"
               )}
             >
               <div
@@ -473,6 +482,16 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                   <span className="text-xs sm:text-sm font-bold text-foreground/90 uppercase tracking-widest text-center">
                     {t('game.draw')}
                   </span>
+                </div>
+                <div className={cn(
+                  "mt-2 sm:mt-2.5 px-2 py-1 rounded-full border text-xs font-semibold whitespace-nowrap",
+                  state.drawPile.length < 3
+                    ? "bg-red-500/20 border-red-500/40 text-red-200 animate-pulse"
+                    : state.drawPile.length < 10
+                    ? "bg-yellow-500/20 border-yellow-500/40 text-yellow-200"
+                    : "bg-green-500/20 border-green-500/40 text-green-200"
+                )}>
+                  {state.drawPile.length} {t('game.cards')}
                 </div>
               </div>
 
@@ -525,6 +544,13 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                         pileCardClass,
                         "shadow-2xl"
                       )}
+                      valueBadge={
+                        discardPile.length > 1 ? (
+                          <div className="px-2 py-1 rounded-full bg-background/80 border border-border/60 text-[11px] font-semibold shadow-sm">
+                            +{Math.min(discardPile.length - 1, 9)}
+                          </div>
+                        ) : null
+                      }
                     />
                 </div>
                 <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm whitespace-nowrap">
@@ -532,6 +558,11 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                     {t('game.discard')}
                   </span>
                 </div>
+                {state.discardPile.length > 0 && (
+                  <div className="mt-2 sm:mt-2.5 px-2 py-1 rounded-full border border-white/20 bg-white/5 text-xs font-semibold text-foreground/70 whitespace-nowrap">
+                    {state.discardPile.length} {t('game.cards')}
+                  </div>
+                )}
               </div>
             </div>
           </div>

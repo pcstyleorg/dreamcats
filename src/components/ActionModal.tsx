@@ -106,7 +106,7 @@ export const ActionModal: React.FC = () => {
           {t('modal.gameOverTitle')}
         </DialogTitle>
         <DialogDescription className="text-base sm:text-lg text-center font-semibold">
-          {t('modal.winsTheGame', { player: gameWinnerName })}
+          {t('modal.winsTheGame', { player: gameWinnerName || "Unknown" })}
         </DialogDescription>
       </DialogHeader>
       <div className="py-3 sm:py-4 md:py-6">
@@ -144,8 +144,16 @@ export const ActionModal: React.FC = () => {
     gamePhase === "round_end" ||
     gamePhase === "game_over";
 
+  // Only allow dismissing on non-critical phases to prevent players from closing during their action
+  const canDismiss = gamePhase === "round_end" || gamePhase === "game_over";
+
   return (
-    <Dialog open={isOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      // Only allow closing if it's safe to dismiss
+      if (!open && !canDismiss) {
+        return; // Prevent closing during active game phases
+      }
+    }}>
       <DialogContent className="bg-background/95 backdrop-blur-lg border-2 border-border/50 shadow-dreamy max-w-[calc(100vw-2rem)] sm:max-w-md md:max-w-lg">
         {gamePhase === "action_take_2" && renderTake2Content()}
         {gamePhase === "round_end" && renderRoundEndContent()}

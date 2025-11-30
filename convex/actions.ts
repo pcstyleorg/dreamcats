@@ -45,9 +45,10 @@ export const performAction = mutation({
     roomId: v.string(),
     playerId: v.string(),
     action: v.any(), // We'll validate this against GameAction type manually
+    idempotencyKey: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { roomId, playerId } = args;
+    const { roomId, playerId, idempotencyKey } = args;
     const action = args.action as GameAction;
 
     const gameRecord = await ctx.db
@@ -59,16 +60,25 @@ export const performAction = mutation({
       throw new Error("Game not found");
     }
 
+    // Check if this action was already processed (idempotency)
+    if (idempotencyKey) {
+      if (gameRecord.idempotencyKey === idempotencyKey) {
+        // Action already processed, return without error
+        return;
+      }
+    }
+
     const state = gameRecord.state as GameState;
-    
+
     // --- VALIDATION & LOGIC ---
-    
+
     // Helper to save state
     const saveState = async (newState: GameState) => {
       await ctx.db.patch(gameRecord._id, {
         state: newState,
         lastUpdated: Date.now(),
         version: (gameRecord.version || 0) + 1,
+        ...(idempotencyKey && { idempotencyKey }),
       });
     };
 
@@ -263,23 +273,38 @@ export const performAction = mutation({
       case "DRAW_FROM_DECK": {
         if (!isMyTurn) throw new Error("Not your turn");
         if (state.gamePhase !== "playing") throw new Error("Invalid phase");
-        
-        if (state.drawPile.length === 0) {
-             await saveState(endRoundWithScores(state, { reason: "deck_exhausted" }));
-             return;
+
+        let drawPile = [...state.drawPile];
+        let discardPile = [...state.discardPile];
+
+        // If deck is empty, reshuffle discard pile back into deck
+        if (drawPile.length === 0) {
+          if (discardPile.length > 1) {
+            const topDiscard = discardPile.pop()!; // Keep the top card on discard
+            drawPile = shuffle(discardPile);
+            discardPile = [topDiscard];
+
+            if (drawPile.length === 0) {
+              await saveState(endRoundWithScores(state, { reason: "deck_exhausted" }));
+              return;
+            }
+          } else {
+            await saveState(endRoundWithScores(state, { reason: "deck_exhausted" }));
+            return;
+          }
         }
 
-        const drawPile = [...state.drawPile];
         const drawnCard = drawPile.pop()!;
 
         await saveState({
             ...state,
             drawPile,
+            discardPile,
             drawnCard,
             drawSource: "deck",
             gamePhase: "holding_card",
-            actionMessage: drawnCard.isSpecial 
-                ? `${currentPlayer.name} drew a special card!` 
+            actionMessage: drawnCard.isSpecial
+                ? `${currentPlayer.name} drew a special card!`
                 : `${currentPlayer.name} drew a card`,
             lastMove: {
                 playerId,
@@ -320,7 +345,7 @@ export const performAction = mutation({
         if (!isMyTurn) throw new Error("Not your turn");
         if (state.gamePhase !== "holding_card") throw new Error("Invalid phase");
         if (!state.drawnCard || !state.drawSource) throw new Error("No card held");
-        if (state.drawSource === "discard") throw new Error("Cannot discard card taken from discard pile");
+        if (state.drawSource === "discard" || state.drawSource === "take2") throw new Error("Cannot discard card taken from discard pile or keep-from-take2");
 
         const discardPile = [...state.discardPile, state.drawnCard];
         
@@ -382,15 +407,15 @@ export const performAction = mutation({
           if (!isMyTurn) throw new Error("Not your turn");
           if (state.gamePhase !== "holding_card") throw new Error("Invalid phase");
           if (!state.drawnCard?.isSpecial) throw new Error("Not a special card");
-          if (state.drawSource !== "deck") throw new Error("Can only use special cards drawn from deck");
+          if (state.drawSource !== "deck" && state.drawSource !== "take2") throw new Error("Can only use special cards drawn from deck or kept from take2");
           
           const specialAction = state.drawnCard.specialAction!;
           
-          // Discard the special card immediately (it's being used)
-          const discardPile = [...state.discardPile, state.drawnCard];
-          const newState = { ...state, discardPile, drawnCard: null, drawSource: null };
-
           if (specialAction === "take_2") {
+              // Discard immediately and proceed to Take 2 flow
+              const discardPile = [...state.discardPile, state.drawnCard];
+              const newState = { ...state, discardPile, drawnCard: null, drawSource: null };
+
               // Draw 2 cards for selection
               const drawPile = [...state.drawPile];
               const tempCards: Card[] = [];
@@ -408,14 +433,17 @@ export const performAction = mutation({
                   actionMessage: `${currentPlayer.name} is choosing from 2 cards...`,
               });
           } else if (specialAction === "peek_1") {
+              // Keep drawnCard until action completes; discard once in action handler
               await saveState({
-                  ...newState,
+                  ...state,
+                  drawSource: null,
                   gamePhase: "action_peek_1",
                   actionMessage: `${currentPlayer.name} is peeking at a card...`,
               });
           } else if (specialAction === "swap_2") {
               await saveState({
-                  ...newState,
+                  ...state,
+                  drawSource: null,
                   gamePhase: "action_swap_2_select_1",
                   actionMessage: `${currentPlayer.name} is swapping 2 cards...`,
               });
@@ -446,7 +474,8 @@ export const performAction = mutation({
               return { ...p, hand };
           });
           
-          const discardPile = [...state.discardPile, state.drawnCard!];
+          if (!state.drawnCard) throw new Error("Missing special card to discard");
+          const discardPile = [...state.discardPile, state.drawnCard];
           
           await saveState(advanceTurn({
               ...state,
@@ -515,7 +544,8 @@ export const performAction = mutation({
                   players[playerBIndex] = { ...playerB, hand: newHandB };
               }
               
-              const discardPile = [...state.discardPile, state.drawnCard!];
+              if (!state.drawnCard) throw new Error("Missing special card to discard");
+              const discardPile = [...state.discardPile, state.drawnCard];
               
               await saveState(advanceTurn({
                   ...state,
@@ -559,7 +589,7 @@ export const performAction = mutation({
               discardPile,
               tempCards: undefined,
               drawnCard: keptCard,
-              drawSource: "deck", // Treated as if drawn from deck
+              drawSource: "take2", // Force swap/use; discard disabled
               gamePhase: "holding_card",
               actionMessage: `${currentPlayer.name} kept a card`,
           });
@@ -577,9 +607,9 @@ export const performAction = mutation({
       case "START_NEW_ROUND": {
           // Allow starting from lobby or round_end
           if (state.gamePhase !== "round_end" && state.gamePhase !== "lobby") throw new Error("Invalid phase");
-          
+
           const deck = shuffle(buildDeck());
-          
+
           let currentPlayers = state.players;
 
           // If starting from lobby, we need to fetch players from the DB first
@@ -588,7 +618,7 @@ export const performAction = mutation({
                   .query("players")
                   .withIndex("by_roomId", (q) => q.eq("roomId", roomId))
                   .collect();
-              
+
               if (roomPlayers.length < 2) throw new Error("Need at least 2 players to start");
 
               // Sort by seat or join order to ensure consistent turn order
@@ -601,20 +631,26 @@ export const performAction = mutation({
                   score: 0,
               }));
           }
-          
+
+          // Hand validation: ensure deck has enough cards for all players plus one for discard pile
+          const requiredCards = currentPlayers.length * 4 + 1;
+          if (deck.length < requiredCards) {
+              throw new Error(`Not enough cards to deal. Need ${requiredCards}, have ${deck.length}`);
+          }
+
           // Deal 4 cards to each player
           const players = currentPlayers.map(p => ({
               ...p,
               hand: [] as Player["hand"]
           }));
-          
+
           for (let i = 0; i < 4; i++) {
               for (const p of players) {
                   const card = deck.shift();
                   if (card) p.hand.push({ card, isFaceUp: false, hasBeenPeeked: false });
               }
           }
-          
+
           const discardPile = [deck.pop()!];
           
           await saveState({
