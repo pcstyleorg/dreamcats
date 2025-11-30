@@ -589,7 +589,7 @@ export const performAction = mutation({
               discardPile,
               tempCards: undefined,
               drawnCard: keptCard,
-              drawSource: "take2", // Force swap/use; discard disabled
+              drawSource: "take2" as const, // Force swap/use; discard disabled
               gamePhase: "holding_card",
               actionMessage: `${currentPlayer.name} kept a card`,
           });
