@@ -109,7 +109,12 @@ export const autoAdvanceAFKPeeking = internalMutation({
         .collect();
 
       for (const game of games) {
-        const state = game.state as any; // GameState type
+        const state = game.state as {
+          gamePhase: string;
+          peekingState?: { playerIndex: number; peekedCount: number };
+          players: { name: string }[];
+          lastMove?: { timestamp: number } | null;
+        };
 
         // Only auto-advance if we're in peeking phase
         if (state.gamePhase !== "peeking" || !state.peekingState) continue;

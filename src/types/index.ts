@@ -44,7 +44,7 @@ export interface GameState {
   currentPlayerIndex: number;
   gamePhase: GamePhase;
   actionMessage: string;
-  drawSource?: "deck" | "discard" | null;
+  drawSource?: "deck" | "discard" | "take2" | null;
   roundWinnerName: string | null;
   gameWinnerName: string | null;
   turnCount: number;
