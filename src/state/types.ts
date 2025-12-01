@@ -65,4 +65,9 @@ export interface NetSlice {
 
 export type AppState = SessionSlice & GameSlice & UISlice & NetSlice;
 
+/**
+ * Zustand v5 SliceCreator type.
+ * Uses the base StateCreator without middleware mutators since slices
+ * only use set/get and don't interact directly with middleware.
+ */
 export type SliceCreator<S> = StateCreator<AppState, [], [], S>;

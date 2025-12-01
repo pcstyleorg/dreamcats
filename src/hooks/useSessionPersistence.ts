@@ -1,24 +1,35 @@
 import { useCallback, useEffect, useRef } from "react";
+import { useShallow } from "zustand/shallow";
 import { useUserPreferences } from "./useUserPreferences";
 import { useAppStore } from "@/state/store";
 
 /**
  * Hook to automatically persist game sessions for rejoin capability
  * Must be used within a component that has access to game state
+ * 
+ * Zustand v5: Using useShallow to select only the needed fields,
+ * preventing re-renders when unrelated state changes.
  */
 export function useSessionPersistence() {
   const { saveActiveSession, saveLocalGameState, clearActiveSession } = useUserPreferences();
   
-  const game = useAppStore((s) => s.game);
-  const playerId = useAppStore((s) => s.playerId);
-  const roomId = useAppStore((s) => s.roomId);
+  // Select only the specific fields we need with useShallow
+  const { gameMode, gamePhase, roomId, playerId, game } = useAppStore(
+    useShallow((s) => ({
+      gameMode: s.game.gameMode,
+      gamePhase: s.game.gamePhase,
+      roomId: s.roomId,
+      playerId: s.playerId,
+      game: s.game,
+    }))
+  );
   
   const lastSavedRef = useRef<string | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Save online session when joining/creating a room
   useEffect(() => {
-    if (game.gameMode === "online" && roomId && playerId) {
+    if (gameMode === "online" && roomId && playerId) {
       const sessionKey = `${roomId}-${playerId}`;
       
       // Only save if this is a new session
@@ -31,11 +42,11 @@ export function useSessionPersistence() {
         });
       }
     }
-  }, [game.gameMode, roomId, playerId, saveActiveSession]);
+  }, [gameMode, roomId, playerId, saveActiveSession]);
 
   // Save hotseat game state periodically (debounced)
   useEffect(() => {
-    if (game.gameMode !== "hotseat" || game.gamePhase === "lobby") {
+    if (gameMode !== "hotseat" || gamePhase === "lobby") {
       return;
     }
 
@@ -54,15 +65,15 @@ export function useSessionPersistence() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [game, saveLocalGameState]);
+  }, [game, gameMode, gamePhase, saveLocalGameState]);
 
   // Clear session when game ends or player leaves
   useEffect(() => {
-    if (game.gamePhase === "game_over") {
+    if (gamePhase === "game_over") {
       // Don't immediately clear - let user see results
       // Clear after a delay or on next navigation
     }
-  }, [game.gamePhase]);
+  }, [gamePhase]);
 
   const clearSession = useCallback(() => {
     lastSavedRef.current = null;
