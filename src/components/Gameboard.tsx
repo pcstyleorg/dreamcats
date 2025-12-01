@@ -447,7 +447,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
           {/* Left Side: Player Info + Actions + Room Code */}
           <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar mask-linear-fade">
             <div className="flex items-center gap-2 sm:gap-3 bg-card/70 border border-border/60 px-3 sm:px-4 py-2 sm:py-3 rounded-2xl shadow-soft backdrop-blur-lg shrink-0">
-              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-linear-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] flex items-center justify-center text-[hsl(var(--primary-foreground))] font-heading text-base sm:text-lg shadow-soft">
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] flex items-center justify-center text-[hsl(var(--primary-foreground))] font-heading text-base sm:text-lg shadow-soft">
                 {currentPlayer?.name?.charAt(0) ?? 'S'}
               </div>
               <div className="flex flex-col">
