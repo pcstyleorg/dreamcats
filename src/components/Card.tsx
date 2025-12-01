@@ -161,7 +161,7 @@ export const GameCard: React.FC<CardProps> = ({
             draggable={false}
           />
           {isFaceUp && (
-            <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
+            <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
               <span
                 className={cn(
                   "inline-block text-xs sm:text-sm font-bold font-heading",
@@ -218,7 +218,7 @@ export const GameCard: React.FC<CardProps> = ({
                 />
 
                 {isFaceUp && (
-                  <div className="absolute top-2 right-2 sm:top-3 sm:right-3 md:top-3 md:right-3 z-10">
+                  <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
                     <span
                       className={cn(
                         "inline-block text-xs sm:text-sm font-bold font-heading",

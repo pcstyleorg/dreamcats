@@ -57,7 +57,26 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     }
     return false;
   });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      // Auto-collapse sidebar on screens narrower than 1400px
+      return window.innerWidth >= 1400;
+    }
+    return true;
+  });
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-collapse sidebar when screen width changes
+  useEffect(() => {
+    const handleResize = () => {
+      const shouldBeOpen = window.innerWidth >= 1400;
+      setIsSidebarOpen(shouldBeOpen);
+      setIsCompact(window.innerHeight < 860 || window.innerWidth < 1300);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const currentPlayer = players[currentPlayerIndex];
 
@@ -382,7 +401,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
       )}
 
       <div
-        className="flex-grow flex flex-col relative z-10 min-h-0 w-full"
+        className="flex-1 flex flex-col relative z-10 min-h-0 w-full transition-all duration-300"
       >
       <main className="flex-grow flex flex-col min-h-0 gap-3 sm:gap-4 overflow-visible w-full">
         <div
@@ -426,35 +445,47 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
               <LogOut className="h-4 w-4 mr-1.5" />
               {t('game.exitGame', { defaultValue: 'Exit' })}
             </Button>
-            {playerCount <= 3 && (
-              <div className="lg:hidden">
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 hover:bg-primary/10 hover:text-primary transition-colors">
-                      <Menu className="h-5 w-5" />
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent className="bg-card/95 backdrop-blur-lg border-border/40">
-                    <SheetHeader>
-                      <SheetTitle className="font-heading text-2xl">
-                        {t('game.gameMenu')}
-                      </SheetTitle>
-                    </SheetHeader>
-                    <ScrollArea className="h-[calc(100%-4rem)] pr-4">
-                      <SidePanelContent />
-                    </ScrollArea>
-                  </SheetContent>
-                </Sheet>
-              </div>
-            )}
+            {/* Sidebar toggle - always visible on lg screens */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden lg:flex rounded-full h-9 w-9 hover:bg-primary/10 hover:text-primary transition-colors"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              title={isSidebarOpen ? t('game.hideSidebar', { defaultValue: 'Hide sidebar' }) : t('game.showSidebar', { defaultValue: 'Show sidebar' })}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            {/* Mobile sheet menu - visible on small screens */}
+            <div className="lg:hidden">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 hover:bg-primary/10 hover:text-primary transition-colors">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent className="bg-card/95 backdrop-blur-lg border-border/40">
+                  <SheetHeader>
+                    <SheetTitle className="font-heading text-2xl">
+                      {t('game.gameMenu')}
+                    </SheetTitle>
+                  </SheetHeader>
+                  <ScrollArea className="h-[calc(100%-4rem)] pr-4">
+                    <SidePanelContent />
+                  </ScrollArea>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
 
         {/* Ring Layout: top/left/right around piles, bottom stays anchored */}
         <div
           className={cn(
-            "grid grid-cols-[minmax(80px,auto)_minmax(0,1fr)_minmax(80px,auto)] grid-rows-[auto_1fr_auto] gap-2 sm:gap-3 lg:gap-4 xl:gap-5 items-center justify-items-center w-full flex-1 px-2 sm:px-4 lg:px-6 mt-4 sm:mt-6 mb-4 sm:mb-6",
-            isCompact && "gap-2 sm:gap-3 mt-3 sm:mt-4"
+            "grid grid-rows-[auto_1fr_auto] gap-2 sm:gap-3 lg:gap-4 xl:gap-5 items-center justify-items-center w-full flex-1 px-2 sm:px-4 lg:px-6 mt-4 sm:mt-6 mb-4 sm:mb-6",
+            // Default 3-column layout
+            "grid-cols-[minmax(80px,1fr)_minmax(0,2fr)_minmax(80px,1fr)]",
+            isCompact && "gap-2 sm:gap-3 mt-3 sm:mt-4",
+            !isSidebarOpen && "lg:px-8 xl:px-12"
           )}
         >
           {/* Top seat - rotated 180deg for tablet play */}
@@ -583,20 +614,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                   data-tutorial-id="discard-pile"
                 >
                   <div className="relative group">
-                      {/* mini-fan of recent discards for quick history */}
-                      {discardPile.length > 1 && (
-                        <div className="absolute -left-10 -top-4 flex gap-1 opacity-70 pointer-events-none">
-                          {discardPile.slice(-3, -1).map((card, idx) => (
-                            <img
-                              key={card.id ?? idx}
-                              src={getCardAsset(card)}
-                              alt={`Discarded card ${card.value}`}
-                              className="w-10 sm:w-12 rounded-md shadow-lg border border-white/10 rotate-[-4deg]"
-                              style={{ transform: `translateY(${idx * 6}px)` }}
-                            />
-                          ))}
-                        </div>
-                      )}
                       <div className="absolute inset-0 bg-white/5 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                       <PileCard
                         card={
@@ -714,19 +731,26 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
       </main>
       </div>
 
-      {/* Side Panel - Desktop */}
-      <aside className="hidden lg:flex w-full lg:w-80 lg:max-w-xs flex-shrink-0 bg-card/95 backdrop-blur-lg p-5 rounded-xl border border-border/40 shadow-soft-lg flex-col relative z-10">
-        <h2 className="text-3xl font-bold mb-3 text-center font-heading text-foreground">
-          Sen
-        </h2>
-        {gameMode === "hotseat" && (
-          <div className="flex items-center justify-center gap-2 mb-2 text-sm text-muted-foreground">
-            <Users className="w-4 h-4" />
-            <span>{t('game.localGame')}</span>
-          </div>
+      {/* Side Panel - Desktop (collapsible) */}
+      <aside
+        className={cn(
+          "hidden lg:flex bg-card/95 backdrop-blur-lg rounded-xl border border-border/40 shadow-soft-lg flex-col relative z-10 transition-all duration-300 ease-in-out overflow-hidden",
+          isSidebarOpen ? "w-80 max-w-xs p-5 flex-shrink-0" : "w-0 p-0 border-0 flex-shrink"
         )}
-        <Separator />
-        <SidePanelContent />
+      >
+        <div className={cn("transition-opacity duration-200", isSidebarOpen ? "opacity-100" : "opacity-0")}>
+          <h2 className="text-3xl font-bold mb-3 text-center font-heading text-foreground">
+            Sen
+          </h2>
+          {gameMode === "hotseat" && (
+            <div className="flex items-center justify-center gap-2 mb-2 text-sm text-muted-foreground">
+              <Users className="w-4 h-4" />
+              <span>{t('game.localGame')}</span>
+            </div>
+          )}
+          <Separator />
+          <SidePanelContent />
+        </div>
       </aside>
 
       <ActionModal />

@@ -74,13 +74,33 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   }, [lastMove, player.id]);
 
   React.useEffect(() => {
-    if (recentMoveForPlayer?.action === "swap") {
-      // Trigger animation on the affected card slot
-      setAnimatingIndex(recentMoveForPlayer.cardIndex ?? null);
-      const animTimer = setTimeout(() => setAnimatingIndex(null), 700);
-      return () => clearTimeout(animTimer);
+    // Trigger animation for any card-changing action (swap, take_2, swap_2)
+    // Delay by 1 second so animation doesn't interfere with hover state
+    if (recentMoveForPlayer?.action === "swap" || recentMoveForPlayer?.action === "take_2") {
+      const delayTimer = setTimeout(() => {
+        setAnimatingIndex(recentMoveForPlayer.cardIndex ?? null);
+      }, 1000);
+      const clearTimer = setTimeout(() => setAnimatingIndex(null), 1600);
+      return () => {
+        clearTimeout(delayTimer);
+        clearTimeout(clearTimer);
+      };
     }
   }, [recentMoveForPlayer]);
+
+  // Handle swap_2 animation separately since it uses swap2HighlightIndex
+  React.useEffect(() => {
+    if (swap2HighlightIndex !== null) {
+      const delayTimer = setTimeout(() => {
+        setAnimatingIndex(swap2HighlightIndex);
+      }, 1000);
+      const clearTimer = setTimeout(() => setAnimatingIndex(null), 1600);
+      return () => {
+        clearTimeout(delayTimer);
+        clearTimeout(clearTimer);
+      };
+    }
+  }, [swap2HighlightIndex]);
 
   // Entrance animation removed to avoid Safari/production opacity glitches.
   // (hand cards were occasionally stuck at opacity:0 when GSAP failed to clear props)
@@ -360,21 +380,6 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
             <span className="whitespace-nowrap">{actionLabel}</span>
         </div>
       )}
-      {recentMoveForPlayer?.action === "draw" && (
-        <div className="pointer-events-none absolute -top-4 right-3 z-20 flex items-center gap-2 text-[0.7rem] sm:text-xs text-muted-foreground bg-primary/10 border border-primary/20 rounded-full px-3 py-1 shadow-soft backdrop-blur-md">
-          <img
-            src={cardBackAsset}
-            alt="Card back"
-            className="w-6 h-8 rounded-md shadow-soft"
-            draggable={false}
-          />
-          <span className="font-medium">
-            {recentMoveForPlayer.source === "discard"
-              ? t('actions.fromDiscard')
-              : t('actions.fromDeck')}
-          </span>
-        </div>
-      )}
 
       <div className="flex flex-col items-center gap-1 sm:gap-1.5 relative z-10">
         <h3
@@ -417,6 +422,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                 className={cn(
                   "hand-card relative transition-all duration-300",
                   shouldPulseCard ? "pulsing-card" : "",
+                  // Card change animation
+                  animatingIndex === index && "animate-card-pop",
                   // Enhanced hover for swap candidates
                   isSwapCandidate
                     ? "cursor-pointer hover:-translate-y-6 hover:z-30 hover:scale-110 hover:shadow-[0_0_30px_hsl(var(--primary)/0.5)]"
@@ -426,7 +433,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                   // Swap 2 highlight effect for cards involved in recent swap
                   swap2HighlightIndex === index && "ring-2 ring-pink-500/70 ring-offset-2 ring-offset-background shadow-[0_0_20px_rgba(236,72,153,0.4)]",
                 )}
-                style={{ zIndex: index }} // Default stacking order
+                style={{ zIndex: animatingIndex === index ? 50 : index }} // Elevate during animation
               >
                 {animatingIndex === index && (
                   <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-xs font-bold text-primary animate-bounce z-20 whitespace-nowrap pointer-events-none">
@@ -502,66 +509,58 @@ const PlayerInlineActions: React.FC<{
   const mustSwap =
     gamePhase === "holding_card" && !!drawnCard && (drawSource === "discard" || drawSource === "take2");
 
+  // All phases return a consistent height container
   // Peeking phase
   if (gamePhase === "peeking" && peekingState !== undefined) {
     return (
-      <div className="mt-2 flex justify-center">
-        <Button
-          onClick={handleFinishPeeking}
-          disabled={peekingState.peekedCount !== 2}
-          variant="secondary"
-          className="min-w-[120px] sm:min-w-[140px] h-10 sm:h-11 text-sm sm:text-base font-semibold shadow-sm hover:bg-secondary/80"
-          size="sm"
-        >
-          {t('game.finishPeeking')}
-        </Button>
-      </div>
+      <Button
+        onClick={handleFinishPeeking}
+        disabled={peekingState.peekedCount !== 2}
+        variant="secondary"
+        className="min-w-[120px] sm:min-w-[140px] h-10 sm:h-11 text-sm sm:text-base font-semibold shadow-sm hover:bg-secondary/80"
+        size="sm"
+      >
+        {t('game.finishPeeking')}
+      </Button>
     );
   }
 
   // Playing phase - show Pobudka button
   if (gamePhase === "playing") {
     return (
-      <div className="mt-2 flex justify-center">
-        <Button
-          onClick={handlePobudka}
-          variant="destructive"
-          className="min-w-[100px] sm:min-w-[120px] h-10 sm:h-11 text-sm sm:text-base font-bold shadow-md rounded-full"
-          size="sm"
-        >
-          {t('game.pobudka')}
-        </Button>
-      </div>
+      <Button
+        onClick={handlePobudka}
+        variant="destructive"
+        className="min-w-[100px] sm:min-w-[120px] h-10 sm:h-11 text-sm sm:text-base font-bold shadow-md rounded-full"
+        size="sm"
+      >
+        {t('game.pobudka')}
+      </Button>
     );
   }
 
-  // Holding card phase - show discard/swap/action buttons
+  // Holding card phase - show discard/swap/action buttons (no extra text to avoid height change)
   if (gamePhase === "holding_card") {
     return (
-      <div className="mt-2 flex flex-col items-center gap-2">
-        <div className="flex items-center justify-center gap-2 flex-wrap">
-          <Button
-            variant="outline"
-            onClick={() => broadcastAction({ type: "DISCARD_HELD_CARD" })}
-            disabled={mustSwap}
-            className="min-w-[70px] sm:min-w-[90px] h-9 sm:h-10 text-xs sm:text-sm rounded-full border-border/70 bg-card/70 shadow-sm"
-            size="sm"
-          >
-            {t('game.discard')}
-          </Button>
-          <Button
-            onClick={() => broadcastAction({ type: "USE_SPECIAL_ACTION" })}
-            disabled={!canUseSpecial}
-            className="min-w-[70px] sm:min-w-[90px] h-9 sm:h-10 text-xs sm:text-sm rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-[hsl(var(--primary-foreground))] shadow-soft-lg disabled:opacity-60"
-            size="sm"
-          >
-            <Wand2 className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
-            {t('game.action')}
-          </Button>
-        </div>
-        <p className="text-[0.65rem] sm:text-xs text-muted-foreground text-center">
-          {mustSwap ? t('game.mustSwapCard') : t('game.orTapCardToSwap')}
-        </p>
+      <div className="flex items-center justify-center gap-2 flex-wrap">
+        <Button
+          variant="outline"
+          onClick={() => broadcastAction({ type: "DISCARD_HELD_CARD" })}
+          disabled={mustSwap}
+          className="min-w-[70px] sm:min-w-[90px] h-10 sm:h-11 text-xs sm:text-sm rounded-full border-border/70 bg-card/70 shadow-sm"
+          size="sm"
+        >
+          {t('game.discard')}
+        </Button>
+        <Button
+          onClick={() => broadcastAction({ type: "USE_SPECIAL_ACTION" })}
+          disabled={!canUseSpecial}
+          className="min-w-[70px] sm:min-w-[90px] h-10 sm:h-11 text-xs sm:text-sm rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-[hsl(var(--primary-foreground))] shadow-soft-lg disabled:opacity-60"
+          size="sm"
+        >
+          <Wand2 className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+          {t('game.action')}
+        </Button>
       </div>
     );
   }
@@ -569,25 +568,22 @@ const PlayerInlineActions: React.FC<{
   // Special action phases
   if (gamePhase === "action_peek_1") {
     return (
-      <div className="mt-2 flex justify-center">
-        <p className="text-xs sm:text-sm text-center text-primary font-medium px-3 py-1.5 bg-primary/10 rounded-full border border-primary/30">
-          {t('game.usedPeek1')}
-        </p>
-      </div>
+      <p className="text-xs sm:text-sm text-center text-primary font-medium px-3 py-2.5 bg-primary/10 rounded-full border border-primary/30">
+        {t('game.usedPeek1')}
+      </p>
     );
   }
 
   if (gamePhase === "action_swap_2_select_1" || gamePhase === "action_swap_2_select_2") {
     return (
-      <div className="mt-2 flex justify-center">
-        <p className="text-xs sm:text-sm text-center text-pink-400 font-medium px-3 py-1.5 bg-pink-500/10 rounded-full border border-pink-400/30">
-          {gamePhase === "action_swap_2_select_1"
-            ? t('game.usedSwap2SelectFirst')
-            : t('game.selectSecondCard')}
-        </p>
-      </div>
+      <p className="text-xs sm:text-sm text-center text-pink-400 font-medium px-3 py-2.5 bg-pink-500/10 rounded-full border border-pink-400/30">
+        {gamePhase === "action_swap_2_select_1"
+          ? t('game.usedSwap2SelectFirst')
+          : t('game.selectSecondCard')}
+      </p>
     );
   }
 
-  return null;
+  // Default empty state with same height
+  return <div className="h-10 sm:h-11" />;
 };
