@@ -39,6 +39,7 @@ export const LobbyScreen: React.FC = () => {
   }, [state.roomId, state.gameMode, state.hostId, myPlayerId, state.gamePhase, t]);
 
   const handleCreateRoom = async () => {
+    if (isLoading) return;
     if (!playerName.trim()) {
       toast.error(t('common:errors.enterName'));
       return;
@@ -49,10 +50,13 @@ export const LobbyScreen: React.FC = () => {
     } catch {
       toast.error(t('common:errors.createRoomFailed'));
       setIsLoading(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleJoinRoom = async () => {
+    if (isLoading) return;
     if (!playerName.trim()) {
       toast.error(t('common:errors.enterName'));
       return;
@@ -68,6 +72,7 @@ export const LobbyScreen: React.FC = () => {
       const message =
         error instanceof Error ? error.message : t('common:errors.joinRoomFailed');
       toast.error(message);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -101,6 +106,7 @@ export const LobbyScreen: React.FC = () => {
   };
 
   const handleStartOnlineGame = async () => {
+    if (isLoading) return;
     if (state.players.length < 2) {
       toast.error(t('common:errors.needTwoPlayers'));
       return;
@@ -110,6 +116,7 @@ export const LobbyScreen: React.FC = () => {
       await startGame();
     } catch {
       toast.error(t('common:errors.startGameFailed'));
+    } finally {
       setIsLoading(false);
     }
   };

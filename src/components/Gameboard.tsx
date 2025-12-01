@@ -9,7 +9,7 @@ import { Button } from "./ui/button";
 import { Scoreboard } from "./Scoreboard";
 import { Separator } from "./ui/separator";
 import { toast } from "sonner";
-import { Copy, Menu, Users, Cloud, ScrollText, Sparkles } from "lucide-react";
+import { Copy, Menu, Users, Cloud, ScrollText, Sparkles, LogOut } from "lucide-react";
 import { ActionModal } from "./ActionModal";
 import {
   Sheet,
@@ -37,7 +37,7 @@ interface GameboardProps {
 
 export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   const { t } = useTranslation();
-  const { state, myPlayerId, broadcastAction, playSound } = useGame();
+  const { state, myPlayerId, broadcastAction, playSound, leaveGame } = useGame();
   const {
     currentPlayerIndex,
     discardPile,
@@ -57,8 +57,26 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     }
     return false;
   });
-  const [boardScale, setBoardScale] = useState(1);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      // Auto-collapse sidebar on screens narrower than 1400px
+      return window.innerWidth >= 1400;
+    }
+    return true;
+  });
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-collapse sidebar when screen width changes
+  useEffect(() => {
+    const handleResize = () => {
+      const shouldBeOpen = window.innerWidth >= 1400;
+      setIsSidebarOpen(shouldBeOpen);
+      setIsCompact(window.innerHeight < 860 || window.innerWidth < 1300);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const currentPlayer = players[currentPlayerIndex];
 
@@ -70,6 +88,11 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         ? players[state.peekingState.playerIndex]?.id
         : players[state.currentPlayerIndex]?.id
       : null;
+
+  const turnOwnerId =
+    state.gameMode === "hotseat"
+      ? activeHotseatPlayerId ?? currentPlayer?.id
+      : currentPlayer?.id;
 
   // Bottom player is fixed in hotseat (player 1) and is "me" in online.
   // We keep seating static for hotseat so players can sit on opposite sides.
@@ -98,29 +121,17 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     }
   }
 
+  // In hotseat mode, always allow actions since everyone plays from the same device
   const isMyTurn =
-    gameMode === "online" ? currentPlayer?.id === myPlayerId : true;
+    gameMode === "hotseat"
+      ? true
+      : currentPlayer?.id === myPlayerId;
 
   useEffect(() => {
     const updateLayout = () => {
       const h = window.innerHeight;
       const w = window.innerWidth;
       setIsCompact(h < 860 || w < 1300);
-
-      // Improved scaling algorithm for better fit on various screen sizes
-      let scale = 1;
-      if (h < 950) scale = 0.95;
-      if (h < 860) scale = 0.9;
-      if (h < 780) scale = 0.85;
-      if (h < 700) scale = 0.8;
-      if (h < 620) scale = 0.75;
-
-      // Adjust for narrow screens
-      if (w < 1300) scale = Math.min(scale, 0.92);
-      if (w < 1100) scale = Math.min(scale, 0.88);
-      if (w < 900) scale = Math.min(scale, 0.82);
-
-      setBoardScale(scale);
     };
     updateLayout();
     window.addEventListener("resize", updateLayout);
@@ -148,8 +159,9 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
   const isPlayerActionable = isMyTurn && gamePhase === "playing";
   const pileCardClass = isCompact
-    ? "!w-[76px] sm:!w-[90px] md:!w-[98px] lg:!w-[104px]"
-    : "!w-20 sm:!w-24 md:!w-28 lg:!w-24 xl:!w-28";
+    ? "!w-[clamp(64px,7.5vw,100px)]"
+    : "!w-[clamp(68px,7.8vw,104px)]";
+  const playerCount = players.length;
 
   const RoomInfoPill = ({ variant }: { variant: "desktop" | "mobile" }) => {
     if (gameMode !== "online" || !roomId) return null;
@@ -191,7 +203,14 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
       <Separator className="my-4 bg-border/50" />
       <div data-tutorial-id="scoreboard">
-        <Scoreboard players={players} />
+        <Scoreboard
+          entries={orderedEntries.map(({ player, seat }) => ({
+            player,
+            seat,
+            isLocal: player.id === bottomPlayer?.id || player.id === myPlayerId,
+            isActive: player.id === turnOwnerId,
+          }))}
+        />
       </div>
       {gameMode === "online" && (
         <>
@@ -302,11 +321,52 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     );
   }
 
+  const isFocusPhase = [
+    "action_peek_1",
+    "action_swap_2_select_1",
+    "action_swap_2_select_2",
+  ].includes(gamePhase);
+
+  type SeatPosition = "bottom" | "top" | "left" | "right" | "bench";
+  const seatFor = (idx: number, total: number): SeatPosition => {
+    if (total === 1) return "top";
+    if (total === 2) return idx === 0 ? "left" : "right";
+    return idx === 0 ? "top" : idx === 1 ? "left" : idx === 2 ? "right" : "bench";
+  };
+
+  const seatingEntries: { player: Player; seat: SeatPosition }[] = bottomPlayer
+    ? [
+      { player: bottomPlayer, seat: "bottom" },
+      ...otherPlayers.map((p, idx) => ({
+        player: p,
+        seat: seatFor(idx, otherPlayers.length),
+      })),
+    ]
+    : otherPlayers.map((p, idx) => ({
+      player: p,
+      seat: seatFor(idx, otherPlayers.length),
+    }));
+
+  const seatOrder: SeatPosition[] = ["bottom", "top", "left", "right", "bench"];
+  const orderedEntries = [...seatingEntries].sort(
+    (a, b) => seatOrder.indexOf(a.seat) - seatOrder.indexOf(b.seat),
+  );
+  const seatMap = seatingEntries.reduce<Record<SeatPosition, Player | undefined>>((acc, entry) => {
+    acc[entry.seat] = entry.player;
+    return acc;
+  }, { bottom: undefined, top: undefined, left: undefined, right: undefined, bench: undefined });
+  const benchPlayers = seatingEntries.filter((s) => s.seat === "bench").map((s) => s.player);
+
+  const handleExitGame = () => {
+    leaveGame();
+    toast.message(t('game.returnedToLobby', { defaultValue: 'Returned to lobby' }));
+  };
+
   return (
     <div
       ref={containerRef}
       className={cn(
-        "relative w-full min-h-[100svh] lg:min-h-[100dvh] lg:h-full text-foreground px-1 sm:px-2 md:px-4 lg:px-6 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 bg-cover bg-center overflow-hidden",
+        "relative w-full min-h-[100svh] lg:min-h-[100dvh] lg:h-full text-foreground px-1 sm:px-2 md:px-3 lg:px-4 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 bg-cover bg-center overflow-x-hidden overflow-y-auto styled-scrollbar",
         isCompact && "game-compact"
       )}
       style={{
@@ -319,6 +379,13 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
       <div className="absolute -top-32 -left-16 w-72 h-72 rounded-full bg-[hsl(var(--primary)/0.25)] blur-3xl" />
       <div className="absolute top-12 -right-24 w-72 h-72 rounded-full bg-[hsl(var(--accent)/0.2)] blur-3xl" />
       <div className="absolute bottom-10 left-1/3 w-64 h-64 rounded-full bg-[hsl(var(--secondary)/0.16)] blur-3xl" />
+      <div
+        className={cn(
+          "absolute inset-0 pointer-events-none transition-opacity duration-250 bg-[radial-gradient(circle_at_center,rgba(8,6,18,0),rgba(6,4,12,0))] z-20",
+          isFocusPhase &&
+            "opacity-100 bg-[radial-gradient(circle_at_center,rgba(8,6,18,0.55),rgba(6,4,12,0.7))] md:bg-[radial-gradient(70%_70%_at_50%_45%,rgba(8,6,18,0.42),rgba(6,4,12,0.68))]"
+        )}
+      />
 
       {recentMoveLabel && (
         <div
@@ -334,15 +401,9 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
       )}
 
       <div
-        className="flex-grow flex flex-col relative z-10 min-h-0"
-        style={{
-          transform: `scale(${boardScale})`,
-          transformOrigin: "top center",
-          width: "100%",
-          maxWidth: "100%",
-        }}
+        className="flex-1 flex flex-col relative z-10 min-h-0 w-full transition-all duration-300"
       >
-      <main className="flex-grow flex flex-col min-h-0 gap-3 sm:gap-4 overflow-hidden">
+      <main className="flex-grow flex flex-col min-h-0 gap-3 sm:gap-4 overflow-visible w-full">
         <div
 
           className={cn(
@@ -375,7 +436,26 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
           <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 bg-card/40 backdrop-blur-sm p-1 rounded-full border border-border/30">
             <LanguageSwitcher />
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
-            
+            <Button
+              variant="ghost"
+              size="sm"
+              className="px-3 h-9 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10"
+              onClick={handleExitGame}
+            >
+              <LogOut className="h-4 w-4 mr-1.5" />
+              {t('game.exitGame', { defaultValue: 'Exit' })}
+            </Button>
+            {/* Sidebar toggle - always visible on lg screens */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden lg:flex rounded-full h-9 w-9 hover:bg-primary/10 hover:text-primary transition-colors"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              title={isSidebarOpen ? t('game.hideSidebar', { defaultValue: 'Hide sidebar' }) : t('game.showSidebar', { defaultValue: 'Show sidebar' })}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            {/* Mobile sheet menu - visible on small screens */}
             <div className="lg:hidden">
               <Sheet>
                 <SheetTrigger asChild>
@@ -398,256 +478,279 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
           </div>
         </div>
 
-        {/* Opponents Area */}
+        {/* Ring Layout: top/left/right around piles, bottom stays anchored */}
         <div
           className={cn(
-            "flex justify-center items-start mt-6 sm:mt-8 lg:mt-8 xl:mt-10 mb-1.5 sm:mb-2 md:mb-3 flex-shrink-0 w-full px-1 sm:px-2 overflow-x-auto",
-            isCompact && "mt-2 sm:mt-3 lg:mt-4 mb-1"
+            "grid grid-rows-[auto_1fr_auto] gap-2 sm:gap-3 lg:gap-4 xl:gap-5 items-center justify-items-center w-full flex-1 px-2 sm:px-4 lg:px-6 mt-4 sm:mt-6 mb-4 sm:mb-6",
+            // Default 3-column layout
+            "grid-cols-[minmax(80px,1fr)_minmax(0,2fr)_minmax(80px,1fr)]",
+            isCompact && "gap-2 sm:gap-3 mt-3 sm:mt-4",
+            !isSidebarOpen && "lg:px-8 xl:px-12"
           )}
         >
-          {otherPlayers.length > 0 ? (
-            <div
-              className={cn(
-                "flex flex-nowrap sm:flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-10 w-full max-w-5xl mx-auto px-2 sm:px-3 py-2 sm:py-3 bg-card/70 border border-border/60 rounded-2xl shadow-soft-lg backdrop-blur-xl overflow-x-auto sm:overflow-visible no-scrollbar",
-                isCompact && "gap-1.5 sm:gap-2.5 md:gap-3 lg:gap-4 max-w-4xl px-2 py-2 sm:py-2.5"
-              )}
-            >
-              {otherPlayers.map((player) => {
-                const isHotseatCurrent =
-                  gameMode === "hotseat" && activeHotseatPlayerId === player.id;
-                return (
-                <div key={player.id} className="flex-shrink-0 min-w-0">
-                  <PlayerHand
-                    player={player}
-                    isCurrentPlayer={
-                      gameMode === "hotseat"
-                        ? activeHotseatPlayerId === player.id
-                        : currentPlayer.id === player.id
-                    }
-                    isOpponent={
-                      gameMode === "hotseat"
-                        ? !isHotseatCurrent
-                        : true
-                    }
-                    playSound={playSound}
-                  />
-                </div>
-              );
-              })}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-20 sm:h-24 w-full max-w-md rounded-lg bg-primary/10 border-2 border-dashed border-border/60 mx-auto shadow-soft">
-              <p className="text-muted-foreground font-heading text-xs sm:text-sm md:text-base">
-                {t('game.waitingForOpponents')}
-              </p>
-            </div>
-          )
-          }
-        </div>
-
-        {/* Center Area */}
-        <div
-          className={cn(
-            "flex-grow flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 md:gap-8 lg:gap-10 my-6 sm:my-8 md:my-10 min-h-0 w-full",
-            isCompact && "gap-2 sm:gap-3 md:gap-4 my-2 sm:my-3 px-2"
-          )}
-          data-tutorial-id="piles"
-        >
-          <div className="relative w-full flex justify-center">
-            {specialAuraGradient && (
-              <div
-                key={specialAuraGradient}
-                className="special-aura absolute inset-[-10%] sm:inset-[-6%] blur-3xl rounded-[32px] pointer-events-none"
-                style={{ background: specialAuraGradient }}
+          {/* Top seat - rotated 180deg for tablet play */}
+          <div className="col-start-2 row-start-1 rotate-180">
+            {seatMap.top && (
+              <PlayerHand
+                player={seatMap.top}
+                isCurrentPlayer={
+                  gameMode === "hotseat"
+                    ? activeHotseatPlayerId === seatMap.top.id
+                    : currentPlayer.id === seatMap.top.id
+                }
+                isOpponent
+                isLocalPlayer={false}
+                playSound={playSound}
               />
             )}
-            
-            {/* Pile Mat */}
-            <div
-              className={cn(
-                "bg-black/40 border border-white/5 rounded-3xl px-4 sm:px-6 md:px-8 py-5 sm:py-7 md:py-8 shadow-2xl backdrop-blur-xl inline-flex items-center justify-center gap-6 sm:gap-10 md:gap-14 relative z-10 mx-auto",
-                isCompact && "px-3 sm:px-4 py-4 sm:py-5 gap-4 sm:gap-6 md:gap-8"
+          </div>
+
+          {/* Left seat - rotated 90deg for tablet play, cards face center */}
+          <div className="col-start-1 row-start-2 self-center rotate-90 origin-center">
+            {seatMap.left && (
+              <PlayerHand
+                player={seatMap.left}
+                orientation="horizontal"
+                isCurrentPlayer={
+                  gameMode === "hotseat"
+                    ? activeHotseatPlayerId === seatMap.left.id
+                    : currentPlayer.id === seatMap.left.id
+                }
+                isOpponent
+                isLocalPlayer={false}
+                playSound={playSound}
+              />
+            )}
+          </div>
+
+          {/* Center Piles */}
+          <div
+            className="col-start-2 row-start-2 w-full flex justify-center"
+            data-tutorial-id="piles"
+          >
+            <div className="relative w-full flex justify-center">
+              {specialAuraGradient && (
+                <div
+                  key={specialAuraGradient}
+                  className="special-aura absolute inset-[-10%] sm:inset-[-6%] blur-3xl rounded-[32px] pointer-events-none"
+                  style={{ background: specialAuraGradient }}
+                />
               )}
-            >
+              
+              {/* Pile Mat */}
               <div
-                className="flex flex-col items-center w-full sm:w-auto"
-                data-tutorial-id="draw-pile"
+                className={cn(
+                  "bg-black/40 border border-white/5 rounded-3xl px-3 sm:px-4 md:px-5 py-3.5 sm:py-4.5 md:py-5.5 shadow-2xl backdrop-blur-xl inline-flex items-center justify-center gap-4.5 sm:gap-6.5 md:gap-8 relative z-10 mx-auto",
+                  isCompact && "px-2.5 sm:px-3.5 py-3 sm:py-3.5 gap-4 sm:gap-5 md:gap-6",
+                  isFocusPhase && "ring-[1.5px] ring-primary/25 shadow-[0_18px_40px_rgba(0,0,0,0.5)] bg-black/45"
+                )}
               >
-                <div className="relative group">
-                    <div className="absolute inset-0 bg-white/5 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <PileCard
-                      card={null}
-                      faceUp={false}
-                      onClick={handleDrawFromDeck}
-                      isGlowing={isPlayerActionable}
-                      className={cn(
-                        isPlayerActionable ? "cursor-pointer" : "",
-                        pileCardClass,
-                        "shadow-2xl"
-                      )}
-                    />
-                </div>
-                <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm whitespace-nowrap">
-                  <span className="text-xs sm:text-sm font-bold text-foreground/90 uppercase tracking-widest text-center">
-                    {t('game.draw')}
-                  </span>
-                </div>
-                <div className={cn(
-                  "mt-2 sm:mt-2.5 px-2 py-1 rounded-full border text-xs font-semibold whitespace-nowrap",
-                  state.drawPile.length < 3
-                    ? "bg-red-500/20 border-red-500/40 text-red-200 animate-pulse"
-                    : state.drawPile.length < 10
-                    ? "bg-yellow-500/20 border-yellow-500/40 text-yellow-200"
-                    : "bg-green-500/20 border-green-500/40 text-green-200"
-                )}>
-                  {state.drawPile.length} {t('game.cards')}
-                </div>
-              </div>
-
-              {/* Drawn Card Slot - Always present to prevent layout shift */}
-              <div className="flex flex-col items-center w-full sm:w-auto">
-                {drawnCard && isMyTurn && gamePhase === "holding_card" ? (
-                  <>
-                    <div className="relative animate-in fade-in duration-300">
-                      <div className="absolute -inset-2 bg-primary/30 rounded-xl blur-md animate-pulse" />
-                      <GameCard
-                        card={drawnCard}
-                        isFaceUp={true}
-                        isGlowing
-                        className={cn(pileCardClass, "shadow-2xl ring-2 ring-primary/60")}
-                        playSound={playSound}
+                <div
+                  className="flex flex-col items-center w-full sm:w-auto"
+                  data-tutorial-id="draw-pile"
+                >
+                  <div className="relative group">
+                      <div className="absolute inset-0 bg-white/5 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <PileCard
+                        card={null}
+                        faceUp={false}
+                        onClick={handleDrawFromDeck}
+                        isGlowing={isPlayerActionable}
+                        className={cn(
+                          isPlayerActionable ? "cursor-pointer" : "",
+                          pileCardClass,
+                          "shadow-2xl"
+                        )}
                       />
-                    </div>
-                    <div className="mt-3 sm:mt-4 bg-primary/20 backdrop-blur-md px-3 py-1 rounded-full border border-primary/30 shadow-sm animate-in slide-in-from-top-2 duration-300 whitespace-nowrap">
-                      <span className="text-xs sm:text-sm font-bold text-primary uppercase tracking-widest text-center">
-                        {t('game.yourCard')}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  /* Placeholder to maintain layout stability */
-                  <>
-                    <div className={cn(pileCardClass, "opacity-0 pointer-events-none")} style={{ aspectRatio: "836/1214" }} />
-                    <div className="mt-3 sm:mt-4 h-[26px] sm:h-[30px] w-full opacity-0 pointer-events-none" />
-                  </>
-                )}
-              </div>
-
-              <div
-                className="flex flex-col items-center w-full sm:w-auto"
-                data-tutorial-id="discard-pile"
-              >
-                <div className="relative group">
-                    {/* mini-fan of recent discards for quick history */}
-                    {discardPile.length > 1 && (
-                      <div className="absolute -left-10 -top-4 flex gap-1 opacity-70 pointer-events-none">
-                        {discardPile.slice(-3, -1).map((card, idx) => (
-                          <img
-                            key={card.id ?? idx}
-                            src={getCardAsset(card)}
-                            alt={`Discarded card ${card.value}`}
-                            className="w-10 sm:w-12 rounded-md shadow-lg border border-white/10 rotate-[-4deg]"
-                            style={{ transform: `translateY(${idx * 6}px)` }}
-                          />
-                        ))}
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-white/5 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <PileCard
-                      card={
-                        discardPile.length > 0
-                          ? discardPile[discardPile.length - 1]
-                          : null
-                      }
-                      faceUp={true}
-                      onClick={handleDrawFromDiscard}
-                      isGlowing={isPlayerActionable && discardPile.length > 0}
-                      className={cn(
-                        isPlayerActionable ? "cursor-pointer" : "",
-                        pileCardClass,
-                        "shadow-2xl"
-                      )}
-                      valueBadge={
-                        discardPile.length > 1 ? (
-                          <div className="px-2 py-1 rounded-full bg-background/80 border border-border/60 text-[11px] font-semibold shadow-sm">
-                            +{Math.min(discardPile.length - 1, 9)}
-                          </div>
-                        ) : null
-                      }
-                    />
-                </div>
-                <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm whitespace-nowrap">
-                  <span className="text-xs sm:text-sm font-bold text-foreground/90 uppercase tracking-widest text-center">
-                    {t('game.discard')}
-                  </span>
-                </div>
-                {state.discardPile.length > 0 && (
-                  <div className="mt-2 sm:mt-2.5 px-2 py-1 rounded-full border border-white/20 bg-white/5 text-xs font-semibold text-foreground/70 whitespace-nowrap">
-                    {state.discardPile.length} {t('game.cards')}
                   </div>
-                )}
+                  <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm whitespace-nowrap">
+                    <span className="text-xs sm:text-sm font-bold text-foreground/90 uppercase tracking-widest text-center">
+                      {t('game.draw')}
+                    </span>
+                  </div>
+                  <div className={cn(
+                    "mt-2 sm:mt-2.5 px-2 py-1 rounded-full border text-xs font-semibold whitespace-nowrap",
+                    state.drawPile.length < 3
+                      ? "bg-red-500/20 border-red-500/40 text-red-200 animate-pulse"
+                      : state.drawPile.length < 10
+                      ? "bg-yellow-500/20 border-yellow-500/40 text-yellow-200"
+                      : "bg-green-500/20 border-green-500/40 text-green-200"
+                  )}>
+                    {state.drawPile.length} {t('game.cards')}
+                  </div>
+                </div>
+
+                {/* Drawn Card Slot - Always present to prevent layout shift */}
+                <div className="flex flex-col items-center w-full sm:w-auto">
+                  {drawnCard && isMyTurn && gamePhase === "holding_card" ? (
+                    <>
+                      <div className="relative animate-in fade-in duration-300">
+                        <div className="absolute -inset-2 bg-primary/30 rounded-xl blur-md animate-pulse" />
+                        <GameCard
+                          card={drawnCard}
+                          isFaceUp={true}
+                          isGlowing
+                          className={cn(pileCardClass, "shadow-2xl ring-2 ring-primary/60")}
+                          playSound={playSound}
+                        />
+                      </div>
+                      <div className="mt-3 sm:mt-4 bg-primary/20 backdrop-blur-md px-3 py-1 rounded-full border border-primary/30 shadow-sm animate-in slide-in-from-top-2 duration-300 whitespace-nowrap">
+                        <span className="text-xs sm:text-sm font-bold text-primary uppercase tracking-widest text-center">
+                          {t('game.yourCard')}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    /* Placeholder to maintain layout stability */
+                    <>
+                      <div className={cn(pileCardClass, "opacity-0 pointer-events-none")} style={{ aspectRatio: "836/1214" }} />
+                      <div className="mt-3 sm:mt-4 h-[26px] sm:h-[30px] w-full opacity-0 pointer-events-none" />
+                    </>
+                  )}
+                </div>
+
+                <div
+                  className="flex flex-col items-center w-full sm:w-auto"
+                  data-tutorial-id="discard-pile"
+                >
+                  <div className="relative group">
+                      <div className="absolute inset-0 bg-white/5 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <PileCard
+                        card={
+                          discardPile.length > 0
+                            ? discardPile[discardPile.length - 1]
+                            : null
+                        }
+                        faceUp={true}
+                        onClick={handleDrawFromDiscard}
+                        isGlowing={isPlayerActionable && discardPile.length > 0}
+                        className={cn(
+                          isPlayerActionable ? "cursor-pointer" : "",
+                          pileCardClass,
+                          "shadow-2xl"
+                        )}
+                        valueBadge={
+                          discardPile.length > 1 ? (
+                            <div className="px-2 py-1 rounded-full bg-background/80 border border-border/60 text-[11px] font-semibold shadow-sm">
+                              +{Math.min(discardPile.length - 1, 9)}
+                            </div>
+                          ) : null
+                        }
+                      />
+                  </div>
+                  <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm whitespace-nowrap">
+                    <span className="text-xs sm:text-sm font-bold text-foreground/90 uppercase tracking-widest text-center">
+                      {t('game.discard')}
+                    </span>
+                  </div>
+                  {state.discardPile.length > 0 && (
+                    <div className="mt-2 sm:mt-2.5 px-2 py-1 rounded-full border border-white/20 bg-white/5 text-xs font-semibold text-foreground/70 whitespace-nowrap">
+                      {state.discardPile.length} {t('game.cards')}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Bottom Player Area */}
-        {bottomPlayer && (
-          <div
-            className={cn(
-              "mt-auto flex-shrink-0 pb-[calc(env(safe-area-inset-bottom)+16px)] sm:pb-3 lg:pb-2",
-              isCompact && "pb-[calc(env(safe-area-inset-bottom)+10px)]"
-            )}
-          >
-            <div
-              className={cn(
-                "flex justify-center mb-2 sm:mb-3 md:mb-4 w-full",
-                isCompact && "mb-1.5"
-              )}
-              data-tutorial-id="game-actions"
-            >
-              {/* Always render GameActions - no longer hiding for holding_card since card is inline */}
-              <div className="min-h-[60px] w-full flex items-center justify-center">
-                <GameActions />
-              </div>
-            </div>
-            <div
-              data-tutorial-id="player-hand"
-              className={cn(isCompact && "scale-[0.95] origin-bottom")}
-            >
+          {/* Right seat - rotated -90deg for tablet play, cards face center */}
+          <div className="col-start-3 row-start-2 self-center -rotate-90 origin-center">
+            {seatMap.right && (
               <PlayerHand
-                player={bottomPlayer}
+                player={seatMap.right}
+                orientation="horizontal"
                 isCurrentPlayer={
                   gameMode === "hotseat"
-                    ? activeHotseatPlayerId === bottomPlayer.id
-                    : currentPlayer.id === bottomPlayer.id
+                    ? activeHotseatPlayerId === seatMap.right.id
+                    : currentPlayer.id === seatMap.right.id
                 }
-                isOpponent={
-                  gameMode === "hotseat"
-                    ? activeHotseatPlayerId !== bottomPlayer.id
-                    : false
-                }
+                isOpponent
+                isLocalPlayer={false}
                 playSound={playSound}
               />
+            )}
+          </div>
+
+          {/* Bottom seat + actions */}
+          {bottomPlayer && (
+            <div className="col-start-2 row-start-3 w-full flex flex-col items-center gap-2 sm:gap-3">
+              {/* Central game actions - only show for online mode */}
+              {gameMode !== "hotseat" && (
+                <div
+                  className="min-h-[56px] w-full max-w-xl flex items-center justify-center"
+                  data-tutorial-id="game-actions"
+                >
+                  <GameActions />
+                </div>
+              )}
+              <div
+                data-tutorial-id="player-hand"
+                className="w-full flex justify-center"
+              >
+                <PlayerHand
+                  player={bottomPlayer}
+                  isCurrentPlayer={
+                    gameMode === "hotseat"
+                      ? activeHotseatPlayerId === bottomPlayer.id
+                      : currentPlayer.id === bottomPlayer.id
+                  }
+                  isOpponent={
+                    gameMode === "hotseat"
+                      ? activeHotseatPlayerId !== bottomPlayer.id
+                      : false
+                  }
+                  isLocalPlayer
+                  playSound={playSound}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Extra bench players (5+) */}
+        {benchPlayers.length > 0 && (
+          <div className="w-full max-w-5xl mx-auto mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 justify-items-center">
+              {benchPlayers.map((player) => (
+                <PlayerHand
+                  key={player.id}
+                  player={player}
+                  isCurrentPlayer={
+                    gameMode === "hotseat"
+                      ? activeHotseatPlayerId === player.id
+                      : currentPlayer.id === player.id
+                  }
+                  isOpponent
+                  isLocalPlayer={false}
+                  playSound={playSound}
+                />
+              ))}
             </div>
           </div>
         )}
       </main>
       </div>
 
-      {/* Side Panel - Desktop */}
-      <aside className="hidden lg:flex w-full lg:w-80 lg:max-w-xs flex-shrink-0 bg-card/95 backdrop-blur-lg p-5 rounded-xl border border-border/40 shadow-soft-lg flex-col relative z-10">
-        <h2 className="text-3xl font-bold mb-3 text-center font-heading text-foreground">
-          Sen
-        </h2>
-        {gameMode === "hotseat" && (
-          <div className="flex items-center justify-center gap-2 mb-2 text-sm text-muted-foreground">
-            <Users className="w-4 h-4" />
-            <span>{t('game.localGame')}</span>
-          </div>
+      {/* Side Panel - Desktop (collapsible) */}
+      <aside
+        className={cn(
+          "hidden lg:flex bg-card/95 backdrop-blur-lg rounded-xl border border-border/40 shadow-soft-lg flex-col relative z-10 transition-all duration-300 ease-in-out overflow-hidden",
+          isSidebarOpen ? "w-80 max-w-xs p-5 flex-shrink-0" : "w-0 p-0 border-0 flex-shrink"
         )}
-        <Separator />
-        <SidePanelContent />
+      >
+        <div className={cn("transition-opacity duration-200", isSidebarOpen ? "opacity-100" : "opacity-0")}>
+          <h2 className="text-3xl font-bold mb-3 text-center font-heading text-foreground">
+            Sen
+          </h2>
+          {gameMode === "hotseat" && (
+            <div className="flex items-center justify-center gap-2 mb-2 text-sm text-muted-foreground">
+              <Users className="w-4 h-4" />
+              <span>{t('game.localGame')}</span>
+            </div>
+          )}
+          <Separator />
+          <SidePanelContent />
+        </div>
       </aside>
 
       <ActionModal />

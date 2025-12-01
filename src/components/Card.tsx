@@ -130,7 +130,7 @@ export const GameCard: React.FC<CardProps> = ({
     : "";
 
   const outerClasses = cn(
-    "group w-[18vw] max-w-24 sm:w-[15vw] sm:max-w-28 md:w-[10vw] md:max-w-32 lg:w-[8vw] lg:max-w-36 perspective-1000 rounded-xl overflow-hidden",
+    "group w-[clamp(68px,9.5vw,118px)] sm:w-[clamp(72px,8.5vw,126px)] md:w-[clamp(76px,8vw,134px)] lg:w-[clamp(82px,7vw,142px)] max-w-[150px] perspective-1000 rounded-xl overflow-hidden",
     "shadow-[0_12px_28px_rgba(0,0,0,0.45)] border-2 border-white/20",
     isFaceUp ? "ring-1 ring-white/5" : "ring-1 ring-black/20",
     (isGlowing || justRevealed) && isFaceUp ? "shadow-soft" : "",
@@ -161,7 +161,7 @@ export const GameCard: React.FC<CardProps> = ({
             draggable={false}
           />
           {isFaceUp && (
-            <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10">
+            <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
               <span
                 className={cn(
                   "inline-block text-xs sm:text-sm font-bold font-heading",
@@ -218,7 +218,7 @@ export const GameCard: React.FC<CardProps> = ({
                 />
 
                 {isFaceUp && (
-                  <div className="absolute top-2 right-2 sm:top-3 sm:right-3 md:top-3 md:right-3 z-10">
+                  <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
                     <span
                       className={cn(
                         "inline-block text-xs sm:text-sm font-bold font-heading",
@@ -246,6 +246,7 @@ export const GameCard: React.FC<CardProps> = ({
                     <div className="absolute inset-0 ring-0 md:ring-1 ring-white/30 rounded-xl" />
                   </div>
                 )}
+
                 {/* Vignette effect for depth */}
                 <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_center,transparent_0%,transparent_50%,rgba(0,0,0,0.25)_100%)]" />
                 <div className="pointer-events-none absolute inset-0 rounded-xl mix-blend-soft-light bg-[radial-gradient(ellipse_at_50%_18%,rgba(255,255,255,0.08),transparent_42%),radial-gradient(ellipse_at_50%_62%,rgba(6,7,20,0.6),transparent_65%)]" />
