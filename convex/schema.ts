@@ -1,7 +1,11 @@
 import { defineSchema, defineTable } from "convex/server";
+import { authTables } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  // Convex Auth tables (users, sessions, accounts, etc.)
+  ...authTables,
+
   rooms: defineTable({
     roomId: v.string(), // human code
     hostId: v.string(),
@@ -68,4 +72,19 @@ export default defineSchema({
   })
     .index("by_roomId", ["roomId"])
     .index("by_playerId", ["playerId"]),
+
+  userPreferences: defineTable({
+    userId: v.id("users"), // Links to auth user
+    displayName: v.optional(v.string()),
+    theme: v.optional(v.string()), // "light" | "dark"
+    language: v.optional(v.string()), // "en" | "pl" etc.
+    // Active game session for rejoin capability
+    activeRoomId: v.optional(v.string()),
+    activePlayerId: v.optional(v.string()),
+    activeGameMode: v.optional(v.string()), // "online" | "hotseat"
+    // Local game backup for hotseat resume
+    localGameState: v.optional(v.any()),
+    updatedAt: v.number(),
+  })
+    .index("by_userId", ["userId"]),
 });

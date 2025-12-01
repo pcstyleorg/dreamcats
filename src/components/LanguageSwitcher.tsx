@@ -3,16 +3,19 @@ import { Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 
 export const LanguageSwitcher: React.FC<{ className?: string }> = ({
   className,
 }) => {
   const { i18n } = useTranslation();
+  const { setLanguage } = useUserPreferences();
   const currentLang = i18n.language?.split('-')[0] || 'en';
 
   const toggleLanguage = () => {
     const newLang = currentLang === 'en' ? 'pl' : 'en';
     i18n.changeLanguage(newLang);
+    setLanguage(newLang);
   };
 
   return (
@@ -22,7 +25,7 @@ export const LanguageSwitcher: React.FC<{ className?: string }> = ({
       aria-label={`Switch to ${currentLang === 'en' ? 'Polish' : 'English'}`}
       onClick={toggleLanguage}
       className={cn(
-        "rounded-full h-10 w-10 border-border/60 bg-card/80 backdrop-blur-sm shadow-soft",
+        "rounded-full h-10 w-10 border-border/60 bg-card/80 backdrop-blur-xs shadow-soft",
         "hover:scale-105 transition-transform",
         className,
       )}

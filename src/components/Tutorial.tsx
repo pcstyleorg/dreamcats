@@ -171,10 +171,10 @@ export const Tutorial: React.FC = () => {
       <Dialog open={step === 'welcome'}>
         <DialogContent className="bg-card/95 backdrop-blur-xl border-primary/20 shadow-2xl max-w-md">
           <DialogHeader className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+            <div className="mx-auto w-16 h-16 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center">
               <Sparkles className="h-8 w-8 text-white" />
             </div>
-            <DialogTitle className="font-heading text-3xl bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <DialogTitle className="font-heading text-3xl bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
               {t('tutorial.welcomeTitle')}
             </DialogTitle>
             <DialogDescription className="text-base text-foreground/80 leading-relaxed">
@@ -191,7 +191,7 @@ export const Tutorial: React.FC = () => {
             </Button>
             <Button 
               onClick={startTutorial}
-              className="w-full sm:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90"
+              className="w-full sm:w-auto bg-linear-to-r from-primary to-accent hover:opacity-90"
             >
               {t('tutorial.yesPlease')}
             </Button>
@@ -208,7 +208,7 @@ export const Tutorial: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] pointer-events-none"
+              className="fixed inset-0 z-100 pointer-events-none"
               style={{
                 background: `radial-gradient(circle at ${highlightRect.left + highlightRect.width / 2}px ${highlightRect.top + highlightRect.height / 2}px, transparent ${Math.max(highlightRect.width, highlightRect.height) / 2 + 20}px, rgba(0, 0, 0, 0.7) ${Math.max(highlightRect.width, highlightRect.height) / 2 + 60}px)`,
               }}
@@ -218,7 +218,7 @@ export const Tutorial: React.FC = () => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="fixed z-[101] pointer-events-none rounded-xl ring-2 ring-primary ring-offset-2 ring-offset-transparent"
+              className="fixed z-101 pointer-events-none rounded-xl ring-2 ring-primary ring-offset-2 ring-offset-transparent"
               style={{
                 top: highlightRect.top - 8,
                 left: highlightRect.left - 8,
@@ -240,7 +240,7 @@ export const Tutorial: React.FC = () => {
             exit={{ opacity: 0, y: 50 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className={cn(
-              "fixed z-[102] w-[95vw] max-w-md",
+              "fixed z-102 w-[95vw] max-w-md",
               "bottom-4 left-1/2 -translate-x-1/2",
               "sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2",
               highlightRect 
@@ -254,7 +254,7 @@ export const Tutorial: React.FC = () => {
               {/* Progress bar */}
               <div className="h-1 bg-muted">
                 <div 
-                  className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-300"
+                  className="h-full bg-linear-to-r from-primary to-accent transition-all duration-300"
                   style={{ width: `${((currentStepIndex + 1) / totalSteps) * 100}%` }}
                 />
               </div>
@@ -277,7 +277,7 @@ export const Tutorial: React.FC = () => {
 
                 {/* Content */}
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                  <div className="shrink-0 w-12 h-12 rounded-xl bg-linear-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                     {stepContent.icon}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -331,7 +331,7 @@ export const Tutorial: React.FC = () => {
 
                   <Button
                     onClick={handleNext}
-                    className="gap-1 bg-gradient-to-r from-primary to-accent hover:opacity-90"
+                    className="gap-1 bg-linear-to-r from-primary to-accent hover:opacity-90"
                   >
                     {isLastStep ? t('tutorial.finish') : t('tutorial.next')}
                     {!isLastStep && <ChevronRight className="h-4 w-4" />}
@@ -347,10 +347,10 @@ export const Tutorial: React.FC = () => {
       <Dialog open={step === 'end'}>
         <DialogContent className="bg-card/95 backdrop-blur-xl border-primary/20 shadow-2xl max-w-md">
           <DialogHeader className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
+            <div className="mx-auto w-16 h-16 rounded-full bg-linear-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
               <Trophy className="h-8 w-8 text-white" />
             </div>
-            <DialogTitle className="font-heading text-3xl bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+            <DialogTitle className="font-heading text-3xl bg-linear-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
               {t('tutorial.readyTitle')}
             </DialogTitle>
             <DialogDescription className="text-base text-foreground/80 leading-relaxed">
@@ -360,7 +360,7 @@ export const Tutorial: React.FC = () => {
           <DialogFooter className="mt-6">
             <Button 
               onClick={endTutorial}
-              className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:opacity-90"
+              className="w-full bg-linear-to-r from-emerald-500 to-cyan-500 hover:opacity-90"
             >
               {t('tutorial.letsPlay')}
             </Button>

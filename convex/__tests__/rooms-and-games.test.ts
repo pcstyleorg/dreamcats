@@ -1,11 +1,88 @@
 /// <reference types="vite/client" />
 import { convexTest } from "convex-test";
 import { describe, it, expect } from "vitest";
+import { z } from "zod";
 import { api } from "../_generated/api";
 import schema from "../schema";
 
 // Load all Convex modules so convex-test can execute mutations/queries
 const modules = import.meta.glob(["../*.ts", "../_generated/**/*.{ts,js}"]);
+
+// ─── Zod Schemas for Game State Validation ────────────────────────────────────
+
+const CardSchema = z.object({
+  id: z.number(),
+  value: z.number(),
+  isSpecial: z.boolean(),
+  specialAction: z.enum(["take_2", "peek_1", "swap_2"]).optional(),
+});
+
+const HandSlotSchema = z.object({
+  card: CardSchema,
+  isFaceUp: z.boolean(),
+  hasBeenPeeked: z.boolean(),
+});
+
+const PlayerSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  hand: z.array(HandSlotSchema),
+  score: z.number(),
+});
+
+const GamePhaseSchema = z.enum([
+  "lobby",
+  "peeking",
+  "playing",
+  "holding_card",
+  "action_take_2",
+  "action_peek_1",
+  "action_swap_2_select_1",
+  "action_swap_2_select_2",
+  "round_end",
+  "game_over",
+]);
+
+const PeekingStateSchema = z.object({
+  playerIndex: z.number(),
+  peekedCount: z.number(),
+  startIndex: z.number().optional(),
+});
+
+const RoundScoreSchema = z.object({
+  playerId: z.string(),
+  score: z.number(),
+  penalty: z.number(),
+});
+
+const GameStateSchema = z.object({
+  gameMode: z.enum(["lobby", "online", "hotseat"]),
+  roomId: z.string().nullable(),
+  hostId: z.string().nullable(),
+  drawPile: z.array(CardSchema),
+  discardPile: z.array(CardSchema),
+  players: z.array(PlayerSchema),
+  currentPlayerIndex: z.number(),
+  gamePhase: GamePhaseSchema,
+  actionMessage: z.string(),
+  turnCount: z.number().optional(),
+  lastCallerId: z.string().nullable().optional(),
+  peekingState: PeekingStateSchema.optional(),
+  drawnCard: CardSchema.nullable().optional(),
+  drawSource: z.enum(["deck", "discard", "take2"]).nullable().optional(),
+  roundWinnerName: z.string().nullable().optional(),
+  gameWinnerName: z.string().nullable().optional(),
+  lastRoundScores: z.array(RoundScoreSchema).optional(),
+  lastMove: z.any().nullable().optional(),
+});
+
+const RoomPlayerSchema = z.object({
+  playerId: z.string(),
+  name: z.string(),
+  seat: z.number(),
+  score: z.number(),
+  connected: z.boolean(),
+});
 
 describe("rooms lifecycle", () => {
   it("creates a room with host seeded as player 0", async () => {
@@ -32,6 +109,8 @@ describe("rooms lifecycle", () => {
       connected: true,
       score: 0,
     });
+    // Validate player structure with Zod schema
+    expect(players[0]).toEqual(expect.schemaMatching(RoomPlayerSchema));
   });
 
   it("assigns unique incremental seats when players join", async () => {
@@ -98,6 +177,10 @@ describe("starting a round", () => {
     expect(state?.discardPile).toHaveLength(1);
     expect(state?.drawPile).toHaveLength(45); // 54 total - (4*2) - 1 discard
     expect(state?.peekingState).toMatchObject({ playerIndex: 0, peekedCount: 0 });
+
+    // Validate entire game state structure with Zod schema
+    expect.assert(state !== null);
+    expect(state).toEqual(expect.schemaMatching(GameStateSchema));
   });
 });
 
@@ -200,5 +283,12 @@ describe("pobudka scoring", () => {
     expect(result?.players.find((p) => p.id === guestId)?.score).toBe(90); // No change for lowest
     const hostRound = result?.lastRoundScores?.find((r) => r.playerId === hostId);
     expect(hostRound?.penalty).toBe(5);
+
+    // Validate final game state and round scores with Zod schemas
+    expect.assert(result !== null);
+    expect(result).toEqual(expect.schemaMatching(GameStateSchema));
+    expect(result.lastRoundScores).toEqual(
+      expect.arrayContaining([expect.schemaMatching(RoundScoreSchema)])
+    );
   });
 });

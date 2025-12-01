@@ -25,19 +25,19 @@ interface ScoreboardProps {
   entries: ScoreboardEntry[];
 }
 
-const seatLabelMap: Record<SeatPosition, string> = {
-  bottom: "You",
-  top: "Top",
-  left: "Left",
-  right: "Right",
-  bench: "Seat",
+const seatLabelKeys: Record<SeatPosition, string> = {
+  bottom: "game.seatYou",
+  top: "game.seatTop",
+  left: "game.seatLeft",
+  right: "game.seatRight",
+  bench: "game.seatBench",
 };
 
 export const Scoreboard: React.FC<ScoreboardProps> = ({ entries }) => {
   const { t } = useTranslation();
 
   return (
-    <div className="bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 rounded-lg p-3 sm:p-4 border border-border/50 shadow-soft">
+    <div className="bg-linear-to-br from-primary/10 via-accent/10 to-secondary/10 rounded-lg p-3 sm:p-4 border border-border/50 shadow-soft">
       <h3 className="text-lg sm:text-xl font-semibold mb-3 text-center font-heading flex items-center justify-center gap-2 text-foreground">
         <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" />
         {t('game.scoreboard')}
@@ -73,7 +73,7 @@ export const Scoreboard: React.FC<ScoreboardProps> = ({ entries }) => {
                           : "bg-muted/30 border-border/60 text-muted-foreground"
                       )}
                     >
-                      {seatLabelMap[seat]}
+                      {t(seatLabelKeys[seat])}
                     </span>
                   )}
                   <span className="flex items-center gap-1">

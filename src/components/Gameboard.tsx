@@ -29,14 +29,14 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 import { usePlayersView } from "@/state/hooks";
 import { useNetStatus } from "@/state/selectors";
 import { PileCard } from "./PileCard";
+import { useScaleToFit } from "@/hooks/useScaleToFit";
 
 interface GameboardProps {
   theme: "light" | "dark";
   toggleTheme: () => void;
-  compensatedHeight?: string;
 }
 
-export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compensatedHeight = '100dvh' }) => {
+export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   const { t } = useTranslation();
   const { state, myPlayerId, broadcastAction, playSound, leaveGame } = useGame();
   const {
@@ -65,7 +65,17 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
     }
     return true;
   });
+  
+  // Refs for scale-to-fit functionality
   const containerRef = useRef<HTMLDivElement>(null);
+  const boardContentRef = useRef<HTMLDivElement>(null);
+  
+  // Use scale-to-fit hook to scale the board content when it overflows
+  const { scale } = useScaleToFit(containerRef, boardContentRef, {
+    maxScale: 1,
+    minScale: 0.65,
+    enabled: true,
+  });
 
   // Auto-collapse sidebar when screen width changes
   useEffect(() => {
@@ -151,6 +161,16 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
     }
   };
 
+  const handleDiscardPileClick = () => {
+    // If holding a card, clicking discard pile discards it
+    if (isMyTurn && gamePhase === "holding_card") {
+      broadcastAction({ type: "DISCARD_HELD_CARD" });
+    } else {
+      // Otherwise, draw from discard
+      handleDrawFromDiscard();
+    }
+  };
+
   const copyRoomId = () => {
     if (roomId) {
       navigator.clipboard.writeText(roomId);
@@ -160,8 +180,8 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
 
   const isPlayerActionable = isMyTurn && gamePhase === "playing";
   const pileCardClass = isCompact
-    ? "!w-[clamp(64px,7.5vw,100px)]"
-    : "!w-[clamp(68px,7.8vw,104px)]";
+    ? "w-[clamp(64px,7.5vw,100px)]!"
+    : "w-[clamp(68px,7.8vw,104px)]!";
 
   const RoomInfoPill = ({ variant }: { variant: "desktop" | "mobile" }) => {
     if (gameMode !== "online" || !roomId) return null;
@@ -359,22 +379,19 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
 
   const handleExitGame = () => {
     leaveGame();
-    toast.message(t('game.returnedToLobby', { defaultValue: 'Returned to lobby' }));
+    toast.message(t('game.returnedToLobby'));
   };
 
   return (
     <div
       ref={containerRef}
       className={cn(
-        "relative w-full text-foreground px-1 sm:px-2 md:px-3 lg:px-4 py-1 sm:py-2 flex flex-col lg:flex-row gap-1 sm:gap-2 md:gap-3 bg-cover bg-center styled-scrollbar",
-        isCompact && "game-compact py-0.5 gap-0.5 sm:gap-1"
+        "relative w-full h-dvh overflow-hidden text-foreground bg-cover bg-center",
+        isCompact && "game-compact"
       )}
-      style={{
-        backgroundImage,
-        minHeight: compensatedHeight,
-      }}
+      style={{ backgroundImage }}
     >
-      {/* Overlays for better readability - theme-aware with soft creamy light mode */}
+      {/* Overlays for better readability - theme-aware with soft creamy light mode (not scaled) */}
       <div className="absolute inset-0 bg-gradient-to-br from-[rgba(255,252,248,0.92)] via-[rgba(255,250,245,0.88)] to-[rgba(255,248,250,0.92)] dark:from-[rgba(8,12,24,0.9)] dark:via-[rgba(12,15,32,0.8)] dark:to-[rgba(10,8,18,0.9)] pointer-events-none" />
       <div className="absolute inset-0 opacity-10 dark:opacity-60 pointer-events-none" style={{ backgroundImage: backgroundImage }} />
       <div className="absolute -top-32 -left-16 w-72 h-72 rounded-full bg-[hsl(var(--primary)/0.08)] dark:bg-[hsl(var(--primary)/0.25)] blur-3xl" />
@@ -389,6 +406,19 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
             "opacity-100 bg-[radial-gradient(circle_at_center,rgba(255,252,248,0.4),rgba(255,250,245,0.5))] md:bg-[radial-gradient(70%_70%_at_50%_45%,rgba(255,252,248,0.3),rgba(255,250,245,0.45))] dark:bg-[radial-gradient(circle_at_center,rgba(8,6,18,0.55),rgba(6,4,12,0.7))] dark:md:bg-[radial-gradient(70%_70%_at_50%_45%,rgba(8,6,18,0.42),rgba(6,4,12,0.68))]"
         )}
       />
+
+      {/* Scaled board content wrapper */}
+      <div
+        ref={boardContentRef}
+        className={cn(
+          "w-full h-full flex flex-col lg:flex-row gap-1 sm:gap-2 md:gap-3 px-1 sm:px-2 md:px-3 lg:px-4 py-1 sm:py-2 styled-scrollbar relative z-10",
+          isCompact && "py-0.5 gap-0.5 sm:gap-1"
+        )}
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: 'top center',
+        }}
+      >
 
       {recentMoveLabel && (
         <div
@@ -406,7 +436,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
       <div
         className="flex-1 flex flex-col relative z-10 min-h-0 w-full transition-all duration-300"
       >
-      <main className="flex-grow flex flex-col min-h-0 gap-3 sm:gap-4 overflow-visible w-full">
+      <main className="grow flex flex-col min-h-0 gap-3 sm:gap-4 overflow-visible w-full">
         <div
 
           className={cn(
@@ -416,7 +446,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
         >
           {/* Left Side: Player Info + Actions + Room Code */}
           <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar mask-linear-fade">
-            <div className="flex items-center gap-2 sm:gap-3 bg-card/70 border border-border/60 px-3 sm:px-4 py-2 sm:py-3 rounded-2xl shadow-soft backdrop-blur-lg flex-shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 bg-card/70 border border-border/60 px-3 sm:px-4 py-2 sm:py-3 rounded-2xl shadow-soft backdrop-blur-lg shrink-0">
               <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] flex items-center justify-center text-[hsl(var(--primary-foreground))] font-heading text-base sm:text-lg shadow-soft">
                 {currentPlayer?.name?.charAt(0) ?? 'S'}
               </div>
@@ -436,7 +466,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
           </div>
 
           {/* Right Side: Settings & Menu */}
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 bg-card/40 backdrop-blur-sm p-1 rounded-full border border-border/30">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 bg-card/40 backdrop-blur-sm p-1 rounded-full border border-border/30">
             <LanguageSwitcher />
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
             <Button
@@ -446,7 +476,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
               onClick={handleExitGame}
             >
               <LogOut className="h-4 w-4 mr-1.5" />
-              {t('game.exitGame', { defaultValue: 'Exit' })}
+              {t('game.exitGame')}
             </Button>
             {/* Sidebar toggle - always visible on lg screens */}
             <Button
@@ -454,7 +484,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
               size="icon"
               className="hidden lg:flex rounded-full h-9 w-9 hover:bg-primary/10 hover:text-primary transition-colors"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              title={isSidebarOpen ? t('game.hideSidebar', { defaultValue: 'Hide sidebar' }) : t('game.showSidebar', { defaultValue: 'Show sidebar' })}
+              title={isSidebarOpen ? t('game.hideSidebar') : t('game.showSidebar')}
             >
               <Menu className="h-5 w-5" />
             </Button>
@@ -625,25 +655,25 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
                             : null
                         }
                         faceUp={true}
-                        onClick={handleDrawFromDiscard}
-                        isGlowing={isPlayerActionable && discardPile.length > 0}
+                        onClick={handleDiscardPileClick}
+                        isGlowing={(isPlayerActionable && discardPile.length > 0) || (isMyTurn && gamePhase === "holding_card")}
                         className={cn(
-                          isPlayerActionable ? "cursor-pointer" : "",
+                          (isPlayerActionable || (isMyTurn && gamePhase === "holding_card")) ? "cursor-pointer" : "",
                           pileCardClass,
                           "shadow-2xl"
                         )}
                         valueBadge={
                           discardPile.length > 1 ? (
-                            <div className="px-2 py-1 rounded-full bg-background/80 border border-border/60 text-[11px] font-semibold shadow-sm">
+                            <div className="px-2 py-1 rounded-full bg-background/80 border border-border/60 text-[11px] font-semibold shadow-xs">
                               +{Math.min(discardPile.length - 1, 9)}
                             </div>
                           ) : null
                         }
                       />
                   </div>
-                  <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm whitespace-nowrap">
+                  <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-xs whitespace-nowrap">
                     <span className="text-xs sm:text-sm font-bold text-foreground/90 uppercase tracking-widest text-center">
-                      {t('game.discard')}
+                      {t('game.discarded')}
                     </span>
                   </div>
                   {state.discardPile.length > 0 && (
@@ -738,7 +768,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
       <aside
         className={cn(
           "hidden lg:flex bg-card/95 backdrop-blur-lg rounded-xl border border-border/40 shadow-soft-lg flex-col relative z-10 transition-all duration-300 ease-in-out overflow-hidden",
-          isSidebarOpen ? "w-80 max-w-xs p-5 flex-shrink-0" : "w-0 p-0 border-0 flex-shrink"
+          isSidebarOpen ? "w-80 max-w-xs p-5 shrink-0" : "w-0 p-0 border-0 shrink"
         )}
       >
         <div className={cn("transition-opacity duration-200", isSidebarOpen ? "opacity-100" : "opacity-0")}>
@@ -755,6 +785,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
           <SidePanelContent />
         </div>
       </aside>
+      </div>
 
       <ActionModal />
     </div>

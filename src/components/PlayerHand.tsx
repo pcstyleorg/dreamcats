@@ -198,7 +198,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   }, [player.id, recentMoveForPlayer, t]);
 
   // Consistent card sizing for all players to prevent layout jumping
-  const cardWidth = "!w-[clamp(64px,8.5vw,112px)]";
+  const cardWidth = "w-[clamp(64px,8.5vw,112px)]!";
   const maxCardWidth =
     "max-w-[110px] sm:max-w-[118px] md:max-w-[126px] lg:max-w-[132px]";
 
@@ -267,11 +267,11 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
             icon: <div className="text-xl font-bold">{c.value}</div>,
           });
         } else {
-          toast.error("Failed to peek card");
+          toast.error(t("common:errors.peekFailed"));
         }
       }).catch((error) => {
         console.error("Peek action failed:", error);
-        toast.error("Peek failed, check your connection");
+        toast.error(t("common:errors.peekFailedConnection"));
       });
       return;
     }
@@ -357,8 +357,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
           "shadow-soft-lg",
           // Only show the glow/highlight when it's this player's turn
           isTurnOwner
-            ? "bg-gradient-to-br from-[hsl(var(--primary)/0.18)] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.18)] border-primary/50 shadow-[0_12px_40px_rgba(0,0,0,0.38)] ring-1 ring-primary/30 outline outline-2 outline-primary/70 shadow-[0_0_32px_hsl(var(--primary)/0.4)]"
-            : "bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.12)] border-border/50",
+            ? "bg-linear-to-br from-[hsl(var(--primary)/0.18)] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.18)] border-primary/50 shadow-[0_12px_40px_rgba(0,0,0,0.38)] ring-1 ring-primary/30 outline-solid outline-2 outline-primary/70 shadow-[0_0_32px_hsl(var(--primary)/0.4)]"
+            : "bg-linear-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.12)] border-border/50",
           // Enhanced glow when player hand is interactive swap target
           isSwapTarget && "swap-target-hand border-primary/60 shadow-[0_0_40px_hsl(var(--primary)/0.4),0_0_80px_hsl(var(--primary)/0.2)] ring-2 ring-primary/30 ring-offset-2 ring-offset-background/50",
         )}
@@ -369,7 +369,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
         )}
         {/* Swap target indicator glow overlay */}
         {isSwapTarget && (
-          <div className="absolute -inset-1 rounded-2xl bg-gradient-to-t from-primary/20 via-primary/10 to-transparent pointer-events-none animate-pulse" />
+          <div className="absolute -inset-1 rounded-2xl bg-linear-to-t from-primary/20 via-primary/10 to-transparent pointer-events-none animate-pulse" />
         )}
         {/* Floating status chips */}
         {actionLabel && (
@@ -441,8 +441,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                 {/* Enhanced Swap 2 indicator with more prominent visual feedback */}
                 {swap2HighlightIndex === index && (
                   <div className="absolute inset-0 z-20 pointer-events-none">
-                    <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-pink-500/30 via-pink-400/20 to-transparent animate-pulse" />
-                    <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[0.65rem] sm:text-xs font-bold text-pink-300 z-30 whitespace-nowrap bg-pink-600/40 px-2.5 py-1 rounded-full border border-pink-400/60 shadow-lg backdrop-blur-sm animate-bounce">
+                    <div className="absolute inset-0 rounded-lg bg-linear-to-t from-pink-500/30 via-pink-400/20 to-transparent animate-pulse" />
+                    <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[0.65rem] sm:text-xs font-bold text-pink-300 z-30 whitespace-nowrap bg-pink-600/40 px-2.5 py-1 rounded-full border border-pink-400/60 shadow-lg backdrop-blur-xs animate-bounce">
                       {t('actions.swappedTwo')}
                     </span>
                   </div>
@@ -515,7 +515,7 @@ const PlayerInlineActions: React.FC<{
         onClick={handleFinishPeeking}
         disabled={peekingState.peekedCount !== 2}
         variant="secondary"
-        className="min-w-[120px] sm:min-w-[140px] h-10 sm:h-11 text-sm sm:text-base font-semibold shadow-sm hover:bg-secondary/80"
+        className="min-w-[120px] sm:min-w-[140px] h-10 sm:h-11 text-sm sm:text-base font-semibold shadow-xs hover:bg-secondary/80"
         size="sm"
       >
         {t('game.finishPeeking')}
@@ -545,7 +545,7 @@ const PlayerInlineActions: React.FC<{
           variant="outline"
           onClick={() => broadcastAction({ type: "DISCARD_HELD_CARD" })}
           disabled={mustSwap}
-          className="min-w-[70px] sm:min-w-[90px] h-10 sm:h-11 text-xs sm:text-sm rounded-full border-border/70 bg-card/70 shadow-sm"
+          className="min-w-[70px] sm:min-w-[90px] h-10 sm:h-11 text-xs sm:text-sm rounded-full border-border/70 bg-card/70 shadow-xs"
           size="sm"
         >
           {t('game.discard')}
@@ -553,7 +553,7 @@ const PlayerInlineActions: React.FC<{
         <Button
           onClick={() => broadcastAction({ type: "USE_SPECIAL_ACTION" })}
           disabled={!canUseSpecial}
-          className="min-w-[70px] sm:min-w-[90px] h-10 sm:h-11 text-xs sm:text-sm rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-[hsl(var(--primary-foreground))] shadow-soft-lg disabled:opacity-60"
+          className="min-w-[70px] sm:min-w-[90px] h-10 sm:h-11 text-xs sm:text-sm rounded-full bg-linear-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-[hsl(var(--primary-foreground))] shadow-soft-lg disabled:opacity-60"
           size="sm"
         >
           <Wand2 className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />

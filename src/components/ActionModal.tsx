@@ -104,7 +104,7 @@ export const ActionModal: React.FC = () => {
   const renderGameOverContent = () => (
     <>
       <DialogHeader className="space-y-2 sm:space-y-3">
-        <DialogTitle className="font-heading text-2xl sm:text-3xl md:text-4xl text-center bg-gradient-to-br from-purple-600 to-pink-600 bg-clip-text text-transparent">
+        <DialogTitle className="font-heading text-2xl sm:text-3xl md:text-4xl text-center bg-linear-to-br from-purple-600 to-pink-600 bg-clip-text text-transparent">
           {t('modal.gameOverTitle')}
         </DialogTitle>
         <DialogDescription className="text-base sm:text-lg text-center font-semibold">

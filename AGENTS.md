@@ -20,6 +20,7 @@
 
 ## Agent/MCP Notes
 - Use Context7 whenever correctness depends on third-party docs (React, Convex, Vite, etc.); otherwise work directly in the repo.
+- Use Claude-Contex (semantic code search) when available for searching files—index the codebase first with `index_codebase`, then use `search_code` for natural language queries across the project.
 - `CLAUDE.md` holds a deep dive on architecture, Convex state flow, and common patterns—consult it before making major design or state changes.
 - `RULES.md` is the authoritative game specification (deck composition, turn flow, scoring)—use it for gameplay logic work.
 - The repo does not currently ship `tasks.md`; proceed with one major task at a time and capture progress verbally instead of checking boxes.
