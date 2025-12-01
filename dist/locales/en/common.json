@@ -6,11 +6,34 @@
     "joinRoomFailed": "Failed to join room.",
     "startGameFailed": "Failed to start game.",
     "needTwoPlayers": "Need at least 2 players to start.",
-    "enterAllNames": "Please enter names for all players."
+    "enterAllNames": "Please enter names for all players.",
+    "createRoomTryAgain": "Could not create room. Try again.",
+    "joinRoomCheckCode": "Could not join room. Check the code and try again.",
+    "notEnoughCards": "Not enough cards in deck to start.",
+    "createOrJoinFirst": "Create or join a room first.",
+    "peekFailed": "Failed to peek card.",
+    "peekFailedConnection": "Peek failed, check your connection.",
+    "sessionMissing": "Session data missing.",
+    "rejoinFailed": "Could not rejoin. The game may have ended.",
+    "noSavedGame": "No saved game found.",
+    "resumeFailed": "Could not resume the game.",
+    "guestFailed": "Failed to sign in anonymously.",
+    "enterEmailPassword": "Please enter email and password.",
+    "signOutFailed": "Failed to sign out."
   },
   "success": {
     "roomIdCopied": "Room ID copied to clipboard!",
-    "idCopied": "Room ID copied!"
+    "idCopied": "Room ID copied!",
+    "roomCreated": "Room created! Share code {{roomId}}.",
+    "joinedRoom": "Joined room {{room}}. Waiting for sync.",
+    "rejoinedRoom": "Rejoined room {{room}}.",
+    "hotseatStarted": "Hotseat game started!",
+    "rejoinedGame": "Rejoined game!",
+    "gameResumed": "Game resumed!",
+    "playingAsGuest": "Playing as guest.",
+    "signedIn": "Signed in!",
+    "accountCreated": "Account created!",
+    "signedOut": "Signed out."
   },
   "theme": {
     "switchToLight": "Switch to light mode",
