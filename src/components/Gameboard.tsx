@@ -187,7 +187,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     if (gameMode !== "online" || !roomId) return null;
     const base =
       variant === "desktop"
-        ? "flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-border/60 bg-card/80 backdrop-blur-xs shadow-soft text-xs sm:text-sm"
+        ? "flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-border/60 bg-card/80 backdrop-blur-sm shadow-soft text-xs sm:text-sm"
         : "hidden"; // Mobile variant disabled
 
     const dotClass =
