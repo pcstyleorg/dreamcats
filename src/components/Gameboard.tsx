@@ -392,7 +392,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
       style={{ backgroundImage }}
     >
       {/* Overlays for better readability - theme-aware with soft creamy light mode (not scaled) */}
-      <div className="absolute inset-0 bg-linear-to-br from-[rgba(255,252,248,0.92)] via-[rgba(255,250,245,0.88)] to-[rgba(255,248,250,0.92)] dark:from-[rgba(8,12,24,0.9)] dark:via-[rgba(12,15,32,0.8)] dark:to-[rgba(10,8,18,0.9)] pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[rgba(255,252,248,0.92)] via-[rgba(255,250,245,0.88)] to-[rgba(255,248,250,0.92)] dark:from-[rgba(8,12,24,0.9)] dark:via-[rgba(12,15,32,0.8)] dark:to-[rgba(10,8,18,0.9)] pointer-events-none" />
       <div className="absolute inset-0 opacity-10 dark:opacity-60 pointer-events-none" style={{ backgroundImage: backgroundImage }} />
       <div className="absolute -top-32 -left-16 w-72 h-72 rounded-full bg-[hsl(var(--primary)/0.08)] dark:bg-[hsl(var(--primary)/0.25)] blur-3xl" />
       <div className="absolute top-12 -right-24 w-72 h-72 rounded-full bg-[hsl(var(--accent)/0.06)] dark:bg-[hsl(var(--accent)/0.2)] blur-3xl" />
