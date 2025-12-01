@@ -139,7 +139,15 @@ export const getPlayers = query({
     return players;
   },
 });
-// DO NOT TOUCH DO NOT TOUCH!!! JUST FUCKING DON'T TOUCH IT!!!
+/**
+ * Updates player presence heartbeat for real-time connectivity tracking.
+ * 
+ * IMPORTANT: This mutation is critical for the real-time presence system.
+ * It updates both the player record and presence table to track online status.
+ * Changes here affect all clients' reconnection and offline detection behavior.
+ * 
+ * Called every 10 seconds by ConvexSync on each connected client.
+ */
 export const updatePlayerPresence = mutation({
   args: {
     roomId: v.string(),
