@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import { User, LogOut, Mail, Lock, UserCircle } from "lucide-react";
 import { useConvexAuth } from "convex/react";
+import { useTranslation } from "react-i18next";
 
 interface AuthDialogProps {
   trigger?: React.ReactNode;
@@ -28,6 +29,7 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
   const { signIn } = useAuthActions();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
   const [mode, setMode] = useState<"signIn" | "signUp">("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,10 +39,10 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
     setIsSubmitting(true);
     try {
       await signIn("anonymous");
-      toast.success("Playing as guest");
+      toast.success(t("common:success.playingAsGuest"));
       setOpen(false);
     } catch (error) {
-      toast.error("Failed to sign in anonymously");
+      toast.error(t("common:errors.guestFailed"));
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -50,14 +52,14 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
-      toast.error("Please enter email and password");
+      toast.error(t("common:errors.enterEmailPassword"));
       return;
     }
 
     setIsSubmitting(true);
     try {
       await signIn("password", { email, password, flow: mode });
-      toast.success(mode === "signIn" ? "Signed in!" : "Account created!");
+      toast.success(mode === "signIn" ? t("common:success.signedIn") : t("common:success.accountCreated"));
       setOpen(false);
       setEmail("");
       setPassword("");
@@ -200,6 +202,7 @@ interface AuthButtonProps {
 export const AuthButton: React.FC<AuthButtonProps> = ({ autoSignIn = true }) => {
   const { signIn, signOut } = useAuthActions();
   const { isAuthenticated, isLoading } = useConvexAuth();
+  const { t } = useTranslation();
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [hasAttemptedAutoSignIn, setHasAttemptedAutoSignIn] = useState(false);
 
@@ -217,12 +220,12 @@ export const AuthButton: React.FC<AuthButtonProps> = ({ autoSignIn = true }) => 
     try {
       await signOut();
       setPopoverOpen(false);
-      toast.success("Signed out");
+      toast.success(t("common:success.signedOut"));
     } catch (error) {
-      toast.error("Failed to sign out");
+      toast.error(t("common:errors.signOutFailed"));
       console.error(error);
     }
-  }, [signOut]);
+  }, [signOut, t]);
 
   if (isLoading) {
     return (

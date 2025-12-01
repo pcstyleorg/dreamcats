@@ -379,7 +379,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
   const handleExitGame = () => {
     leaveGame();
-    toast.message(t('game.returnedToLobby', { defaultValue: 'Returned to lobby' }));
+    toast.message(t('game.returnedToLobby'));
   };
 
   return (
@@ -476,7 +476,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
               onClick={handleExitGame}
             >
               <LogOut className="h-4 w-4 mr-1.5" />
-              {t('game.exitGame', { defaultValue: 'Exit' })}
+              {t('game.exitGame')}
             </Button>
             {/* Sidebar toggle - always visible on lg screens */}
             <Button
@@ -484,7 +484,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
               size="icon"
               className="hidden lg:flex rounded-full h-9 w-9 hover:bg-primary/10 hover:text-primary transition-colors"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              title={isSidebarOpen ? t('game.hideSidebar', { defaultValue: 'Hide sidebar' }) : t('game.showSidebar', { defaultValue: 'Show sidebar' })}
+              title={isSidebarOpen ? t('game.hideSidebar') : t('game.showSidebar')}
             >
               <Menu className="h-5 w-5" />
             </Button>

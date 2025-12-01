@@ -13,12 +13,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { RefreshCw, X, Gamepad2, Users } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface RejoinPromptProps {
   onEnter: () => void;
 }
 
 export const RejoinPrompt: React.FC<RejoinPromptProps> = ({ onEnter }) => {
+  const { t } = useTranslation();
   const { activeSession, clearActiveSession, isLoading } = useUserPreferences();
   const { rejoinRoom } = useGame();
   const setGame = useAppStore((s) => s.setGame);
@@ -42,7 +44,7 @@ export const RejoinPrompt: React.FC<RejoinPromptProps> = ({ onEnter }) => {
 
   const handleRejoinOnline = async () => {
     if (!activeSession?.roomId || !activeSession?.playerId) {
-      toast.error("Session data missing");
+      toast.error(t("common:errors.sessionMissing"));
       return;
     }
 
@@ -54,12 +56,12 @@ export const RejoinPrompt: React.FC<RejoinPromptProps> = ({ onEnter }) => {
       // Rejoin using the stored player ID (not generating a new one)
       await rejoinRoom(activeSession.roomId, activeSession.playerId, storedName);
       
-      toast.success("Rejoined game!");
+      toast.success(t("common:success.rejoinedGame"));
       setOpen(false);
       onEnter();
     } catch (error) {
       console.error("Failed to rejoin:", error);
-      toast.error("Could not rejoin. The game may have ended.");
+      toast.error(t("common:errors.rejoinFailed"));
       // Clear the stale session
       await clearActiveSession();
     } finally {
@@ -69,7 +71,7 @@ export const RejoinPrompt: React.FC<RejoinPromptProps> = ({ onEnter }) => {
 
   const handleResumeHotseat = () => {
     if (!activeSession?.localGameState) {
-      toast.error("No saved game found");
+      toast.error(t("common:errors.noSavedGame"));
       return;
     }
 
@@ -83,12 +85,12 @@ export const RejoinPrompt: React.FC<RejoinPromptProps> = ({ onEnter }) => {
         setPlayer(firstPlayer.id, firstPlayer.name);
       }
       
-      toast.success("Game resumed!");
+      toast.success(t("common:success.gameResumed"));
       setOpen(false);
       onEnter();
     } catch (error) {
       console.error("Failed to resume:", error);
-      toast.error("Could not resume the game");
+      toast.error(t("common:errors.resumeFailed"));
       clearActiveSession();
     }
   };

@@ -267,11 +267,11 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
             icon: <div className="text-xl font-bold">{c.value}</div>,
           });
         } else {
-          toast.error("Failed to peek card");
+          toast.error(t("common:errors.peekFailed"));
         }
       }).catch((error) => {
         console.error("Peek action failed:", error);
-        toast.error("Peek failed, check your connection");
+        toast.error(t("common:errors.peekFailedConnection"));
       });
       return;
     }

@@ -25,12 +25,12 @@ interface ScoreboardProps {
   entries: ScoreboardEntry[];
 }
 
-const seatLabelMap: Record<SeatPosition, string> = {
-  bottom: "You",
-  top: "Top",
-  left: "Left",
-  right: "Right",
-  bench: "Seat",
+const seatLabelKeys: Record<SeatPosition, string> = {
+  bottom: "game.seatYou",
+  top: "game.seatTop",
+  left: "game.seatLeft",
+  right: "game.seatRight",
+  bench: "game.seatBench",
 };
 
 export const Scoreboard: React.FC<ScoreboardProps> = ({ entries }) => {
@@ -73,7 +73,7 @@ export const Scoreboard: React.FC<ScoreboardProps> = ({ entries }) => {
                           : "bg-muted/30 border-border/60 text-muted-foreground"
                       )}
                     >
-                      {seatLabelMap[seat]}
+                      {t(seatLabelKeys[seat])}
                     </span>
                   )}
                   <span className="flex items-center gap-1">

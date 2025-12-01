@@ -136,10 +136,10 @@ export const useGame = () => {
         setRoom(newRoomId);
         persistSession(newPlayerId, name, newRoomId);
         setGame(next, { source: "local" });
-        toast.success(`Room created! Share code ${newRoomId}.`);
+        toast.success(i18n.t("common:success.roomCreated", { roomId: newRoomId }));
       } catch (err) {
         console.error(err);
-        toast.error("Could not create room. Try again.");
+        toast.error(i18n.t("common:errors.createRoomTryAgain"));
       }
     },
     [createRoomMutation, persistSession, setGame, setPlayer, setRoom],
@@ -174,10 +174,10 @@ export const useGame = () => {
         setRoom(room);
         persistSession(newPlayerId, name, room);
         setGame(joinState, { source: "local" });
-        toast.success(`Joined room ${room}. Waiting for sync.`);
+        toast.success(i18n.t("common:success.joinedRoom", { room }));
       } catch (err) {
         console.error(err);
-        toast.error("Could not join room. Check the code and try again.");
+        toast.error(i18n.t("common:errors.joinRoomCheckCode"));
       }
     },
     [joinRoomMutation, persistSession, setGame, setPlayer, setRoom],
@@ -206,7 +206,7 @@ export const useGame = () => {
           actionMessage: `Rejoining room ${room}...`,
         }, { source: "local" });
         
-        toast.success(`Rejoined room ${room}.`);
+        toast.success(i18n.t("common:success.rejoinedRoom", { room }));
       } catch (err) {
         console.error(err);
         throw err; // Re-throw so caller can handle
@@ -219,14 +219,14 @@ export const useGame = () => {
     (playerNames: string[]) => {
       const names = playerNames.map((n) => n.trim()).filter(Boolean);
       if (names.length < 2) {
-        toast.error("Need at least 2 players.");
+        toast.error(i18n.t("common:errors.needTwoPlayers"));
         return;
       }
 
       const deck = shuffle(buildDeck());
       const requiredCards = names.length * 4 + 1;
       if (deck.length < requiredCards) {
-        toast.error("Not enough cards in deck to start.");
+        toast.error(i18n.t("common:errors.notEnoughCards"));
         return;
       }
 
@@ -271,19 +271,19 @@ export const useGame = () => {
       setPlayer(viewerId, viewerName);
       setRoom(null);
       setGame(next, { source: "local" });
-      toast.success("Hotseat game started!");
+      toast.success(i18n.t("common:success.hotseatStarted"));
     },
     [setGame, setPlayer, setRoom],
   );
 
   const startGame = useCallback(async () => {
     if (game.gameMode !== "online" || !game.roomId || !playerId) {
-      toast.error("Create or join a room first.");
+      toast.error(i18n.t("common:errors.createOrJoinFirst"));
       return;
     }
 
     if (game.players.length < 2) {
-      toast.error("Need at least 2 players to start.");
+      toast.error(i18n.t("common:errors.needTwoPlayers"));
       return;
     }
 
@@ -296,7 +296,7 @@ export const useGame = () => {
       });
     } catch (error) {
       console.error("Failed to start game:", error);
-      toast.error("Failed to start game.");
+      toast.error(i18n.t("common:errors.startGameFailed"));
     }
   }, [game, performActionMutation, playerId]);
 
