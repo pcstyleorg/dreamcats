@@ -58,13 +58,12 @@ function App() {
     }
 
     // Only update if scale actually changed to avoid loops
+    // Only update if scale actually changed to avoid loops
     if (newScale !== lastScale.current) {
       lastScale.current = newScale;
       setScale(newScale);
-    } else {
-      // Restore zoom if we're not changing scale
-      container.style.zoom = prevZoom;
     }
+    // else: keep current zoom - no need to restore it
     
     isCalculating.current = false;
   }, []);
