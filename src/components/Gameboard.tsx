@@ -303,7 +303,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   }
 
   const isFocusPhase = [
-    "holding_card",
     "action_peek_1",
     "action_swap_2_select_1",
     "action_swap_2_select_2",
