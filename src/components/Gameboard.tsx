@@ -466,7 +466,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
           </div>
 
           {/* Right Side: Settings & Menu */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 bg-card/40 backdrop-blur-xs p-1 rounded-full border border-border/30">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 bg-card/40 backdrop-blur-sm p-1 rounded-full border border-border/30">
             <LanguageSwitcher />
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
             <Button
