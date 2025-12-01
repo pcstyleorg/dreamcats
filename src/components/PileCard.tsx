@@ -39,7 +39,7 @@ export const PileCard: React.FC<PileCardProps> = ({
   return (
     <div
       className={cn(
-        "group relative rounded-xl overflow-hidden border-2 border-white/15 bg-black/30 shadow-[0_12px_28px_rgba(0,0,0,0.45)]",
+        "group relative rounded-xl overflow-hidden border-2 border-black/8 dark:border-white/15 bg-white/20 dark:bg-black/30 shadow-[0_4px_12px_rgba(0,0,0,0.08)] dark:shadow-[0_12px_28px_rgba(0,0,0,0.45)]",
         isGlowing && "ring-2 ring-primary/60 shadow-[0_0_30px_hsl(var(--primary)/0.35)]",
         className,
       )}
@@ -53,6 +53,22 @@ export const PileCard: React.FC<PileCardProps> = ({
         draggable={false}
         loading="eager"
       />
+      {/* Number overlay for face-up cards */}
+      {faceUp && card && (
+        <div className="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 z-10">
+          <span
+            className={cn(
+              "inline-flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 rounded-full",
+              "bg-gradient-to-br from-violet-500/50 via-purple-500/40 to-fuchsia-500/30",
+              "text-xs sm:text-sm md:text-sm font-bold font-heading text-white",
+              "shadow-[0_0_6px_rgba(139,92,246,0.4),0_0_10px_rgba(168,85,247,0.25)]",
+              card?.isSpecial && "from-fuchsia-500/55 via-purple-500/45 to-violet-500/35 shadow-[0_0_8px_rgba(236,72,153,0.5),0_0_14px_rgba(168,85,247,0.3)]",
+            )}
+          >
+            {card.value}
+          </span>
+        </div>
+      )}
       {valueBadge && (
         <div className="absolute top-2 right-2 z-10">{valueBadge}</div>
       )}
@@ -77,8 +93,10 @@ export const PileCard: React.FC<PileCardProps> = ({
           {valueBadge}
         </div>
       )}
-      <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_center,transparent_0%,transparent_50%,rgba(0,0,0,0.25)_100%)]" />
-      <div className="pointer-events-none absolute inset-0 rounded-xl mix-blend-soft-light bg-[radial-gradient(ellipse_at_50%_18%,rgba(255,255,255,0.08),transparent_42%),radial-gradient(ellipse_at_50%_62%,rgba(6,7,20,0.6),transparent_65%)]" />
+      {/* Light mode: bright vignette to counteract dark baked-in image vignette */}
+      <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.08)_40%,transparent_70%)] dark:bg-transparent" />
+      {/* Dark mode: subtle vignette */}
+      <div className="pointer-events-none absolute inset-0 rounded-xl bg-transparent dark:bg-[radial-gradient(ellipse_at_center,transparent_0%,transparent_50%,rgba(0,0,0,0.2)_100%)]" />
     </div>
   );
 };

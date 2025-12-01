@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 
 interface LandingPageProps {
   onEnter: () => void;
+  compensatedHeight?: string;
 }
 
 const Crow = ({
@@ -25,7 +26,7 @@ const Crow = ({
   </svg>
 );
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onEnter, compensatedHeight = '100dvh' }) => {
   const { t } = useTranslation();
   const title = t('landing.title');
 
@@ -63,7 +64,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden p-4 sm:p-6 md:p-8 bg-background">
+    <div 
+      className="w-full flex items-center justify-center relative overflow-hidden p-4 sm:p-6 md:p-8 bg-background"
+      style={{ minHeight: compensatedHeight }}
+    >
       {/* Background elements - theme-aware gradients */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--primary)/0.16)] via-[hsl(var(--accent)/0.08)] to-[hsl(var(--secondary)/0.2)]"

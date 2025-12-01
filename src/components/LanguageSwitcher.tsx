@@ -8,7 +8,7 @@ export const LanguageSwitcher: React.FC<{ className?: string }> = ({
   className,
 }) => {
   const { i18n } = useTranslation();
-  const currentLang = i18n.language.split('-')[0]; // Get base language (en from en-US)
+  const currentLang = i18n.language?.split('-')[0] || 'en';
 
   const toggleLanguage = () => {
     const newLang = currentLang === 'en' ? 'pl' : 'en';

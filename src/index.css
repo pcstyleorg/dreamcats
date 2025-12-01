@@ -5,38 +5,40 @@
 @tailwind utilities;
 
 @layer base {
+  /* Light mode - dreamy creamy off-white with soft cherry blossom tints */
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 35 30% 97%;
+    --foreground: 263 40% 18%;
 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 35 25% 95%;
+    --card-foreground: 263 40% 18%;
 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 35 28% 96%;
+    --popover-foreground: 263 40% 18%;
 
-    --primary: 263 70% 50%; /* Deep rich purple */
-    --primary-foreground: 210 40% 98%;
+    --primary: 270 60% 55%; /* Soft purple */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 24% 20%; /* Muted cool gray */
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 35 20% 90%; /* Creamy beige */
+    --secondary-foreground: 263 40% 25%;
 
-    --muted: 217 24% 20%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 35 18% 91%;
+    --muted-foreground: 263 25% 45%;
 
-    --accent: 263 70% 50%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 330 55% 62%; /* Cherry blossom pink */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217 24% 20%;
-    --input: 217 24% 20%;
-    --ring: 263 70% 50%;
+    --border: 35 20% 85%;
+    --input: 35 22% 88%;
+    --ring: 270 60% 55%;
 
     --radius: 0.75rem;
   }
 
+  /* Dark mode - deep twilight with mystical purple glow */
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
@@ -76,18 +78,19 @@
   html,
   body,
   #root {
-    min-height: 100%;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    height: 100dvh;
     width: 100%;
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
   }
 
   body {
     @apply bg-background text-foreground;
     overscroll-behavior: none;
-    background: radial-gradient(circle at top center, #2e1065, #020617);
+    background: linear-gradient(135deg, hsl(35 35% 96%), hsl(40 30% 94%) 40%, hsl(330 20% 95%) 80%);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-family:
@@ -153,6 +156,24 @@
 
 .transform-rotate-y-180 {
   transform: rotateY(180deg);
+}
+
+/* Compact mode for small viewport heights */
+.game-compact {
+  /* Reduce all card sizes when in compact mode */
+  --card-scale: 0.85;
+}
+
+@media (max-height: 800px) {
+  .game-compact {
+    --card-scale: 0.75;
+  }
+}
+
+@media (max-height: 700px) {
+  .game-compact {
+    --card-scale: 0.65;
+  }
 }
 
 /* Soft shadows for light theme */

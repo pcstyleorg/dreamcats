@@ -6,7 +6,6 @@ import { GameCard } from "./Card";
 import { useGame } from "@/state/useGame";
 import { cn } from "@/lib/utils";
 import { SoundType } from "@/hooks/use-sounds";
-import { getCardBackAsset } from "@/lib/cardAssets";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
@@ -198,7 +197,6 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     }
   }, [player.id, recentMoveForPlayer, t]);
 
-  const cardBackAsset = React.useMemo(() => getCardBackAsset(), []);
   // Consistent card sizing for all players to prevent layout jumping
   const cardWidth = "!w-[clamp(64px,8.5vw,112px)]";
   const maxCardWidth =
@@ -344,7 +342,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
             gamePhase={gamePhase}
             peekingState={peekingState}
             drawnCard={drawnCard}
-            drawSource={drawSource}
+            drawSource={drawSource ?? null}
             broadcastAction={broadcastAction}
             t={t}
           />
