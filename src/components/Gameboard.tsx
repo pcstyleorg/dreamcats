@@ -211,7 +211,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
   const SidePanelContent = () => (
     <>
-      <div className="my-4 p-4 bg-accent/40 backdrop-blur-xs rounded-lg min-h-[60px] border border-border/30">
+      <div className="my-4 p-4 bg-accent/40 backdrop-blur-sm rounded-lg min-h-[60px] border border-border/30">
         <h4 className="font-semibold mb-2 font-heading flex items-center gap-2 text-foreground">
           <ScrollText className="w-4 h-4 text-primary" />
           {t('game.actionLog')}
