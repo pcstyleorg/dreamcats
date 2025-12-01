@@ -596,7 +596,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                         )}
                       />
                   </div>
-                  <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-xs whitespace-nowrap">
+                  <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm whitespace-nowrap">
                     <span className="text-xs sm:text-sm font-bold text-foreground/90 uppercase tracking-widest text-center">
                       {t('game.draw')}
                     </span>
