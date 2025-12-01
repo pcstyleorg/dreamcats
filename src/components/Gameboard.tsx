@@ -627,7 +627,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                           playSound={playSound}
                         />
                       </div>
-                      <div className="mt-3 sm:mt-4 bg-primary/20 backdrop-blur-md px-3 py-1 rounded-full border border-primary/30 shadow-xs animate-in slide-in-from-top-2 duration-300 whitespace-nowrap">
+                      <div className="mt-3 sm:mt-4 bg-primary/20 backdrop-blur-md px-3 py-1 rounded-full border border-primary/30 shadow-sm animate-in slide-in-from-top-2 duration-300 whitespace-nowrap">
                         <span className="text-xs sm:text-sm font-bold text-primary uppercase tracking-widest text-center">
                           {t('game.yourCard')}
                         </span>
