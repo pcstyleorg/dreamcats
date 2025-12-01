@@ -268,6 +268,11 @@ export const useGame = () => {
     }
   }, [game, performActionMutation, playerId]);
 
+  const leaveGame = useCallback(() => {
+    setRoom(null);
+    setGame(initialGameState, { source: "local" });
+  }, [setGame, setRoom]);
+
   const broadcastAction = useCallback(
     async (action: GameAction) => {
       // Optimistic UI updates (sounds)
@@ -371,6 +376,7 @@ export const useGame = () => {
     joinRoom,
     startHotseatGame,
     startGame,
+    leaveGame,
     broadcastAction,
     sendChatMessage,
     playSound,

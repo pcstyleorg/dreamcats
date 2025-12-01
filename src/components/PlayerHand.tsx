@@ -14,6 +14,8 @@ interface PlayerHandProps {
   player: Player;
   isCurrentPlayer: boolean;
   isOpponent?: boolean;
+  isLocalPlayer?: boolean;
+  orientation?: "horizontal" | "vertical";
   playSound: (sound: SoundType) => void;
 }
 
@@ -21,6 +23,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   player,
   isCurrentPlayer,
   isOpponent,
+  isLocalPlayer,
+  orientation = "horizontal",
   playSound,
 }) => {
   const { t } = useTranslation();
@@ -173,7 +177,9 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   }, [player.id, recentMoveForPlayer, t]);
 
   const cardBackAsset = React.useMemo(() => getCardBackAsset(), []);
-  const baseCardWidth = "!w-[clamp(64px,8.6vw,112px)]";
+  const baseCardWidth = isLocalPlayer
+    ? "!w-[clamp(72px,9.6vw,128px)]"
+    : "!w-[clamp(64px,8.6vw,112px)]";
   const opponentCardWidth = "!w-[clamp(60px,7.8vw,104px)]";
   const maxCardWidth =
     "max-w-[110px] sm:max-w-[118px] md:max-w-[126px] lg:max-w-[132px]";
@@ -293,23 +299,32 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     return "";
   };
 
-  const showYouTag = gameMode === "online" && myPlayerId === player.id;
+  const showYouTag =
+    (gameMode === "online" && myPlayerId === player.id) || isLocalPlayer;
+  const isTurnOwner =
+    isCurrentPlayer &&
+    gamePhase !== "round_end" &&
+    gamePhase !== "game_over";
 
   return (
     <div
       ref={containerRef}
       className={cn(
-        "relative p-3 sm:p-3.5 md:p-4 lg:p-4.5 rounded-2xl border transition-all duration-300 bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.12)] backdrop-blur-md",
+        "relative p-3 sm:p-3.5 md:p-4 lg:p-4.5 rounded-2xl border transition-all duration-300 backdrop-blur-md",
         "shadow-soft-lg",
-        isCurrentPlayer &&
-          gamePhase !== "round_end" &&
-          gamePhase !== "game_over"
-          ? "border-primary/40 shadow-[0_0_28px_hsl(var(--primary)/0.25)]"
-          : "border-border/50",
+        isLocalPlayer
+          ? "bg-gradient-to-br from-[hsl(var(--primary)/0.18)] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.18)] border-primary/50 shadow-[0_12px_40px_rgba(0,0,0,0.38)] ring-1 ring-primary/30"
+          : "bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.12)] border-border/50",
+        isTurnOwner &&
+          "outline outline-2 outline-primary/70 shadow-[0_0_32px_hsl(var(--primary)/0.4)]",
         // Enhanced glow when player hand is interactive swap target
         isSwapTarget && "swap-target-hand border-primary/60 shadow-[0_0_40px_hsl(var(--primary)/0.4),0_0_80px_hsl(var(--primary)/0.2)] ring-2 ring-primary/30 ring-offset-2 ring-offset-background/50",
       )}
     >
+      {/* Active turn aura */}
+      {isTurnOwner && (
+        <div className="pointer-events-none absolute -inset-2 rounded-3xl bg-[radial-gradient(circle_at_30%_20%,rgba(137,103,255,0.18),rgba(61,19,90,0.05))] blur-[2px] animate-pulse" />
+      )}
       {/* Swap target indicator glow overlay */}
       {isSwapTarget && (
         <div className="absolute -inset-1 rounded-2xl bg-gradient-to-t from-primary/20 via-primary/10 to-transparent pointer-events-none animate-pulse" />
@@ -337,7 +352,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
         </div>
       )}
 
-      <div className="flex flex-col items-center gap-1 sm:gap-1.5">
+      <div className="flex flex-col items-center gap-1 sm:gap-1.5 relative z-10">
         <h3
           className={cn(
             "font-heading text-sm sm:text-base md:text-lg font-bold text-center text-foreground tracking-wide",
@@ -350,9 +365,20 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
               ({t('game.you')})
             </span>
           )}
+          {isTurnOwner && (
+            <span className="ml-2 text-[0.65rem] sm:text-xs uppercase tracking-[0.2em] text-primary font-semibold bg-primary/10 border border-primary/30 px-2 py-1 rounded-full">
+              {t('game.yourTurn')}
+            </span>
+          )}
         </h3>
 
-        <div className={cn("flex justify-center w-full relative px-4 gap-1 sm:gap-1.5 md:gap-2")}>
+        <div
+          className={cn(
+            "flex justify-center w-full relative px-4",
+            isLocalPlayer ? "gap-2 sm:gap-2.5 md:gap-3" : "gap-1 sm:gap-1.5 md:gap-2",
+            orientation === "vertical" && "flex-col items-center px-2 gap-2 sm:gap-2.5 md:gap-3"
+          )}
+        >
           {player.hand.map((cardInHand, index) => {
             const isTargeted =
               recentMoveForPlayer &&
