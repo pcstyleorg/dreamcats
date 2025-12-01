@@ -26,6 +26,9 @@ i18n
     },
     react: {
       useSuspense: true,
+      // Bind to languageChanged event to trigger re-renders
+      bindI18n: 'languageChanged loaded',
+      bindI18nStore: 'added removed',
     },
   });
 
