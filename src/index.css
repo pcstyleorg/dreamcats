@@ -78,12 +78,13 @@
   html,
   body,
   #root {
-    min-height: 100%;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    height: 100dvh;
     width: 100%;
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
   }
 
   body {
@@ -155,6 +156,24 @@
 
 .transform-rotate-y-180 {
   transform: rotateY(180deg);
+}
+
+/* Compact mode for small viewport heights */
+.game-compact {
+  /* Reduce all card sizes when in compact mode */
+  --card-scale: 0.85;
+}
+
+@media (max-height: 800px) {
+  .game-compact {
+    --card-scale: 0.75;
+  }
+}
+
+@media (max-height: 700px) {
+  .game-compact {
+    --card-scale: 0.65;
+  }
 }
 
 /* Soft shadows for light theme */

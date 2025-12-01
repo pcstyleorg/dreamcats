@@ -130,9 +130,9 @@ export const GameCard: React.FC<CardProps> = ({
     : "";
 
   const outerClasses = cn(
-    "group w-[clamp(68px,9.5vw,118px)] sm:w-[clamp(72px,8.5vw,126px)] md:w-[clamp(76px,8vw,134px)] lg:w-[clamp(82px,7vw,142px)] max-w-[150px] perspective-1000 rounded-xl overflow-hidden",
-    "shadow-[0_12px_28px_rgba(0,0,0,0.45)] border-2 border-white/20",
-    isFaceUp ? "ring-1 ring-white/5" : "ring-1 ring-black/20",
+    "group w-[clamp(56px,8vh,100px)] sm:w-[clamp(60px,9vh,110px)] md:w-[clamp(64px,10vh,120px)] lg:w-[clamp(70px,11vh,130px)] max-w-[140px] perspective-1000 rounded-xl overflow-hidden",
+    "shadow-[0_6px_16px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_28px_rgba(0,0,0,0.45)] border-2 border-black/10 dark:border-white/20",
+    isFaceUp ? "ring-0 dark:ring-1 dark:ring-white/5" : "ring-0 dark:ring-1 dark:ring-black/20",
     (isGlowing || justRevealed) && isFaceUp ? "shadow-soft" : "",
     peekGlow,
     specialRevealGlow,
@@ -160,21 +160,25 @@ export const GameCard: React.FC<CardProps> = ({
             className="w-full h-full object-cover"
             draggable={false}
           />
-          {isFaceUp && (
-            <div className="absolute top-1 left-1 sm:top-1.5 sm:left-1.5 z-10">
+          {isFaceUp && card && (
+            <div className="absolute top-0 left-0 z-10">
               <span
                 className={cn(
-                  "inline-block text-sm sm:text-base md:text-lg font-bold font-heading text-white",
-                  "drop-shadow-[0_0_8px_rgba(168,85,247,0.9)] drop-shadow-[0_0_16px_rgba(219,39,119,0.6)] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]",
-                  card?.isSpecial && "drop-shadow-[0_0_10px_rgba(236,72,153,0.95)] drop-shadow-[0_0_20px_rgba(168,85,247,0.7)]",
+                  "inline-flex items-center justify-center w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-4 md:h-4 rounded-full",
+                  "bg-gradient-to-br from-violet-500/50 via-purple-500/40 to-fuchsia-500/30",
+                  "text-[10px] sm:text-xs md:text-xs font-bold font-heading text-white",
+                  "shadow-[0_0_6px_rgba(139,92,246,0.4),0_0_10px_rgba(168,85,247,0.25)]",
+                  card?.isSpecial && "from-fuchsia-500/55 via-purple-500/45 to-violet-500/35 shadow-[0_0_8px_rgba(236,72,153,0.5),0_0_14px_rgba(168,85,247,0.3)]",
                 )}
               >
                 {card?.value}
               </span>
             </div>
           )}
-          <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_center,transparent_0%,transparent_50%,rgba(0,0,0,0.25)_100%)]" />
-          <div className="pointer-events-none absolute inset-0 rounded-xl mix-blend-soft-light bg-[radial-gradient(ellipse_at_50%_18%,rgba(255,255,255,0.08),transparent_42%),radial-gradient(ellipse_at_50%_62%,rgba(6,7,20,0.6),transparent_65%)]" />
+          {/* Light mode: bright vignette to counteract dark baked-in image vignette */}
+          <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.08)_40%,transparent_70%)] dark:bg-transparent" />
+          {/* Dark mode: subtle vignette */}
+          <div className="pointer-events-none absolute inset-0 rounded-xl bg-transparent dark:bg-[radial-gradient(ellipse_at_center,transparent_0%,transparent_50%,rgba(0,0,0,0.2)_100%)]" />
         </div>
       </div>
     );
@@ -200,9 +204,10 @@ export const GameCard: React.FC<CardProps> = ({
               className="w-full h-full object-cover"
               draggable={false}
             />
-            {/* Vignette effect for depth */}
-            <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_center,transparent_0%,transparent_50%,rgba(0,0,0,0.25)_100%)]" />
-            <div className="pointer-events-none absolute inset-0 rounded-xl mix-blend-soft-light bg-[radial-gradient(ellipse_at_50%_18%,rgba(255,255,255,0.08),transparent_42%),radial-gradient(ellipse_at_50%_62%,rgba(6,7,20,0.6),transparent_65%)]" />
+            {/* Light mode: bright vignette to counteract dark baked-in image vignette */}
+            <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.08)_40%,transparent_70%)] dark:bg-transparent" />
+            {/* Dark mode: subtle vignette */}
+            <div className="pointer-events-none absolute inset-0 rounded-xl bg-transparent dark:bg-[radial-gradient(ellipse_at_center,transparent_0%,transparent_50%,rgba(0,0,0,0.2)_100%)]" />
           </div>
         </div>
 
@@ -219,12 +224,14 @@ export const GameCard: React.FC<CardProps> = ({
                 />
 
                 {isFaceUp && (
-                  <div className="absolute top-1 left-1 sm:top-1.5 sm:left-1.5 z-10">
+                  <div className="absolute top-0 left-0 z-10">
                     <span
                       className={cn(
-                        "inline-block text-sm sm:text-base md:text-lg font-bold font-heading text-white",
-                        "drop-shadow-[0_0_8px_rgba(168,85,247,0.9)] drop-shadow-[0_0_16px_rgba(219,39,119,0.6)] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]",
-                        card?.isSpecial && "drop-shadow-[0_0_10px_rgba(236,72,153,0.95)] drop-shadow-[0_0_20px_rgba(168,85,247,0.7)]",
+                        "inline-flex items-center justify-center w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-4 md:h-4 rounded-full",
+                        "bg-gradient-to-br from-violet-500/50 via-purple-500/40 to-fuchsia-500/30",
+                        "text-[10px] sm:text-xs md:text-xs font-bold font-heading text-white",
+                        "shadow-[0_0_6px_rgba(139,92,246,0.4),0_0_10px_rgba(168,85,247,0.25)]",
+                        card?.isSpecial && "from-fuchsia-500/55 via-purple-500/45 to-violet-500/35 shadow-[0_0_8px_rgba(236,72,153,0.5),0_0_14px_rgba(168,85,247,0.3)]",
                       )}
                     >
                       {card.value}
@@ -249,9 +256,10 @@ export const GameCard: React.FC<CardProps> = ({
                   </div>
                 )}
 
-                {/* Vignette effect for depth */}
-                <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_center,transparent_0%,transparent_50%,rgba(0,0,0,0.25)_100%)]" />
-                <div className="pointer-events-none absolute inset-0 rounded-xl mix-blend-soft-light bg-[radial-gradient(ellipse_at_50%_18%,rgba(255,255,255,0.08),transparent_42%),radial-gradient(ellipse_at_50%_62%,rgba(6,7,20,0.6),transparent_65%)]" />
+                {/* Light mode: bright vignette to counteract dark baked-in image vignette */}
+                <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.08)_40%,transparent_70%)] dark:bg-transparent" />
+                {/* Dark mode: subtle vignette */}
+                <div className="pointer-events-none absolute inset-0 rounded-xl bg-transparent dark:bg-[radial-gradient(ellipse_at_center,transparent_0%,transparent_50%,rgba(0,0,0,0.2)_100%)]" />
               </>
             ) : (
               <img

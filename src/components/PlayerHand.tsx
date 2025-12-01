@@ -6,7 +6,6 @@ import { GameCard } from "./Card";
 import { useGame } from "@/state/useGame";
 import { cn } from "@/lib/utils";
 import { SoundType } from "@/hooks/use-sounds";
-import { getCardBackAsset } from "@/lib/cardAssets";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "./ui/button";

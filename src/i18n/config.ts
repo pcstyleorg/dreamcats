@@ -1,23 +1,36 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import HttpBackend from 'i18next-http-backend';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
+// Import translations directly for instant availability
+import enTranslation from '@/locales/en/translation.json';
+import enCommon from '@/locales/en/common.json';
+import plTranslation from '@/locales/pl/translation.json';
+import plCommon from '@/locales/pl/common.json';
+
+const resources = {
+  en: {
+    translation: enTranslation,
+    common: enCommon,
+  },
+  pl: {
+    translation: plTranslation,
+    common: plCommon,
+  },
+};
+
 i18n
-  .use(HttpBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
+    resources,
     fallbackLng: 'en',
     supportedLngs: ['en', 'pl'],
     debug: false,
     defaultNS: 'translation',
     ns: ['translation', 'common'],
     interpolation: {
-      escapeValue: false, // React already escapes by default
-    },
-    backend: {
-      loadPath: '/locales/{{lng}}/{{ns}}.json',
+      escapeValue: false,
     },
     detection: {
       order: ['localStorage', 'navigator'],
@@ -25,10 +38,9 @@ i18n
       lookupLocalStorage: 'i18nextLng',
     },
     react: {
-      useSuspense: true,
-      // Bind to languageChanged event to trigger re-renders
-      bindI18n: 'languageChanged loaded',
-      bindI18nStore: 'added removed',
+      useSuspense: false,
+      bindI18n: 'languageChanged',
+      bindI18nStore: '',
     },
   });
 

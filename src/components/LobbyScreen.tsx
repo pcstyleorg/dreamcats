@@ -15,7 +15,11 @@ import { ArrowLeft, Users, Cloud, Copy, Check, Play } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 
-export const LobbyScreen: React.FC = () => {
+interface LobbyScreenProps {
+  compensatedHeight?: string;
+}
+
+export const LobbyScreen: React.FC<LobbyScreenProps> = ({ compensatedHeight = '100dvh' }) => {
   const { t } = useTranslation();
   const { createRoom, joinRoom, startHotseatGame, startGame, state, myPlayerId } = useGame();
   const [mode, setMode] = useState<"select" | "online" | "hotseat">("select");
@@ -405,7 +409,10 @@ export const LobbyScreen: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-[hsl(var(--background))] via-[hsl(var(--background))] to-[hsl(var(--accent)/0.2)] relative overflow-hidden">
+    <div 
+      className="flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-[hsl(var(--background))] via-[hsl(var(--background))] to-[hsl(var(--accent)/0.2)] relative overflow-hidden"
+      style={{ minHeight: compensatedHeight }}
+    >
       <div className="absolute -left-10 top-12 w-48 h-48 rounded-full bg-[hsl(var(--primary)/0.18)] blur-3xl" />
       <div className="absolute right-0 bottom-6 w-56 h-56 rounded-full bg-[hsl(var(--secondary)/0.22)] blur-3xl" />
       <Card className="w-full max-w-md sm:max-w-lg bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.08)] backdrop-blur-xl shadow-2xl border border-border/50 relative overflow-hidden">

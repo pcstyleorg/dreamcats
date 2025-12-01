@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React from "react";
 import { Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -8,24 +8,12 @@ export const LanguageSwitcher: React.FC<{ className?: string }> = ({
   className,
 }) => {
   const { i18n } = useTranslation();
-  // Use local state to force re-render after language change
-  const [currentLang, setCurrentLang] = useState(() => 
-    i18n.language?.split('-')[0] || 'en'
-  );
+  const currentLang = i18n.language?.split('-')[0] || 'en';
 
-  const toggleLanguage = useCallback(async () => {
+  const toggleLanguage = () => {
     const newLang = currentLang === 'en' ? 'pl' : 'en';
-    try {
-      // Change language and wait for it to complete
-      await i18n.changeLanguage(newLang);
-      // Update local state to force re-render
-      setCurrentLang(newLang);
-      // Persist to localStorage
-      localStorage.setItem('i18nextLng', newLang);
-    } catch (error) {
-      console.error('Failed to change language:', error);
-    }
-  }, [currentLang, i18n]);
+    i18n.changeLanguage(newLang);
+  };
 
   return (
     <Button

@@ -33,9 +33,10 @@ import { PileCard } from "./PileCard";
 interface GameboardProps {
   theme: "light" | "dark";
   toggleTheme: () => void;
+  compensatedHeight?: string;
 }
 
-export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
+export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compensatedHeight = '100dvh' }) => {
   const { t } = useTranslation();
   const { state, myPlayerId, broadcastAction, playSound, leaveGame } = useGame();
   const {
@@ -314,7 +315,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
   if (players.length === 0) {
     return (
-      <div className="w-full min-h-screen flex items-center justify-center font-heading">
+      <div className="w-full h-full flex items-center justify-center font-heading">
         <p>{t('game.loadingGame')}</p>
       </div>
     );
@@ -365,11 +366,12 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     <div
       ref={containerRef}
       className={cn(
-        "relative w-full min-h-[100svh] lg:min-h-[100dvh] lg:h-full text-foreground px-1 sm:px-2 md:px-3 lg:px-4 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 bg-cover bg-center overflow-x-hidden overflow-y-auto styled-scrollbar",
-        isCompact && "game-compact"
+        "relative w-full text-foreground px-1 sm:px-2 md:px-3 lg:px-4 py-1 sm:py-2 flex flex-col lg:flex-row gap-1 sm:gap-2 md:gap-3 bg-cover bg-center styled-scrollbar",
+        isCompact && "game-compact py-0.5 gap-0.5 sm:gap-1"
       )}
       style={{
         backgroundImage,
+        minHeight: compensatedHeight,
       }}
     >
       {/* Overlays for better readability - theme-aware with soft creamy light mode */}
@@ -482,11 +484,11 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         {/* Ring Layout: top/left/right around piles, bottom stays anchored */}
         <div
           className={cn(
-            "grid grid-rows-[auto_1fr_auto] gap-2 sm:gap-3 lg:gap-4 xl:gap-5 items-center justify-items-center w-full flex-1 px-2 sm:px-4 lg:px-6 mt-4 sm:mt-6 mb-4 sm:mb-6",
+            "grid grid-rows-[auto_1fr_auto] gap-1 sm:gap-2 lg:gap-3 items-center justify-items-center w-full flex-1 px-1 sm:px-2 lg:px-4 mt-1 sm:mt-2 mb-1 sm:mb-2",
             // Default 3-column layout
-            "grid-cols-[minmax(80px,1fr)_minmax(0,2fr)_minmax(80px,1fr)]",
-            isCompact && "gap-2 sm:gap-3 mt-3 sm:mt-4",
-            !isSidebarOpen && "lg:px-8 xl:px-12"
+            "grid-cols-[minmax(60px,1fr)_minmax(0,2fr)_minmax(60px,1fr)]",
+            isCompact && "gap-0.5 sm:gap-1 mt-0.5 mb-0.5",
+            !isSidebarOpen && "lg:px-6 xl:px-8"
           )}
         >
           {/* Top seat - rotated 180deg for tablet play */}
@@ -541,9 +543,9 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
               {/* Pile Mat */}
               <div
                 className={cn(
-                  "bg-black/40 border border-white/5 rounded-3xl px-3 sm:px-4 md:px-5 py-3.5 sm:py-4.5 md:py-5.5 shadow-2xl backdrop-blur-xl inline-flex items-center justify-center gap-4.5 sm:gap-6.5 md:gap-8 relative z-10 mx-auto",
+                  "bg-white/60 dark:bg-black/40 border border-black/5 dark:border-white/5 rounded-3xl px-3 sm:px-4 md:px-5 py-3.5 sm:py-4.5 md:py-5.5 shadow-lg dark:shadow-2xl backdrop-blur-xl inline-flex items-center justify-center gap-4.5 sm:gap-6.5 md:gap-8 relative z-10 mx-auto",
                   isCompact && "px-2.5 sm:px-3.5 py-3 sm:py-3.5 gap-4 sm:gap-5 md:gap-6",
-                  isFocusPhase && "ring-[1.5px] ring-primary/25 shadow-[0_18px_40px_rgba(0,0,0,0.5)] bg-black/45"
+                  isFocusPhase && "ring-[1.5px] ring-primary/25 shadow-[0_12px_30px_rgba(0,0,0,0.15)] dark:shadow-[0_18px_40px_rgba(0,0,0,0.5)] bg-white/70 dark:bg-black/45"
                 )}
               >
                 <div

@@ -1,11 +1,11 @@
 {
   "errors": {
-    "enterName": "Wpisz swoje imię.",
+    "enterName": "Wpisz swoje imie.",
     "enterRoomId": "Wpisz kod pokoju.",
-    "createRoomFailed": "Nie udało się utworzyć pokoju. Sprawdź połączenie z internetem.",
-    "joinRoomFailed": "Nie udało się dołączyć do pokoju.",
-    "startGameFailed": "Nie udało się rozpocząć gry.",
-    "needTwoPlayers": "Do rozpoczęcia potrzeba co najmniej 2 graczy.",
+    "createRoomFailed": "Nie udalo sie utworzyc pokoju. Sprawdz polaczenie z internetem.",
+    "joinRoomFailed": "Nie udalo sie dolaczyc do pokoju.",
+    "startGameFailed": "Nie udalo sie rozpoczac gry.",
+    "needTwoPlayers": "Do rozpoczecia potrzeba co najmniej 2 graczy.",
     "enterAllNames": "Wpisz imiona wszystkich graczy."
   },
   "success": {
@@ -17,7 +17,7 @@
     "switchToDark": "Tryb ciemny"
   },
   "language": {
-    "switchLanguage": "Zmień język",
+    "switchLanguage": "Zmien jezyk",
     "en": "Angielski",
     "pl": "Polski"
   }
