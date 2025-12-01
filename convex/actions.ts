@@ -1,7 +1,7 @@
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { GameAction, GameState, Player, Card } from "./types";
-import { createDeck, shuffleDeck } from "./game-core";
+import { createDeck, shuffleDeck } from "./game_core";
 
 // Helper to clone state for mutation (though we can mutate directly in Convex if we are careful,
 // but treating it immutably first is safer for logic porting)
