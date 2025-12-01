@@ -170,14 +170,14 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
   const isPlayerActionable = isMyTurn && gamePhase === "playing";
   const pileCardClass = isCompact
-    ? "!w-[clamp(64px,7.5vw,100px)]"
-    : "!w-[clamp(68px,7.8vw,104px)]";
+    ? "w-[clamp(64px,7.5vw,100px)]!"
+    : "w-[clamp(68px,7.8vw,104px)]!";
 
   const RoomInfoPill = ({ variant }: { variant: "desktop" | "mobile" }) => {
     if (gameMode !== "online" || !roomId) return null;
     const base =
       variant === "desktop"
-        ? "flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-border/60 bg-card/80 backdrop-blur-sm shadow-soft text-xs sm:text-sm"
+        ? "flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-border/60 bg-card/80 backdrop-blur-xs shadow-soft text-xs sm:text-sm"
         : "hidden"; // Mobile variant disabled
 
     const dotClass =
@@ -201,7 +201,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
   const SidePanelContent = () => (
     <>
-      <div className="my-4 p-4 bg-accent/40 backdrop-blur-sm rounded-lg min-h-[60px] border border-border/30">
+      <div className="my-4 p-4 bg-accent/40 backdrop-blur-xs rounded-lg min-h-[60px] border border-border/30">
         <h4 className="font-semibold mb-2 font-heading flex items-center gap-2 text-foreground">
           <ScrollText className="w-4 h-4 text-primary" />
           {t('game.actionLog')}
@@ -376,13 +376,13 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     <div
       ref={containerRef}
       className={cn(
-        "relative w-full h-[100dvh] overflow-hidden text-foreground bg-cover bg-center",
+        "relative w-full h-dvh overflow-hidden text-foreground bg-cover bg-center",
         isCompact && "game-compact"
       )}
       style={{ backgroundImage }}
     >
       {/* Overlays for better readability - theme-aware with soft creamy light mode (not scaled) */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[rgba(255,252,248,0.92)] via-[rgba(255,250,245,0.88)] to-[rgba(255,248,250,0.92)] dark:from-[rgba(8,12,24,0.9)] dark:via-[rgba(12,15,32,0.8)] dark:to-[rgba(10,8,18,0.9)] pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-[rgba(255,252,248,0.92)] via-[rgba(255,250,245,0.88)] to-[rgba(255,248,250,0.92)] dark:from-[rgba(8,12,24,0.9)] dark:via-[rgba(12,15,32,0.8)] dark:to-[rgba(10,8,18,0.9)] pointer-events-none" />
       <div className="absolute inset-0 opacity-10 dark:opacity-60 pointer-events-none" style={{ backgroundImage: backgroundImage }} />
       <div className="absolute -top-32 -left-16 w-72 h-72 rounded-full bg-[hsl(var(--primary)/0.08)] dark:bg-[hsl(var(--primary)/0.25)] blur-3xl" />
       <div className="absolute top-12 -right-24 w-72 h-72 rounded-full bg-[hsl(var(--accent)/0.06)] dark:bg-[hsl(var(--accent)/0.2)] blur-3xl" />
@@ -426,7 +426,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
       <div
         className="flex-1 flex flex-col relative z-10 min-h-0 w-full transition-all duration-300"
       >
-      <main className="flex-grow flex flex-col min-h-0 gap-3 sm:gap-4 overflow-visible w-full">
+      <main className="grow flex flex-col min-h-0 gap-3 sm:gap-4 overflow-visible w-full">
         <div
 
           className={cn(
@@ -436,8 +436,8 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         >
           {/* Left Side: Player Info + Actions + Room Code */}
           <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar mask-linear-fade">
-            <div className="flex items-center gap-2 sm:gap-3 bg-card/70 border border-border/60 px-3 sm:px-4 py-2 sm:py-3 rounded-2xl shadow-soft backdrop-blur-lg flex-shrink-0">
-              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] flex items-center justify-center text-[hsl(var(--primary-foreground))] font-heading text-base sm:text-lg shadow-soft">
+            <div className="flex items-center gap-2 sm:gap-3 bg-card/70 border border-border/60 px-3 sm:px-4 py-2 sm:py-3 rounded-2xl shadow-soft backdrop-blur-lg shrink-0">
+              <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-linear-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] flex items-center justify-center text-[hsl(var(--primary-foreground))] font-heading text-base sm:text-lg shadow-soft">
                 {currentPlayer?.name?.charAt(0) ?? 'S'}
               </div>
               <div className="flex flex-col">
@@ -456,7 +456,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
           </div>
 
           {/* Right Side: Settings & Menu */}
-          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 bg-card/40 backdrop-blur-sm p-1 rounded-full border border-border/30">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 bg-card/40 backdrop-blur-xs p-1 rounded-full border border-border/30">
             <LanguageSwitcher />
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
             <Button
@@ -586,7 +586,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                         )}
                       />
                   </div>
-                  <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm whitespace-nowrap">
+                  <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-xs whitespace-nowrap">
                     <span className="text-xs sm:text-sm font-bold text-foreground/90 uppercase tracking-widest text-center">
                       {t('game.draw')}
                     </span>
@@ -617,7 +617,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                           playSound={playSound}
                         />
                       </div>
-                      <div className="mt-3 sm:mt-4 bg-primary/20 backdrop-blur-md px-3 py-1 rounded-full border border-primary/30 shadow-sm animate-in slide-in-from-top-2 duration-300 whitespace-nowrap">
+                      <div className="mt-3 sm:mt-4 bg-primary/20 backdrop-blur-md px-3 py-1 rounded-full border border-primary/30 shadow-xs animate-in slide-in-from-top-2 duration-300 whitespace-nowrap">
                         <span className="text-xs sm:text-sm font-bold text-primary uppercase tracking-widest text-center">
                           {t('game.yourCard')}
                         </span>
@@ -654,14 +654,14 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                         )}
                         valueBadge={
                           discardPile.length > 1 ? (
-                            <div className="px-2 py-1 rounded-full bg-background/80 border border-border/60 text-[11px] font-semibold shadow-sm">
+                            <div className="px-2 py-1 rounded-full bg-background/80 border border-border/60 text-[11px] font-semibold shadow-xs">
                               +{Math.min(discardPile.length - 1, 9)}
                             </div>
                           ) : null
                         }
                       />
                   </div>
-                  <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-sm whitespace-nowrap">
+                  <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-xs whitespace-nowrap">
                     <span className="text-xs sm:text-sm font-bold text-foreground/90 uppercase tracking-widest text-center">
                       {t('game.discard')}
                     </span>
@@ -758,7 +758,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
       <aside
         className={cn(
           "hidden lg:flex bg-card/95 backdrop-blur-lg rounded-xl border border-border/40 shadow-soft-lg flex-col relative z-10 transition-all duration-300 ease-in-out overflow-hidden",
-          isSidebarOpen ? "w-80 max-w-xs p-5 flex-shrink-0" : "w-0 p-0 border-0 flex-shrink"
+          isSidebarOpen ? "w-80 max-w-xs p-5 shrink-0" : "w-0 p-0 border-0 shrink"
         )}
       >
         <div className={cn("transition-opacity duration-200", isSidebarOpen ? "opacity-100" : "opacity-0")}>

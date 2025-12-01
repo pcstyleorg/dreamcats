@@ -37,7 +37,7 @@ export const Scoreboard: React.FC<ScoreboardProps> = ({ entries }) => {
   const { t } = useTranslation();
 
   return (
-    <div className="bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 rounded-lg p-3 sm:p-4 border border-border/50 shadow-soft">
+    <div className="bg-linear-to-br from-primary/10 via-accent/10 to-secondary/10 rounded-lg p-3 sm:p-4 border border-border/50 shadow-soft">
       <h3 className="text-lg sm:text-xl font-semibold mb-3 text-center font-heading flex items-center justify-center gap-2 text-foreground">
         <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" />
         {t('game.scoreboard')}

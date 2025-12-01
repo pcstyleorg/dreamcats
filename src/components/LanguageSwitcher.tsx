@@ -22,7 +22,7 @@ export const LanguageSwitcher: React.FC<{ className?: string }> = ({
       aria-label={`Switch to ${currentLang === 'en' ? 'Polish' : 'English'}`}
       onClick={toggleLanguage}
       className={cn(
-        "rounded-full h-10 w-10 border-border/60 bg-card/80 backdrop-blur-sm shadow-soft",
+        "rounded-full h-10 w-10 border-border/60 bg-card/80 backdrop-blur-xs shadow-soft",
         "hover:scale-105 transition-transform",
         className,
       )}

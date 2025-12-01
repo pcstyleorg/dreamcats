@@ -144,7 +144,7 @@ export const LobbyScreen: React.FC = () => {
       className="space-y-6"
     >
       <CardHeader className="space-y-2 sm:space-y-3">
-        <CardTitle className="text-5xl sm:text-6xl md:text-7xl text-center font-heading bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--accent))] to-[hsl(var(--secondary))] bg-clip-text text-transparent drop-shadow-sm">
+        <CardTitle className="text-5xl sm:text-6xl md:text-7xl text-center font-heading bg-linear-to-br from-[hsl(var(--primary))] via-[hsl(var(--accent))] to-[hsl(var(--secondary))] bg-clip-text text-transparent drop-shadow-xs">
           {t('lobby.title')}
         </CardTitle>
         <CardDescription className="text-center text-base sm:text-lg font-medium text-muted-foreground">
@@ -154,14 +154,14 @@ export const LobbyScreen: React.FC = () => {
       <CardContent className="space-y-4">
         <Button
           onClick={() => setMode("online")}
-          className="w-full h-16 text-lg font-semibold bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] hover:from-[hsl(var(--primary))] hover:to-[hsl(var(--secondary))] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          className="w-full h-16 text-lg font-semibold bg-linear-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] hover:from-[hsl(var(--primary))] hover:to-[hsl(var(--secondary))] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           size="lg"
         >
           <Cloud className="mr-3 h-6 w-6" /> {t('lobby.onlineMultiplayer')}
         </Button>
         <Button
           onClick={() => setMode("hotseat")}
-          className="w-full h-16 text-lg font-semibold bg-card text-foreground border-2 border-border hover:bg-muted hover:border-muted-foreground/30 shadow-sm hover:shadow-md transition-all duration-300"
+          className="w-full h-16 text-lg font-semibold bg-card text-foreground border-2 border-border hover:bg-muted hover:border-muted-foreground/30 shadow-xs hover:shadow-md transition-all duration-300"
           size="lg"
           variant="ghost"
         >
@@ -223,8 +223,8 @@ export const LobbyScreen: React.FC = () => {
               </div>
               <div className="grid gap-2">
                 {state.players.map(p => (
-                  <div key={p.id} className="flex items-center gap-3 bg-card p-3 rounded-lg border border-border shadow-sm">
-                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] flex items-center justify-center text-[hsl(var(--primary-foreground))] font-bold text-sm">
+                  <div key={p.id} className="flex items-center gap-3 bg-card p-3 rounded-lg border border-border shadow-xs">
+                    <div className="h-8 w-8 rounded-full bg-linear-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] flex items-center justify-center text-[hsl(var(--primary-foreground))] font-bold text-sm">
                       {p.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="font-medium text-foreground">{p.name}</span>
@@ -247,7 +247,7 @@ export const LobbyScreen: React.FC = () => {
                   handleStartOnlineGame();
                 }}
                 className={`w-full h-14 text-lg font-bold shadow-lg transition-all duration-300 ${state.players.length >= 2
-                    ? "bg-gradient-to-r from-[hsl(var(--secondary))] to-[hsl(var(--primary))] hover:from-[hsl(var(--primary))] hover:to-[hsl(var(--accent))] hover:shadow-xl transform hover:-translate-y-1"
+                    ? "bg-linear-to-r from-[hsl(var(--secondary))] to-[hsl(var(--primary))] hover:from-[hsl(var(--primary))] hover:to-[hsl(var(--accent))] hover:shadow-xl transform hover:-translate-y-1"
                     : "bg-muted text-muted-foreground cursor-not-allowed"
                   }`}
                 disabled={state.players.length < 2}
@@ -395,7 +395,7 @@ export const LobbyScreen: React.FC = () => {
 
         <Button
           onClick={handleStartHotseat}
-          className="w-full h-14 text-lg font-bold bg-gradient-to-r from-[hsl(var(--secondary))] to-[hsl(var(--primary))] hover:from-[hsl(var(--primary))] hover:to-[hsl(var(--accent))] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 mt-4 text-[hsl(var(--primary-foreground))]"
+          className="w-full h-14 text-lg font-bold bg-linear-to-r from-[hsl(var(--secondary))] to-[hsl(var(--primary))] hover:from-[hsl(var(--primary))] hover:to-[hsl(var(--accent))] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 mt-4 text-[hsl(var(--primary-foreground))]"
           size="lg"
         >
           {t('lobby.hotseat.startGame')}
@@ -406,12 +406,12 @@ export const LobbyScreen: React.FC = () => {
 
   return (
     <div 
-      className="min-h-[100dvh] flex items-center justify-center p-4 sm:p-6 bg-gradient-to-br from-[hsl(var(--background))] via-[hsl(var(--background))] to-[hsl(var(--accent)/0.2)] relative overflow-hidden"
+      className="min-h-dvh flex items-center justify-center p-4 sm:p-6 bg-linear-to-br from-[hsl(var(--background))] via-[hsl(var(--background))] to-[hsl(var(--accent)/0.2)] relative overflow-hidden"
     >
       <div className="absolute -left-10 top-12 w-48 h-48 rounded-full bg-[hsl(var(--primary)/0.18)] blur-3xl" />
       <div className="absolute right-0 bottom-6 w-56 h-56 rounded-full bg-[hsl(var(--secondary)/0.22)] blur-3xl" />
-      <Card className="w-full max-w-md sm:max-w-lg bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.08)] backdrop-blur-xl shadow-2xl border border-border/50 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[hsl(var(--secondary))] via-[hsl(var(--primary))] to-[hsl(var(--accent))]" />
+      <Card className="w-full max-w-md sm:max-w-lg bg-linear-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.08)] backdrop-blur-xl shadow-2xl border border-border/50 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-[hsl(var(--secondary))] via-[hsl(var(--primary))] to-[hsl(var(--accent))]" />
         <AnimatePresence mode="wait">
           {mode === "select" && renderSelectMode()}
           {mode === "online" && renderOnlineMode()}

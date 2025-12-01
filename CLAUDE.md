@@ -117,7 +117,7 @@ The app uses a **unidirectional Zustand store** with specialized slices. State f
 - Transform/opacity only (no width/height transitions to avoid reflow)
 - Honors `prefers-reduced-motion`
 - Core durations capped at ~200ms ease-out
-- Gameplay locks scroll via `game-scroll-lock` class and uses `min-h-[100dvh]`
+- Gameplay locks scroll via `game-scroll-lock` class and uses `min-h-dvh`
 - Compact mode for viewports <1100px width or <860px height
 
 ### i18n (Internationalization)

@@ -59,7 +59,7 @@ export const PileCard: React.FC<PileCardProps> = ({
           <span
             className={cn(
               "inline-flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 md:w-5 md:h-5 rounded-full",
-              "bg-gradient-to-br from-violet-500/50 via-purple-500/40 to-fuchsia-500/30",
+              "bg-linear-to-br from-violet-500/50 via-purple-500/40 to-fuchsia-500/30",
               "text-xs sm:text-sm md:text-sm font-bold font-heading text-white",
               "shadow-[0_0_6px_rgba(139,92,246,0.4),0_0_10px_rgba(168,85,247,0.25)]",
               card?.isSpecial && "from-fuchsia-500/55 via-purple-500/45 to-violet-500/35 shadow-[0_0_8px_rgba(236,72,153,0.5),0_0_14px_rgba(168,85,247,0.3)]",
@@ -76,7 +76,7 @@ export const PileCard: React.FC<PileCardProps> = ({
         <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
           <div className="absolute inset-0 bg-black/15 backdrop-blur-[1px]" />
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-white text-lg sm:text-xl font-heading font-bold text-center px-3 drop-shadow">
+            <div className="text-white text-lg sm:text-xl font-heading font-bold text-center px-3 drop-shadow-sm">
               <div>{card.value}</div>
               {actionLabel && (
                 <div className="mt-1 text-sm font-medium opacity-90">

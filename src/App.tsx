@@ -44,10 +44,10 @@ function App() {
   const showGameboard = hasEntered && state.gamePhase !== 'lobby';
 
   return (
-    <Suspense fallback={<div className="h-[100dvh] bg-background flex items-center justify-center"><div className="text-foreground">Loading...</div></div>}>
+    <Suspense fallback={<div className="h-dvh bg-background flex items-center justify-center"><div className="text-foreground">Loading...</div></div>}>
       <TutorialProvider>
-        <div className="bg-background w-full min-h-[100dvh]">
-          <main className="font-sans bg-background text-foreground transition-colors relative flex flex-col w-full min-h-[100dvh]">
+        <div className="bg-background w-full min-h-dvh">
+          <main className="font-sans bg-background text-foreground transition-colors relative flex flex-col w-full min-h-dvh">
             <ConvexSync />
             {!showGameboard && (
               <div className="fixed top-3 sm:top-4 right-3 sm:right-4 z-50 flex gap-2">
@@ -57,17 +57,17 @@ function App() {
             )}
             <AnimatePresence mode="wait">
               {showLanding && (
-                <motion.div key="landing" className="flex-1 w-full min-h-[100dvh]" exit={{ opacity: 0, transition: { duration: 0.5 } }}>
+                <motion.div key="landing" className="flex-1 w-full min-h-dvh" exit={{ opacity: 0, transition: { duration: 0.5 } }}>
                   <LandingPage onEnter={() => setHasEntered(true)} />
                 </motion.div>
               )}
               {showLobby && (
-                <motion.div key="lobby" className="flex-1 w-full min-h-[100dvh]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+                <motion.div key="lobby" className="flex-1 w-full min-h-dvh" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
                   <LobbyScreen />
                 </motion.div>
               )}
               {showGameboard && (
-                <motion.div key="gameboard" className="flex-1 w-full min-h-[100dvh]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+                <motion.div key="gameboard" className="flex-1 w-full min-h-dvh" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
                   <Gameboard theme={theme} toggleTheme={toggleTheme} />
                 </motion.div>
               )}

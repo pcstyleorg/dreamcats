@@ -38,7 +38,7 @@ export const ChatBox = () => {
         {t("game.chat")}
       </h4>
       <ScrollArea
-        className="flex-grow h-48 rounded-md border p-2 mb-2 bg-black/10"
+        className="grow h-48 rounded-md border p-2 mb-2 bg-black/10"
         ref={scrollAreaRef}
       >
         {(state.chatMessages || []).map((msg) => (
@@ -58,7 +58,7 @@ export const ChatBox = () => {
               )}
             >
               <p className="font-bold text-xs">{msg.senderName}</p>
-              <p className="break-words">{msg.message}</p>
+              <p className="wrap-break-word">{msg.message}</p>
             </div>
           </div>
         ))}
