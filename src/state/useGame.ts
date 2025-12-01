@@ -183,6 +183,38 @@ export const useGame = () => {
     [joinRoomMutation, persistSession, setGame, setPlayer, setRoom],
   );
 
+  // Rejoin an existing room with a known player ID (for reconnection after refresh)
+  const rejoinRoom = useCallback(
+    async (room: string, existingPlayerId: string, name: string) => {
+      try {
+        // Use the existing player ID to rejoin
+        await joinRoomMutation({
+          roomId: room,
+          playerId: existingPlayerId,
+          name,
+        });
+        setPlayer(existingPlayerId, name);
+        setRoom(room);
+        persistSession(existingPlayerId, name, room);
+        
+        // Set minimal game state to trigger ConvexSync to start querying
+        // The server will send us the full current state
+        setGame({
+          ...clone(initialGameState),
+          gameMode: "online",
+          roomId: room,
+          actionMessage: `Rejoining room ${room}...`,
+        }, { source: "local" });
+        
+        toast.success(`Rejoined room ${room}.`);
+      } catch (err) {
+        console.error(err);
+        throw err; // Re-throw so caller can handle
+      }
+    },
+    [joinRoomMutation, persistSession, setGame, setPlayer, setRoom],
+  );
+
   const startHotseatGame = useCallback(
     (playerNames: string[]) => {
       const names = playerNames.map((n) => n.trim()).filter(Boolean);
@@ -374,6 +406,7 @@ export const useGame = () => {
     roomId,
     createRoom,
     joinRoom,
+    rejoinRoom,
     startHotseatGame,
     startGame,
     leaveGame,

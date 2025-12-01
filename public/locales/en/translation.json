@@ -49,6 +49,7 @@
     "waitingForOpponents": "Waiting for opponents...",
     "draw": "Draw",
     "discard": "Discard",
+    "discarded": "Discarded",
     "swap": "Swap",
     "cards": "cards",
     "yourCard": "Your Card",

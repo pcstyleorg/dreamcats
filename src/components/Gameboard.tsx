@@ -161,6 +161,16 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     }
   };
 
+  const handleDiscardPileClick = () => {
+    // If holding a card, clicking discard pile discards it
+    if (isMyTurn && gamePhase === "holding_card") {
+      broadcastAction({ type: "DISCARD_HELD_CARD" });
+    } else {
+      // Otherwise, draw from discard
+      handleDrawFromDiscard();
+    }
+  };
+
   const copyRoomId = () => {
     if (roomId) {
       navigator.clipboard.writeText(roomId);
@@ -645,10 +655,10 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                             : null
                         }
                         faceUp={true}
-                        onClick={handleDrawFromDiscard}
-                        isGlowing={isPlayerActionable && discardPile.length > 0}
+                        onClick={handleDiscardPileClick}
+                        isGlowing={(isPlayerActionable && discardPile.length > 0) || (isMyTurn && gamePhase === "holding_card")}
                         className={cn(
-                          isPlayerActionable ? "cursor-pointer" : "",
+                          (isPlayerActionable || (isMyTurn && gamePhase === "holding_card")) ? "cursor-pointer" : "",
                           pileCardClass,
                           "shadow-2xl"
                         )}
@@ -663,7 +673,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                   </div>
                   <div className="mt-3 sm:mt-4 bg-background/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-xs whitespace-nowrap">
                     <span className="text-xs sm:text-sm font-bold text-foreground/90 uppercase tracking-widest text-center">
-                      {t('game.discard')}
+                      {t('game.discarded')}
                     </span>
                   </div>
                   {state.discardPile.length > 0 && (

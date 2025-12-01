@@ -157,3 +157,101 @@ export const setLanguage = mutation({
     }
   },
 });
+
+/**
+ * Set active game session (for rejoin after refresh)
+ */
+export const setActiveSession = mutation({
+  args: {
+    roomId: v.optional(v.string()),
+    playerId: v.optional(v.string()),
+    gameMode: v.optional(v.string()),
+  },
+  handler: async (ctx, { roomId, playerId, gameMode }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      // For anonymous, store in localStorage on client side
+      return;
+    }
+
+    const existing = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .unique();
+
+    const sessionData = {
+      activeRoomId: roomId,
+      activePlayerId: playerId,
+      activeGameMode: gameMode,
+      updatedAt: Date.now(),
+    };
+
+    if (existing) {
+      await ctx.db.patch(existing._id, sessionData);
+    } else {
+      await ctx.db.insert("userPreferences", {
+        userId,
+        ...sessionData,
+      });
+    }
+  },
+});
+
+/**
+ * Clear active game session
+ */
+export const clearActiveSession = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return;
+
+    const existing = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .unique();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        activeRoomId: undefined,
+        activePlayerId: undefined,
+        activeGameMode: undefined,
+        localGameState: undefined,
+        updatedAt: Date.now(),
+      });
+    }
+  },
+});
+
+/**
+ * Save local game state (for hotseat resume)
+ */
+export const saveLocalGameState = mutation({
+  args: {
+    gameState: v.any(),
+  },
+  handler: async (ctx, { gameState }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return;
+
+    const existing = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .unique();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        localGameState: gameState,
+        activeGameMode: "hotseat",
+        updatedAt: Date.now(),
+      });
+    } else {
+      await ctx.db.insert("userPreferences", {
+        userId,
+        localGameState: gameState,
+        activeGameMode: "hotseat",
+        updatedAt: Date.now(),
+      });
+    }
+  },
+});

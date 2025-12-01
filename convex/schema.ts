@@ -78,6 +78,12 @@ export default defineSchema({
     displayName: v.optional(v.string()),
     theme: v.optional(v.string()), // "light" | "dark"
     language: v.optional(v.string()), // "en" | "pl" etc.
+    // Active game session for rejoin capability
+    activeRoomId: v.optional(v.string()),
+    activePlayerId: v.optional(v.string()),
+    activeGameMode: v.optional(v.string()), // "online" | "hotseat"
+    // Local game backup for hotseat resume
+    localGameState: v.optional(v.any()),
     updatedAt: v.number(),
   })
     .index("by_userId", ["userId"]),
