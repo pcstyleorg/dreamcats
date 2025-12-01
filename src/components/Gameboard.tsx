@@ -658,15 +658,18 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
           {/* Bottom seat + actions */}
           {bottomPlayer && (
             <div className="col-start-2 row-start-3 w-full flex flex-col items-center gap-2 sm:gap-3">
-              <div
-                className="min-h-[56px] w-full max-w-xl flex items-center justify-center"
-                data-tutorial-id="game-actions"
-              >
-                <GameActions />
-              </div>
+              {/* Central game actions - only show for online mode */}
+              {gameMode !== "hotseat" && (
+                <div
+                  className="min-h-[56px] w-full max-w-xl flex items-center justify-center"
+                  data-tutorial-id="game-actions"
+                >
+                  <GameActions />
+                </div>
+              )}
               <div
                 data-tutorial-id="player-hand"
-                className={cn(isCompact && "scale-[0.95] origin-bottom w-full flex justify-center")}
+                className="w-full flex justify-center"
               >
                 <PlayerHand
                   player={bottomPlayer}

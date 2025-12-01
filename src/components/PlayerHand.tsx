@@ -9,6 +9,8 @@ import { SoundType } from "@/hooks/use-sounds";
 import { getCardBackAsset } from "@/lib/cardAssets";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { Button } from "./ui/button";
+import { Wand2 } from "lucide-react";
 
 interface PlayerHandProps {
   player: Player;
@@ -29,7 +31,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
 }) => {
   const { t } = useTranslation();
   const { state, broadcastAction, myPlayerId } = useGame();
-  const { gamePhase, gameMode, lastMove } = state;
+  const { gamePhase, gameMode, lastMove, peekingState, drawnCard, drawSource } = state;
   const containerRef = useRef<HTMLDivElement>(null);
   const currentPlayer = state.players[state.currentPlayerIndex];
   const isMyTurn =
@@ -177,10 +179,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   }, [player.id, recentMoveForPlayer, t]);
 
   const cardBackAsset = React.useMemo(() => getCardBackAsset(), []);
-  const baseCardWidth = isLocalPlayer
-    ? "!w-[clamp(72px,9.6vw,128px)]"
-    : "!w-[clamp(64px,8.6vw,112px)]";
-  const opponentCardWidth = "!w-[clamp(60px,7.8vw,104px)]";
+  // Consistent card sizing for all players to prevent layout jumping
+  const cardWidth = "!w-[clamp(64px,8.5vw,112px)]";
   const maxCardWidth =
     "max-w-[110px] sm:max-w-[118px] md:max-w-[126px] lg:max-w-[132px]";
 
@@ -190,23 +190,25 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     state.players.findIndex((p) => p.id === player.id);
 
   // Check if this hand should be highlighted for swap interaction
+  // In hotseat, the current player can swap their own cards even if they're in an "opponent" position
   const isSwapTarget =
     gamePhase === "holding_card" &&
-    isMyTurn &&
-    !isOpponent &&
+    isCurrentPlayer &&
     (gameMode === "hotseat" || player.id === myPlayerId);
 
   const handleCardClick = (cardIndex: number) => {
     // Block interaction with opponent cards during normal gameplay
     // Only allow if it's a special action that explicitly targets opponents
     // or if it's the peeking phase and this is the active peeker's hand
+    // or if it's holding_card phase and this is the current player's hand
     const isSpecialActionAllowingOpponentTarget = 
       (gamePhase === "action_peek_1" && isMyTurn) || 
       ((gamePhase === "action_swap_2_select_1" || gamePhase === "action_swap_2_select_2") && isMyTurn);
     
     const isPeekingOwnCards = gamePhase === "peeking" && isPeekingTurn;
+    const isSwappingOwnCards = gamePhase === "holding_card" && isCurrentPlayer;
     
-    if (isOpponent && !isSpecialActionAllowingOpponentTarget && !isPeekingOwnCards) {
+    if (isOpponent && !isSpecialActionAllowingOpponentTarget && !isPeekingOwnCards && !isSwappingOwnCards) {
       return; // Silently ignore clicks on opponent cards when not allowed
     }
 
@@ -223,8 +225,10 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     }
 
     // Swapping card from hand after drawing (only the active player's own hand)
-    if (gamePhase === "holding_card" && isCurrentPlayer && isMyTurn) {
-      if (isOpponent) return; // Should be covered, but safety first
+    // In hotseat, isCurrentPlayer is true for the active player regardless of position
+    if (gamePhase === "holding_card" && isCurrentPlayer) {
+      // In online mode, also verify it's the local player's hand
+      if (gameMode === "online" && player.id !== myPlayerId) return;
       broadcastAction({ type: "SWAP_HELD_CARD", payload: { cardIndex } });
       return;
     }
@@ -282,7 +286,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       return "cursor-pointer";
     }
 
-    if (gamePhase === "holding_card" && isCurrentPlayer && isMyTurn) {
+    // For holding_card phase, allow current player to swap
+    if (gamePhase === "holding_card" && isCurrentPlayer) {
       return "cursor-pointer";
     }
 
@@ -309,33 +314,50 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     gamePhase !== "round_end" &&
     gamePhase !== "game_over";
 
+  // Wrapper to hold both actions (outside) and hand container
   return (
-    <div
-      ref={containerRef}
-      className={cn(
-        "relative p-3 sm:p-3.5 md:p-4 lg:p-4.5 rounded-2xl border transition-all duration-300 backdrop-blur-md",
-        "shadow-soft-lg",
-        // Only show the glow/highlight when it's this player's turn
-        isTurnOwner
-          ? "bg-gradient-to-br from-[hsl(var(--primary)/0.18)] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.18)] border-primary/50 shadow-[0_12px_40px_rgba(0,0,0,0.38)] ring-1 ring-primary/30 outline outline-2 outline-primary/70 shadow-[0_0_32px_hsl(var(--primary)/0.4)]"
-          : "bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.12)] border-border/50",
-        // Enhanced glow when player hand is interactive swap target
-        isSwapTarget && "swap-target-hand border-primary/60 shadow-[0_0_40px_hsl(var(--primary)/0.4),0_0_80px_hsl(var(--primary)/0.2)] ring-2 ring-primary/30 ring-offset-2 ring-offset-background/50",
+    <div className="flex flex-col items-center gap-2">
+      {/* Action buttons OUTSIDE the card container - always reserve space in hotseat to prevent layout shift */}
+      {gameMode === "hotseat" && (
+        <div className={cn("min-h-[44px] flex items-center justify-center", !isTurnOwner && "invisible")}>
+          <PlayerInlineActions
+            gamePhase={gamePhase}
+            peekingState={peekingState}
+            drawnCard={drawnCard}
+            drawSource={drawSource}
+            broadcastAction={broadcastAction}
+            t={t}
+          />
+        </div>
       )}
-    >
-      {/* Active turn aura */}
-      {isTurnOwner && (
-        <div className="pointer-events-none absolute -inset-2 rounded-3xl bg-[radial-gradient(circle_at_30%_20%,rgba(137,103,255,0.18),rgba(61,19,90,0.05))] blur-[2px] animate-pulse" />
-      )}
-      {/* Swap target indicator glow overlay */}
-      {isSwapTarget && (
-        <div className="absolute -inset-1 rounded-2xl bg-gradient-to-t from-primary/20 via-primary/10 to-transparent pointer-events-none animate-pulse" />
-      )}
-      {/* Floating status chips */}
-      {actionLabel && (
-        <div className="pointer-events-none absolute -top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 text-[0.7rem] sm:text-xs text-muted-foreground bg-background/80 border border-border/60 rounded-full px-3 py-1 shadow-soft backdrop-blur-md">
-          <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-          <span className="whitespace-nowrap">{actionLabel}</span>
+      
+      {/* The actual hand container */}
+      <div
+        ref={containerRef}
+        className={cn(
+          "relative p-3 sm:p-3.5 md:p-4 lg:p-4.5 rounded-2xl border transition-all duration-300 backdrop-blur-md",
+          "shadow-soft-lg",
+          // Only show the glow/highlight when it's this player's turn
+          isTurnOwner
+            ? "bg-gradient-to-br from-[hsl(var(--primary)/0.18)] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.18)] border-primary/50 shadow-[0_12px_40px_rgba(0,0,0,0.38)] ring-1 ring-primary/30 outline outline-2 outline-primary/70 shadow-[0_0_32px_hsl(var(--primary)/0.4)]"
+            : "bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.12)] border-border/50",
+          // Enhanced glow when player hand is interactive swap target
+          isSwapTarget && "swap-target-hand border-primary/60 shadow-[0_0_40px_hsl(var(--primary)/0.4),0_0_80px_hsl(var(--primary)/0.2)] ring-2 ring-primary/30 ring-offset-2 ring-offset-background/50",
+        )}
+      >
+        {/* Active turn aura */}
+        {isTurnOwner && (
+          <div className="pointer-events-none absolute -inset-2 rounded-3xl bg-[radial-gradient(circle_at_30%_20%,rgba(137,103,255,0.18),rgba(61,19,90,0.05))] blur-[2px] animate-pulse" />
+        )}
+        {/* Swap target indicator glow overlay */}
+        {isSwapTarget && (
+          <div className="absolute -inset-1 rounded-2xl bg-gradient-to-t from-primary/20 via-primary/10 to-transparent pointer-events-none animate-pulse" />
+        )}
+        {/* Floating status chips */}
+        {actionLabel && (
+          <div className="pointer-events-none absolute -top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 text-[0.7rem] sm:text-xs text-muted-foreground bg-background/80 border border-border/60 rounded-full px-3 py-1 shadow-soft backdrop-blur-md">
+            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            <span className="whitespace-nowrap">{actionLabel}</span>
         </div>
       )}
       {recentMoveForPlayer?.action === "draw" && (
@@ -376,8 +398,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
 
         <div
           className={cn(
-            "flex justify-center w-full relative px-4",
-            isLocalPlayer ? "gap-2 sm:gap-2.5 md:gap-3" : "gap-1 sm:gap-1.5 md:gap-2",
+            "flex justify-center w-full relative px-4 gap-1.5 sm:gap-2 md:gap-2.5",
             orientation === "vertical" && "flex-col items-center px-2 gap-2 sm:gap-2.5 md:gap-3"
           )}
         >
@@ -438,9 +459,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                     hasBeenPeeked={cardInHand.hasBeenPeeked}
                     onClick={() => handleCardClick(index)}
                     className={cn(
-                      baseCardWidth,
+                      cardWidth,
                       maxCardWidth,
-                      isOpponent && opponentCardWidth,
                       getCardInteractionClass(index),
                     )}
                     playSound={playSound}
@@ -452,5 +472,122 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
         </div>
       </div>
     </div>
+    </div>
   );
+};
+
+/** Inline action buttons that appear in each player's hand area */
+const PlayerInlineActions: React.FC<{
+  gamePhase: string;
+  peekingState?: { playerIndex: number; peekedCount: number };
+  drawnCard: any;
+  drawSource: string | null;
+  broadcastAction: (action: any) => void;
+  t: (key: string) => string;
+}> = ({ gamePhase, peekingState, drawnCard, drawSource, broadcastAction, t }) => {
+  const handleFinishPeeking = () => {
+    if (peekingState?.peekedCount === 2) {
+      broadcastAction({ type: "FINISH_PEEKING" });
+    }
+  };
+
+  const handlePobudka = () => {
+    broadcastAction({ type: "CALL_POBUDKA" });
+  };
+
+  const canUseSpecial =
+    drawnCard?.isSpecial &&
+    gamePhase === "holding_card" &&
+    (drawSource === "deck" || drawSource === "take2");
+  const mustSwap =
+    gamePhase === "holding_card" && !!drawnCard && (drawSource === "discard" || drawSource === "take2");
+
+  // Peeking phase
+  if (gamePhase === "peeking" && peekingState !== undefined) {
+    return (
+      <div className="mt-2 flex justify-center">
+        <Button
+          onClick={handleFinishPeeking}
+          disabled={peekingState.peekedCount !== 2}
+          variant="secondary"
+          className="min-w-[120px] sm:min-w-[140px] h-10 sm:h-11 text-sm sm:text-base font-semibold shadow-sm hover:bg-secondary/80"
+          size="sm"
+        >
+          {t('game.finishPeeking')}
+        </Button>
+      </div>
+    );
+  }
+
+  // Playing phase - show Pobudka button
+  if (gamePhase === "playing") {
+    return (
+      <div className="mt-2 flex justify-center">
+        <Button
+          onClick={handlePobudka}
+          variant="destructive"
+          className="min-w-[100px] sm:min-w-[120px] h-10 sm:h-11 text-sm sm:text-base font-bold shadow-md rounded-full"
+          size="sm"
+        >
+          {t('game.pobudka')}
+        </Button>
+      </div>
+    );
+  }
+
+  // Holding card phase - show discard/swap/action buttons
+  if (gamePhase === "holding_card") {
+    return (
+      <div className="mt-2 flex flex-col items-center gap-2">
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            onClick={() => broadcastAction({ type: "DISCARD_HELD_CARD" })}
+            disabled={mustSwap}
+            className="min-w-[70px] sm:min-w-[90px] h-9 sm:h-10 text-xs sm:text-sm rounded-full border-border/70 bg-card/70 shadow-sm"
+            size="sm"
+          >
+            {t('game.discard')}
+          </Button>
+          <Button
+            onClick={() => broadcastAction({ type: "USE_SPECIAL_ACTION" })}
+            disabled={!canUseSpecial}
+            className="min-w-[70px] sm:min-w-[90px] h-9 sm:h-10 text-xs sm:text-sm rounded-full bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-[hsl(var(--primary-foreground))] shadow-soft-lg disabled:opacity-60"
+            size="sm"
+          >
+            <Wand2 className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+            {t('game.action')}
+          </Button>
+        </div>
+        <p className="text-[0.65rem] sm:text-xs text-muted-foreground text-center">
+          {mustSwap ? t('game.mustSwapCard') : t('game.orTapCardToSwap')}
+        </p>
+      </div>
+    );
+  }
+
+  // Special action phases
+  if (gamePhase === "action_peek_1") {
+    return (
+      <div className="mt-2 flex justify-center">
+        <p className="text-xs sm:text-sm text-center text-primary font-medium px-3 py-1.5 bg-primary/10 rounded-full border border-primary/30">
+          {t('game.usedPeek1')}
+        </p>
+      </div>
+    );
+  }
+
+  if (gamePhase === "action_swap_2_select_1" || gamePhase === "action_swap_2_select_2") {
+    return (
+      <div className="mt-2 flex justify-center">
+        <p className="text-xs sm:text-sm text-center text-pink-400 font-medium px-3 py-1.5 bg-pink-500/10 rounded-full border border-pink-400/30">
+          {gamePhase === "action_swap_2_select_1"
+            ? t('game.usedSwap2SelectFirst')
+            : t('game.selectSecondCard')}
+        </p>
+      </div>
+    );
+  }
+
+  return null;
 };
