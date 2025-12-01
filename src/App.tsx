@@ -31,7 +31,6 @@ function App() {
     const viewportWidth = window.innerWidth;
 
     // Temporarily reset to scale=1 to measure natural content size
-    const prevZoom = container.style.zoom;
     container.style.zoom = '1';
     container.style.minHeight = '100dvh';
     
