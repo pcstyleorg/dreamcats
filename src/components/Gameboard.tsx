@@ -29,14 +29,14 @@ import { LanguageSwitcher } from "./LanguageSwitcher";
 import { usePlayersView } from "@/state/hooks";
 import { useNetStatus } from "@/state/selectors";
 import { PileCard } from "./PileCard";
+import { useScaleToFit } from "@/hooks/useScaleToFit";
 
 interface GameboardProps {
   theme: "light" | "dark";
   toggleTheme: () => void;
-  compensatedHeight?: string;
 }
 
-export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compensatedHeight = '100dvh' }) => {
+export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   const { t } = useTranslation();
   const { state, myPlayerId, broadcastAction, playSound, leaveGame } = useGame();
   const {
@@ -65,7 +65,17 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
     }
     return true;
   });
+  
+  // Refs for scale-to-fit functionality
   const containerRef = useRef<HTMLDivElement>(null);
+  const boardContentRef = useRef<HTMLDivElement>(null);
+  
+  // Use scale-to-fit hook to scale the board content when it overflows
+  const { scale } = useScaleToFit(containerRef, boardContentRef, {
+    maxScale: 1,
+    minScale: 0.65,
+    enabled: true,
+  });
 
   // Auto-collapse sidebar when screen width changes
   useEffect(() => {
@@ -366,15 +376,12 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
     <div
       ref={containerRef}
       className={cn(
-        "relative w-full text-foreground px-1 sm:px-2 md:px-3 lg:px-4 py-1 sm:py-2 flex flex-col lg:flex-row gap-1 sm:gap-2 md:gap-3 bg-cover bg-center styled-scrollbar",
-        isCompact && "game-compact py-0.5 gap-0.5 sm:gap-1"
+        "relative w-full h-[100dvh] overflow-hidden text-foreground bg-cover bg-center",
+        isCompact && "game-compact"
       )}
-      style={{
-        backgroundImage,
-        minHeight: compensatedHeight,
-      }}
+      style={{ backgroundImage }}
     >
-      {/* Overlays for better readability - theme-aware with soft creamy light mode */}
+      {/* Overlays for better readability - theme-aware with soft creamy light mode (not scaled) */}
       <div className="absolute inset-0 bg-gradient-to-br from-[rgba(255,252,248,0.92)] via-[rgba(255,250,245,0.88)] to-[rgba(255,248,250,0.92)] dark:from-[rgba(8,12,24,0.9)] dark:via-[rgba(12,15,32,0.8)] dark:to-[rgba(10,8,18,0.9)] pointer-events-none" />
       <div className="absolute inset-0 opacity-10 dark:opacity-60 pointer-events-none" style={{ backgroundImage: backgroundImage }} />
       <div className="absolute -top-32 -left-16 w-72 h-72 rounded-full bg-[hsl(var(--primary)/0.08)] dark:bg-[hsl(var(--primary)/0.25)] blur-3xl" />
@@ -389,6 +396,19 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
             "opacity-100 bg-[radial-gradient(circle_at_center,rgba(255,252,248,0.4),rgba(255,250,245,0.5))] md:bg-[radial-gradient(70%_70%_at_50%_45%,rgba(255,252,248,0.3),rgba(255,250,245,0.45))] dark:bg-[radial-gradient(circle_at_center,rgba(8,6,18,0.55),rgba(6,4,12,0.7))] dark:md:bg-[radial-gradient(70%_70%_at_50%_45%,rgba(8,6,18,0.42),rgba(6,4,12,0.68))]"
         )}
       />
+
+      {/* Scaled board content wrapper */}
+      <div
+        ref={boardContentRef}
+        className={cn(
+          "w-full h-full flex flex-col lg:flex-row gap-1 sm:gap-2 md:gap-3 px-1 sm:px-2 md:px-3 lg:px-4 py-1 sm:py-2 styled-scrollbar relative z-10",
+          isCompact && "py-0.5 gap-0.5 sm:gap-1"
+        )}
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: 'top center',
+        }}
+      >
 
       {recentMoveLabel && (
         <div
@@ -755,6 +775,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme, compen
           <SidePanelContent />
         </div>
       </aside>
+      </div>
 
       <ActionModal />
     </div>

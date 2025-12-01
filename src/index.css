@@ -176,6 +176,18 @@
   }
 }
 
+/* Transform containment for scaled game board */
+.scale-container {
+  contain: layout style;
+  will-change: transform;
+}
+
+/* Ensure scaled content doesn't overflow parent */
+.scale-wrapper {
+  transform-origin: top center;
+  will-change: transform;
+}
+
 /* Soft shadows for light theme */
 .shadow-soft {
   box-shadow:
