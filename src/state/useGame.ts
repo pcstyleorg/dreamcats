@@ -3,11 +3,12 @@ import { toast } from "sonner";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useSounds } from "@/hooks/use-sounds";
-import { Card, GameAction, GameState, Player } from "@/types";
+import { GameAction, GameState, Player } from "@/types";
 import { useAppStore } from "./store";
 import { initialGameState } from "./initialGame";
 import i18n from "@/i18n/config";
 import { gameReducer } from "./gameReducer";
+import { createDeck, shuffleDeck } from "@/lib/game-logic";
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -46,35 +47,6 @@ const retryMutation = async <T>({
       tries += 1;
     }
   }
-};
-
-const buildDeck = (): Card[] => {
-  const cards: Card[] = [];
-  let id = 0;
-  for (let i = 0; i <= 9; i++) {
-    const count = i === 9 ? 9 : 4;
-    for (let j = 0; j < count; j++) {
-      cards.push({ id: id++, value: i, isSpecial: false });
-    }
-  }
-  const addSpecial = (value: number, specialAction: Card["specialAction"]) => {
-    for (let i = 0; i < 3; i++) {
-      cards.push({ id: id++, value, isSpecial: true, specialAction });
-    }
-  };
-  addSpecial(5, "take_2");
-  addSpecial(6, "peek_1");
-  addSpecial(7, "swap_2");
-  return cards;
-};
-
-const shuffle = (deck: Card[]) => {
-  const shuffled = [...deck];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
 };
 
 export const useGame = () => {
@@ -223,7 +195,7 @@ export const useGame = () => {
         return;
       }
 
-      const deck = shuffle(buildDeck());
+      const deck = shuffleDeck(createDeck());
       const requiredCards = names.length * 4 + 1;
       if (deck.length < requiredCards) {
         toast.error(i18n.t("common:errors.notEnoughCards"));

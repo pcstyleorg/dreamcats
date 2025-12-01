@@ -1,40 +1,7 @@
 import { mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { GameAction, GameState, Player, Card } from "./types";
-
-// --- HELPERS ---
-
-const buildDeck = (): Card[] => {
-  const cards: Card[] = [];
-  let id = 0;
-  for (let i = 0; i <= 9; i++) {
-    const count = i === 9 ? 9 : 4;
-    for (let j = 0; j < count; j++) {
-      cards.push({ id: id++, value: i, isSpecial: false });
-    }
-  }
-  const addSpecial = (
-    value: number,
-    specialAction: Card["specialAction"]
-  ) => {
-    for (let i = 0; i < 3; i++) {
-      cards.push({ id: id++, value, isSpecial: true, specialAction });
-    }
-  };
-  addSpecial(5, "take_2");
-  addSpecial(6, "peek_1");
-  addSpecial(7, "swap_2");
-  return cards;
-};
-
-const shuffle = (deck: Card[]) => {
-  const shuffled = [...deck];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-};
+import { createDeck, shuffleDeck } from "./game-core";
 
 // Helper to clone state for mutation (though we can mutate directly in Convex if we are careful,
 // but treating it immutably first is safer for logic porting)
@@ -281,7 +248,7 @@ export const performAction = mutation({
         if (drawPile.length === 0) {
           if (discardPile.length > 1) {
             const topDiscard = discardPile.pop()!; // Keep the top card on discard
-            drawPile = shuffle(discardPile);
+            drawPile = shuffleDeck(discardPile);
             discardPile = [topDiscard];
 
             if (drawPile.length === 0) {
@@ -608,7 +575,7 @@ export const performAction = mutation({
           // Allow starting from lobby or round_end
           if (state.gamePhase !== "round_end" && state.gamePhase !== "lobby") throw new Error("Invalid phase");
 
-          const deck = shuffle(buildDeck());
+          const deck = shuffleDeck(createDeck());
 
           let currentPlayers = state.players;
 

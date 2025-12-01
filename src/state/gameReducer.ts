@@ -1,5 +1,6 @@
 import i18n from "@/i18n/config";
 import { GameAction, GameState, Player, Card } from "@/types";
+import { shuffleDeck } from "@/lib/game-logic";
 
 export type ReducerAction =
   | { type: "SET_STATE"; payload: GameState }
@@ -626,12 +627,8 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
             return state;
           }
 
-          // Fisher-Yates shuffle for better randomness (client-side fallback)
-          const shuffled = [...deck];
-          for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-          }
+          // Shuffle using shared utility (client-side fallback)
+          const shuffled = shuffleDeck(deck);
 
           const players = state.players.map((p) => ({
             ...p,

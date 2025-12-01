@@ -5,6 +5,8 @@ node_modules/
 .vercel
 
 dist/
+coverage/
 *.tsbuildinfo
 .claude/
 out.txt
+package-lock.json
