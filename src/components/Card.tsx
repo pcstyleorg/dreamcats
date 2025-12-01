@@ -130,7 +130,7 @@ export const GameCard: React.FC<CardProps> = ({
     : "";
 
   const outerClasses = cn(
-    "group w-[18vw] max-w-24 sm:w-[15vw] sm:max-w-28 md:w-[10vw] md:max-w-32 lg:w-[8vw] lg:max-w-36 perspective-1000 rounded-xl overflow-hidden",
+    "group w-[clamp(68px,9.5vw,118px)] sm:w-[clamp(72px,8.5vw,126px)] md:w-[clamp(76px,8vw,134px)] lg:w-[clamp(82px,7vw,142px)] max-w-[150px] perspective-1000 rounded-xl overflow-hidden",
     "shadow-[0_12px_28px_rgba(0,0,0,0.45)] border-2 border-white/20",
     isFaceUp ? "ring-1 ring-white/5" : "ring-1 ring-black/20",
     (isGlowing || justRevealed) && isFaceUp ? "shadow-soft" : "",

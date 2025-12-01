@@ -57,7 +57,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     }
     return false;
   });
-  const [boardScale, setBoardScale] = useState(1);
+  const [boardScale, setBoardScale] = useState(0.9);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const currentPlayer = players[currentPlayerIndex];
@@ -110,19 +110,24 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
       setIsCompact(h < 860 || w < 1300);
 
       // Improved scaling algorithm for better fit on various screen sizes
-      let scale = 1;
-      if (h < 950) scale = 0.95;
-      if (h < 860) scale = 0.9;
-      if (h < 780) scale = 0.85;
-      if (h < 700) scale = 0.8;
-      if (h < 620) scale = 0.75;
+      const playerCount = players.length;
+
+      let scale = h > 1100 && w > 1680 ? 0.96 : 0.9;
+      if (h < 980) scale = Math.min(scale, 0.88);
+      if (h < 900) scale = Math.min(scale, 0.86);
+      if (h < 820) scale = Math.min(scale, 0.84);
+      if (h < 760) scale = Math.min(scale, 0.8);
+      if (h < 700) scale = Math.min(scale, 0.76);
 
       // Adjust for narrow screens
-      if (w < 1300) scale = Math.min(scale, 0.92);
-      if (w < 1100) scale = Math.min(scale, 0.88);
-      if (w < 900) scale = Math.min(scale, 0.82);
+      if (w < 1400) scale = Math.min(scale, 0.88);
+      if (w < 1220) scale = Math.min(scale, 0.84);
+      if (w < 1080) scale = Math.min(scale, 0.82);
 
-      setBoardScale(scale);
+      const countScale =
+        playerCount <= 2 ? 0.86 : playerCount === 3 ? 0.84 : 0.8;
+
+      setBoardScale(Math.min(scale, countScale));
     };
     updateLayout();
     window.addEventListener("resize", updateLayout);
@@ -150,8 +155,11 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
 
   const isPlayerActionable = isMyTurn && gamePhase === "playing";
   const pileCardClass = isCompact
-    ? "!w-[76px] sm:!w-[90px] md:!w-[98px] lg:!w-[104px]"
-    : "!w-20 sm:!w-24 md:!w-28 lg:!w-24 xl:!w-28";
+    ? "!w-[clamp(64px,7.5vw,100px)]"
+    : "!w-[clamp(68px,7.8vw,104px)]";
+  const isTwoPlayer = players.length === 2;
+  const playerCount = players.length;
+  const singleOpponent = isTwoPlayer && otherPlayers.length === 1;
 
   const RoomInfoPill = ({ variant }: { variant: "desktop" | "mobile" }) => {
     if (gameMode !== "online" || !roomId) return null;
@@ -308,7 +316,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     <div
       ref={containerRef}
       className={cn(
-        "relative w-full min-h-[100svh] lg:min-h-[100dvh] lg:h-full text-foreground px-1 sm:px-2 md:px-4 lg:px-6 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 bg-cover bg-center overflow-hidden",
+        "relative w-full max-w-screen-2xl mx-auto min-h-[100svh] lg:min-h-[100dvh] lg:h-full text-foreground px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 bg-cover bg-center overflow-x-hidden overflow-y-auto styled-scrollbar",
         isCompact && "game-compact"
       )}
       style={{
@@ -344,7 +352,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
           maxWidth: "100%",
         }}
       >
-      <main className="flex-grow flex flex-col min-h-0 gap-3 sm:gap-4 overflow-hidden">
+      <main className="flex-grow flex flex-col min-h-0 gap-3 sm:gap-4 overflow-visible">
         <div
 
           className={cn(
@@ -403,40 +411,75 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         {/* Opponents Area */}
         <div
           className={cn(
-            "flex justify-center items-start mt-6 sm:mt-8 lg:mt-8 xl:mt-10 mb-1.5 sm:mb-2 md:mb-3 flex-shrink-0 w-full px-1 sm:px-2 overflow-x-auto",
-            isCompact && "mt-2 sm:mt-3 lg:mt-4 mb-1"
+            "flex justify-center items-start mt-6 sm:mt-7 lg:mt-8 xl:mt-9 mb-4 sm:mb-5 md:mb-6 flex-shrink-0 w-full px-1 sm:px-2",
+            isCompact && "mt-3 sm:mt-4 lg:mt-4.5 mb-3"
           )}
         >
           {otherPlayers.length > 0 ? (
-            <div
-              className={cn(
-                "flex flex-nowrap sm:flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 xl:gap-10 w-full max-w-5xl mx-auto px-2 sm:px-3 py-2 sm:py-3 bg-card/70 border border-border/60 rounded-2xl shadow-soft-lg backdrop-blur-xl overflow-x-auto sm:overflow-visible no-scrollbar",
-                isCompact && "gap-1.5 sm:gap-2.5 md:gap-3 lg:gap-4 max-w-4xl px-2 py-2 sm:py-2.5"
-              )}
-            >
-              {otherPlayers.map((player) => {
-                const isHotseatCurrent =
-                  gameMode === "hotseat" && activeHotseatPlayerId === player.id;
-                return (
-                <div key={player.id} className="flex-shrink-0 min-w-0">
-                  <PlayerHand
-                    player={player}
-                    isCurrentPlayer={
-                      gameMode === "hotseat"
-                        ? activeHotseatPlayerId === player.id
-                        : currentPlayer.id === player.id
-                    }
-                    isOpponent={
-                      gameMode === "hotseat"
-                        ? !isHotseatCurrent
-                        : true
-                    }
-                    playSound={playSound}
-                  />
+            singleOpponent ? (
+              <div className="w-full flex justify-center">
+                <div className="w-full max-w-2xl px-2 sm:px-3 py-2.5 sm:py-3 bg-card/70 border border-border/60 rounded-2xl shadow-soft-lg backdrop-blur-xl">
+                  {otherPlayers.map((player) => {
+                    const isHotseatCurrent =
+                      gameMode === "hotseat" && activeHotseatPlayerId === player.id;
+                    return (
+                      <PlayerHand
+                        key={player.id}
+                        player={player}
+                        isCurrentPlayer={
+                          gameMode === "hotseat"
+                            ? activeHotseatPlayerId === player.id
+                            : currentPlayer.id === player.id
+                        }
+                        isOpponent={
+                          gameMode === "hotseat"
+                            ? !isHotseatCurrent
+                            : true
+                        }
+                        playSound={playSound}
+                      />
+                    );
+                  })}
                 </div>
-              );
-              })}
-            </div>
+              </div>
+            ) : (
+              <div
+                className={cn(
+                  "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 justify-center gap-2.5 sm:gap-3 md:gap-3.5 lg:gap-4 w-full mx-auto px-2 sm:px-3 py-2.5 sm:py-3 bg-card/70 border border-border/60 rounded-2xl shadow-soft-lg backdrop-blur-xl",
+                  isCompact && "gap-2 sm:gap-2.5 md:gap-3 px-2 py-2",
+                  isTwoPlayer ? "max-w-2xl" : "max-w-5xl"
+                )}
+              >
+                {otherPlayers.map((player) => {
+                  const isHotseatCurrent =
+                    gameMode === "hotseat" && activeHotseatPlayerId === player.id;
+                  return (
+                    <div
+                      key={player.id}
+                      className={cn(
+                        "min-w-0",
+                        playerCount > 2 && "scale-[0.93]"
+                      )}
+                    >
+                      <PlayerHand
+                        player={player}
+                        isCurrentPlayer={
+                          gameMode === "hotseat"
+                            ? activeHotseatPlayerId === player.id
+                            : currentPlayer.id === player.id
+                        }
+                        isOpponent={
+                          gameMode === "hotseat"
+                            ? !isHotseatCurrent
+                            : true
+                        }
+                        playSound={playSound}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )
           ) : (
             <div className="flex items-center justify-center h-20 sm:h-24 w-full max-w-md rounded-lg bg-primary/10 border-2 border-dashed border-border/60 mx-auto shadow-soft">
               <p className="text-muted-foreground font-heading text-xs sm:text-sm md:text-base">
@@ -450,8 +493,9 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         {/* Center Area */}
         <div
           className={cn(
-            "flex-grow flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 md:gap-8 lg:gap-10 my-6 sm:my-8 md:my-10 min-h-0 w-full",
-            isCompact && "gap-2 sm:gap-3 md:gap-4 my-2 sm:my-3 px-2"
+            "flex-grow flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 md:gap-6 lg:gap-7 my-6 sm:my-8 md:my-9 min-h-0 w-full",
+            isCompact && "gap-2 sm:gap-3 md:gap-4 my-4 sm:my-5 px-2",
+            isTwoPlayer ? "max-w-2xl mx-auto px-2 sm:px-3" : "max-w-4xl mx-auto px-2 sm:px-3"
           )}
           data-tutorial-id="piles"
         >
@@ -467,8 +511,8 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
             {/* Pile Mat */}
             <div
               className={cn(
-                "bg-black/40 border border-white/5 rounded-3xl px-4 sm:px-6 md:px-8 py-5 sm:py-7 md:py-8 shadow-2xl backdrop-blur-xl inline-flex items-center justify-center gap-6 sm:gap-10 md:gap-14 relative z-10 mx-auto",
-                isCompact && "px-3 sm:px-4 py-4 sm:py-5 gap-4 sm:gap-6 md:gap-8"
+                "bg-black/40 border border-white/5 rounded-3xl px-3 sm:px-4 md:px-5 py-3.5 sm:py-4.5 md:py-5.5 shadow-2xl backdrop-blur-xl inline-flex items-center justify-center gap-4.5 sm:gap-6.5 md:gap-8 relative z-10 mx-auto",
+                isCompact && "px-2.5 sm:px-3.5 py-3 sm:py-3.5 gap-4 sm:gap-5 md:gap-6"
               )}
             >
               <div
@@ -597,19 +641,19 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         {bottomPlayer && (
           <div
             className={cn(
-              "mt-auto flex-shrink-0 pb-[calc(env(safe-area-inset-bottom)+16px)] sm:pb-3 lg:pb-2",
+              "mt-auto flex-shrink-0 pb-[calc(env(safe-area-inset-bottom)+16px)] sm:pb-3 lg:pb-2 relative z-20",
               isCompact && "pb-[calc(env(safe-area-inset-bottom)+10px)]"
             )}
           >
             <div
               className={cn(
-                "flex justify-center mb-2 sm:mb-3 md:mb-4 w-full",
+                "flex justify-center mb-2 sm:mb-2.5 md:mb-3 w-full relative z-20",
                 isCompact && "mb-1.5"
               )}
               data-tutorial-id="game-actions"
             >
               {/* Always render GameActions - no longer hiding for holding_card since card is inline */}
-              <div className="min-h-[60px] w-full flex items-center justify-center">
+              <div className="min-h-[56px] w-full max-w-xl flex items-center justify-center">
                 <GameActions />
               </div>
             </div>

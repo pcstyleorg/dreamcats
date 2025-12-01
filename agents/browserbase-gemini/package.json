@@ -1,0 +1,13 @@
+{
+  "name": "browserbase-gemini-agent",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "start": "bun run index.ts"
+  },
+  "dependencies": {
+    "@browserbasehq/stagehand": "latest",
+    "dotenv": "^16.4.7"
+  }
+}

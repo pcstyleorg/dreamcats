@@ -173,6 +173,10 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   }, [player.id, recentMoveForPlayer, t]);
 
   const cardBackAsset = React.useMemo(() => getCardBackAsset(), []);
+  const baseCardWidth = "!w-[clamp(64px,8.6vw,112px)]";
+  const opponentCardWidth = "!w-[clamp(60px,7.8vw,104px)]";
+  const maxCardWidth =
+    "max-w-[110px] sm:max-w-[118px] md:max-w-[126px] lg:max-w-[132px]";
 
   const isPeekingTurn =
     gamePhase === "peeking" &&
@@ -406,10 +410,9 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                     hasBeenPeeked={cardInHand.hasBeenPeeked}
                     onClick={() => handleCardClick(index)}
                     className={cn(
-                      "!w-[15vw] sm:!w-[13vw] md:!w-[11vw] lg:!w-[9.5vw] xl:!w-[9vw]",
-                      "max-w-[112px] sm:max-w-[124px] md:max-w-[134px] lg:max-w-[138px] xl:max-w-[142px]",
-                      isOpponent &&
-                      "!w-[13vw] sm:!w-[11vw] md:!w-[10vw] lg:!w-[9vw] xl:!w-[8.5vw] max-w-[108px]",
+                      baseCardWidth,
+                      maxCardWidth,
+                      isOpponent && opponentCardWidth,
                       getCardInteractionClass(index),
                     )}
                     playSound={playSound}
