@@ -14,16 +14,25 @@ import { toast } from "sonner";
 import { ArrowLeft, Users, Cloud, Copy, Check, Play } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 
 export const LobbyScreen: React.FC = () => {
   const { t } = useTranslation();
   const { createRoom, joinRoom, startHotseatGame, startGame, state, myPlayerId } = useGame();
+  const { displayName, setDisplayName } = useUserPreferences();
   const [mode, setMode] = useState<"select" | "online" | "hotseat">("select");
   const [roomIdInput, setRoomIdInput] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [hotseatPlayers, setHotseatPlayers] = useState<string[]>(["", ""]);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Auto-fill player name from preferences
+  useEffect(() => {
+    if (displayName && !playerName) {
+      setPlayerName(displayName);
+    }
+  }, [displayName, playerName]);
 
   // Auto-copy room ID when created
   useEffect(() => {
@@ -45,6 +54,8 @@ export const LobbyScreen: React.FC = () => {
       return;
     }
     setIsLoading(true);
+    // Save the player name for next time
+    setDisplayName(playerName.trim());
     try {
       await createRoom(playerName);
     } catch {
@@ -66,6 +77,8 @@ export const LobbyScreen: React.FC = () => {
       return;
     }
     setIsLoading(true);
+    // Save the player name for next time
+    setDisplayName(playerName.trim());
     try {
       await joinRoom(roomIdInput.trim(), playerName);
     } catch (error: unknown) {

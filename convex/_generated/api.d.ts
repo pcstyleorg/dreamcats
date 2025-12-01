@@ -9,13 +9,16 @@
  */
 
 import type * as actions from "../actions.js";
+import type * as auth from "../auth.js";
 import type * as chat from "../chat.js";
 import type * as cleanup from "../cleanup.js";
 import type * as crons from "../crons.js";
 import type * as games from "../games.js";
+import type * as http from "../http.js";
 import type * as presence from "../presence.js";
 import type * as rooms from "../rooms.js";
 import type * as types from "../types.js";
+import type * as userPreferences from "../userPreferences.js";
 
 import type {
   ApiFromModules,
@@ -25,13 +28,16 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   actions: typeof actions;
+  auth: typeof auth;
   chat: typeof chat;
   cleanup: typeof cleanup;
   crons: typeof crons;
   games: typeof games;
+  http: typeof http;
   presence: typeof presence;
   rooms: typeof rooms;
   types: typeof types;
+  userPreferences: typeof userPreferences;
 }>;
 
 /**

@@ -9,35 +9,36 @@ import { Tutorial } from './components/Tutorial';
 import { LandingPage } from './components/LandingPage';
 import { ThemeToggle } from './components/ThemeToggle';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
+import { AuthButton } from './components/AuthDialog';
+import { useUserPreferences } from './hooks/useUserPreferences';
 import './i18n/config';
 import { ConvexSync } from "@/state/ConvexSync";
 
 function App() {
   const { state } = useGame();
   const [hasEntered, setHasEntered] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const { theme, setTheme: saveTheme } = useUserPreferences();
+  const [localTheme, setLocalTheme] = useState<'light' | 'dark'>('light');
 
+  // Initialize theme from preferences
   useEffect(() => {
-    const stored = localStorage.getItem('theme');
-    if (stored === 'light' || stored === 'dark') {
-      setTheme(stored);
-      return;
-    }
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setTheme(prefersDark ? 'dark' : 'light');
-  }, []);
+    setLocalTheme(theme);
+  }, [theme]);
 
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === 'dark') {
+    if (localTheme === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
     }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+  }, [localTheme]);
 
-  const toggleTheme = () => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  const toggleTheme = () => {
+    const newTheme = localTheme === 'light' ? 'dark' : 'light';
+    setLocalTheme(newTheme);
+    saveTheme(newTheme);
+  };
 
   const showLanding = !hasEntered;
   const showLobby = hasEntered && state.gamePhase === 'lobby';
@@ -51,6 +52,7 @@ function App() {
             <ConvexSync />
             {!showGameboard && (
               <div className="fixed top-3 sm:top-4 right-3 sm:right-4 z-50 flex gap-2">
+                <AuthButton autoSignIn={hasEntered} />
                 <LanguageSwitcher />
                 <ThemeToggle theme={theme} onToggle={toggleTheme} />
               </div>
@@ -73,7 +75,7 @@ function App() {
               )}
             </AnimatePresence>
 
-            <Toaster richColors theme={theme} />
+            <Toaster richColors theme={localTheme} />
             {hasEntered && <Tutorial />}
           </main>
         </div>

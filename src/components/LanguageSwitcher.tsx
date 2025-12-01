@@ -3,16 +3,19 @@ import { Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 
 export const LanguageSwitcher: React.FC<{ className?: string }> = ({
   className,
 }) => {
   const { i18n } = useTranslation();
+  const { setLanguage } = useUserPreferences();
   const currentLang = i18n.language?.split('-')[0] || 'en';
 
   const toggleLanguage = () => {
     const newLang = currentLang === 'en' ? 'pl' : 'en';
     i18n.changeLanguage(newLang);
+    setLanguage(newLang);
   };
 
   return (
