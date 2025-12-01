@@ -86,24 +86,19 @@ function App() {
     // Visual viewport resize (catches pinch zoom on mobile, keyboard show/hide)
     window.visualViewport?.addEventListener('resize', debouncedCalculate);
     
-    // MutationObserver to catch DOM changes that might affect size
+    // MutationObserver to catch structural DOM changes that might affect size
+    // Only watch childList changes, not attribute changes (avoids firing on animations/hover states)
     const mutationObserver = new MutationObserver(debouncedCalculate);
     if (contentRef.current) {
       mutationObserver.observe(contentRef.current, {
         childList: true,
         subtree: true,
-        attributes: true,
-        attributeFilter: ['class', 'style'],
       });
     }
-    
-    // Recalculate periodically as a fallback (every 2 seconds)
-    const intervalTimer = setInterval(calculateScale, 2000);
     
     return () => {
       clearTimeout(timer);
       clearTimeout(debounceTimer);
-      clearInterval(intervalTimer);
       window.removeEventListener('resize', debouncedCalculate);
       window.visualViewport?.removeEventListener('resize', debouncedCalculate);
       mutationObserver.disconnect();
