@@ -5,35 +5,35 @@
 @tailwind utilities;
 
 @layer base {
-  /* Light mode - dreamy soft pastels with cherry blossom vibes */
+  /* Light mode - dreamy creamy off-white with soft cherry blossom tints */
   :root {
-    --background: 270 30% 98%;
-    --foreground: 263 50% 15%;
+    --background: 35 30% 97%;
+    --foreground: 263 40% 18%;
 
-    --card: 270 25% 96%;
-    --card-foreground: 263 50% 15%;
+    --card: 35 25% 95%;
+    --card-foreground: 263 40% 18%;
 
-    --popover: 270 25% 97%;
-    --popover-foreground: 263 50% 15%;
+    --popover: 35 28% 96%;
+    --popover-foreground: 263 40% 18%;
 
-    --primary: 263 70% 55%; /* Rich purple */
+    --primary: 270 60% 55%; /* Soft purple */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 280 30% 90%; /* Soft lavender */
-    --secondary-foreground: 263 50% 25%;
+    --secondary: 35 20% 90%; /* Creamy beige */
+    --secondary-foreground: 263 40% 25%;
 
-    --muted: 270 20% 92%;
-    --muted-foreground: 263 30% 45%;
+    --muted: 35 18% 91%;
+    --muted-foreground: 263 25% 45%;
 
-    --accent: 330 65% 65%; /* Cherry blossom pink */
+    --accent: 330 55% 62%; /* Cherry blossom pink */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 65% 50%;
+    --destructive: 0 60% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 263 25% 85%;
-    --input: 263 25% 88%;
-    --ring: 263 70% 55%;
+    --border: 35 20% 85%;
+    --input: 35 22% 88%;
+    --ring: 270 60% 55%;
 
     --radius: 0.75rem;
   }
@@ -89,7 +89,7 @@
   body {
     @apply bg-background text-foreground;
     overscroll-behavior: none;
-    background: linear-gradient(135deg, hsl(280 35% 95%), hsl(270 30% 92%) 40%, hsl(330 30% 94%) 80%);
+    background: linear-gradient(135deg, hsl(35 35% 96%), hsl(40 30% 94%) 40%, hsl(330 20% 95%) 80%);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-family:

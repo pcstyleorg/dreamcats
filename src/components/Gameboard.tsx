@@ -21,7 +21,7 @@ import {
 import { ChatBox } from "./ChatBox";
 import { GameActions } from "./GameActions";
 import { ScrollArea } from "./ui/scroll-area";
-import { getGameBackgroundAsset, getCardAsset } from "@/lib/cardAssets";
+import { getGameBackgroundAsset } from "@/lib/cardAssets";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
@@ -161,7 +161,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   const pileCardClass = isCompact
     ? "!w-[clamp(64px,7.5vw,100px)]"
     : "!w-[clamp(68px,7.8vw,104px)]";
-  const playerCount = players.length;
 
   const RoomInfoPill = ({ variant }: { variant: "desktop" | "mobile" }) => {
     if (gameMode !== "online" || !roomId) return null;
@@ -373,19 +372,19 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         backgroundImage,
       }}
     >
-      {/* Light overlays for better readability on bright background - theme-aware */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[rgba(245,240,255,0.85)] via-[rgba(250,245,255,0.75)] to-[rgba(255,248,252,0.85)] dark:from-[rgba(8,12,24,0.9)] dark:via-[rgba(12,15,32,0.8)] dark:to-[rgba(10,8,18,0.9)] pointer-events-none" />
-      <div className="absolute inset-0 opacity-20 dark:opacity-60 pointer-events-none" style={{ backgroundImage: backgroundImage }} />
-      <div className="absolute -top-32 -left-16 w-72 h-72 rounded-full bg-[hsl(var(--primary)/0.15)] dark:bg-[hsl(var(--primary)/0.25)] blur-3xl" />
-      <div className="absolute top-12 -right-24 w-72 h-72 rounded-full bg-[hsl(var(--accent)/0.12)] dark:bg-[hsl(var(--accent)/0.2)] blur-3xl" />
-      <div className="absolute bottom-10 left-1/3 w-64 h-64 rounded-full bg-[hsl(var(--secondary)/0.1)] dark:bg-[hsl(var(--secondary)/0.16)] blur-3xl" />
+      {/* Overlays for better readability - theme-aware with soft creamy light mode */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[rgba(255,252,248,0.92)] via-[rgba(255,250,245,0.88)] to-[rgba(255,248,250,0.92)] dark:from-[rgba(8,12,24,0.9)] dark:via-[rgba(12,15,32,0.8)] dark:to-[rgba(10,8,18,0.9)] pointer-events-none" />
+      <div className="absolute inset-0 opacity-10 dark:opacity-60 pointer-events-none" style={{ backgroundImage: backgroundImage }} />
+      <div className="absolute -top-32 -left-16 w-72 h-72 rounded-full bg-[hsl(var(--primary)/0.08)] dark:bg-[hsl(var(--primary)/0.25)] blur-3xl" />
+      <div className="absolute top-12 -right-24 w-72 h-72 rounded-full bg-[hsl(var(--accent)/0.06)] dark:bg-[hsl(var(--accent)/0.2)] blur-3xl" />
+      <div className="absolute bottom-10 left-1/3 w-64 h-64 rounded-full bg-[hsl(35_30%_85%/0.3)] dark:bg-[hsl(var(--secondary)/0.16)] blur-3xl" />
       <div
         className={cn(
           "absolute inset-0 pointer-events-none transition-opacity duration-250 z-20",
-          "bg-[radial-gradient(circle_at_center,rgba(255,250,255,0),rgba(245,240,250,0))]",
+          "bg-transparent",
           "dark:bg-[radial-gradient(circle_at_center,rgba(8,6,18,0),rgba(6,4,12,0))]",
           isFocusPhase &&
-            "opacity-100 bg-[radial-gradient(circle_at_center,rgba(255,250,255,0.55),rgba(245,240,250,0.7))] md:bg-[radial-gradient(70%_70%_at_50%_45%,rgba(255,250,255,0.42),rgba(245,240,250,0.68))] dark:bg-[radial-gradient(circle_at_center,rgba(8,6,18,0.55),rgba(6,4,12,0.7))] dark:md:bg-[radial-gradient(70%_70%_at_50%_45%,rgba(8,6,18,0.42),rgba(6,4,12,0.68))]"
+            "opacity-100 bg-[radial-gradient(circle_at_center,rgba(255,252,248,0.4),rgba(255,250,245,0.5))] md:bg-[radial-gradient(70%_70%_at_50%_45%,rgba(255,252,248,0.3),rgba(255,250,245,0.45))] dark:bg-[radial-gradient(circle_at_center,rgba(8,6,18,0.55),rgba(6,4,12,0.7))] dark:md:bg-[radial-gradient(70%_70%_at_50%_45%,rgba(8,6,18,0.42),rgba(6,4,12,0.68))]"
         )}
       />
 

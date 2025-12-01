@@ -16,11 +16,6 @@ export const GameActions = () => {
   } = state;
 
   const currentPlayer = state.players[currentPlayerIndex];
-  // Determine active player (hotseat uses peekingState during peeks)
-  const activeHotseatPlayerId =
-    gameMode === "hotseat" && gamePhase === "peeking" && peekingState
-      ? state.players[peekingState.playerIndex]?.id
-      : currentPlayer?.id;
 
   // In hotseat mode, we always allow the active player to take actions
   // since everyone is playing from the same device

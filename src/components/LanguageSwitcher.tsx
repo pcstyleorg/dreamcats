@@ -8,11 +8,17 @@ export const LanguageSwitcher: React.FC<{ className?: string }> = ({
   className,
 }) => {
   const { i18n } = useTranslation();
-  const currentLang = i18n.language.split('-')[0]; // Get base language (en from en-US)
+  const currentLang = i18n.language?.split('-')[0] || 'en'; // Get base language (en from en-US)
 
-  const toggleLanguage = () => {
+  const toggleLanguage = async () => {
     const newLang = currentLang === 'en' ? 'pl' : 'en';
-    i18n.changeLanguage(newLang);
+    try {
+      await i18n.changeLanguage(newLang);
+      // Explicitly save to localStorage to ensure persistence
+      localStorage.setItem('i18nextLng', newLang);
+    } catch (error) {
+      console.error('Failed to change language:', error);
+    }
   };
 
   return (

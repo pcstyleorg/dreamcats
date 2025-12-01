@@ -198,7 +198,6 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     }
   }, [player.id, recentMoveForPlayer, t]);
 
-  const cardBackAsset = React.useMemo(() => getCardBackAsset(), []);
   // Consistent card sizing for all players to prevent layout jumping
   const cardWidth = "!w-[clamp(64px,8.5vw,112px)]";
   const maxCardWidth =
@@ -344,7 +343,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
             gamePhase={gamePhase}
             peekingState={peekingState}
             drawnCard={drawnCard}
-            drawSource={drawSource}
+            drawSource={drawSource ?? null}
             broadcastAction={broadcastAction}
             t={t}
           />

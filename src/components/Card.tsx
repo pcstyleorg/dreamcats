@@ -161,12 +161,12 @@ export const GameCard: React.FC<CardProps> = ({
             draggable={false}
           />
           {isFaceUp && (
-            <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
+            <div className="absolute top-1 left-1 sm:top-1.5 sm:left-1.5 z-10">
               <span
                 className={cn(
-                  "inline-block text-xs sm:text-sm font-bold font-heading text-white",
-                  "drop-shadow-[0_0_6px_rgba(139,92,246,0.8)] drop-shadow-[0_0_12px_rgba(139,92,246,0.5)]",
-                  card?.isSpecial && "drop-shadow-[0_0_8px_rgba(168,85,247,0.9)] drop-shadow-[0_0_16px_rgba(168,85,247,0.6)]",
+                  "inline-block text-sm sm:text-base md:text-lg font-bold font-heading text-white",
+                  "drop-shadow-[0_0_8px_rgba(168,85,247,0.9)] drop-shadow-[0_0_16px_rgba(219,39,119,0.6)] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]",
+                  card?.isSpecial && "drop-shadow-[0_0_10px_rgba(236,72,153,0.95)] drop-shadow-[0_0_20px_rgba(168,85,247,0.7)]",
                 )}
               >
                 {card?.value}
@@ -219,12 +219,12 @@ export const GameCard: React.FC<CardProps> = ({
                 />
 
                 {isFaceUp && (
-                  <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
+                  <div className="absolute top-1 left-1 sm:top-1.5 sm:left-1.5 z-10">
                     <span
                       className={cn(
-                        "inline-block text-xs sm:text-sm font-bold font-heading text-white",
-                        "drop-shadow-[0_0_6px_rgba(139,92,246,0.8)] drop-shadow-[0_0_12px_rgba(139,92,246,0.5)]",
-                        card?.isSpecial && "drop-shadow-[0_0_8px_rgba(168,85,247,0.9)] drop-shadow-[0_0_16px_rgba(168,85,247,0.6)]",
+                        "inline-block text-sm sm:text-base md:text-lg font-bold font-heading text-white",
+                        "drop-shadow-[0_0_8px_rgba(168,85,247,0.9)] drop-shadow-[0_0_16px_rgba(219,39,119,0.6)] drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]",
+                        card?.isSpecial && "drop-shadow-[0_0_10px_rgba(236,72,153,0.95)] drop-shadow-[0_0_20px_rgba(168,85,247,0.7)]",
                       )}
                     >
                       {card.value}
