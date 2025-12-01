@@ -164,8 +164,9 @@ export const GameCard: React.FC<CardProps> = ({
             <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
               <span
                 className={cn(
-                  "inline-block text-xs sm:text-sm font-bold font-heading",
-                  card?.isSpecial ? "text-purple-200" : "text-white",
+                  "inline-block text-xs sm:text-sm font-bold font-heading text-white",
+                  "drop-shadow-[0_0_6px_rgba(139,92,246,0.8)] drop-shadow-[0_0_12px_rgba(139,92,246,0.5)]",
+                  card?.isSpecial && "drop-shadow-[0_0_8px_rgba(168,85,247,0.9)] drop-shadow-[0_0_16px_rgba(168,85,247,0.6)]",
                 )}
               >
                 {card?.value}
@@ -221,8 +222,9 @@ export const GameCard: React.FC<CardProps> = ({
                   <div className="absolute top-2 left-2 sm:top-3 sm:left-3 z-10">
                     <span
                       className={cn(
-                        "inline-block text-xs sm:text-sm font-bold font-heading",
-                        card?.isSpecial ? "text-purple-200" : "text-white",
+                        "inline-block text-xs sm:text-sm font-bold font-heading text-white",
+                        "drop-shadow-[0_0_6px_rgba(139,92,246,0.8)] drop-shadow-[0_0_12px_rgba(139,92,246,0.5)]",
+                        card?.isSpecial && "drop-shadow-[0_0_8px_rgba(168,85,247,0.9)] drop-shadow-[0_0_16px_rgba(168,85,247,0.6)]",
                       )}
                     >
                       {card.value}

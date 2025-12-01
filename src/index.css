@@ -5,38 +5,40 @@
 @tailwind utilities;
 
 @layer base {
+  /* Light mode - dreamy soft pastels with cherry blossom vibes */
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 270 30% 98%;
+    --foreground: 263 50% 15%;
 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 270 25% 96%;
+    --card-foreground: 263 50% 15%;
 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 270 25% 97%;
+    --popover-foreground: 263 50% 15%;
 
-    --primary: 263 70% 50%; /* Deep rich purple */
-    --primary-foreground: 210 40% 98%;
+    --primary: 263 70% 55%; /* Rich purple */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217 24% 20%; /* Muted cool gray */
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 280 30% 90%; /* Soft lavender */
+    --secondary-foreground: 263 50% 25%;
 
-    --muted: 217 24% 20%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 270 20% 92%;
+    --muted-foreground: 263 30% 45%;
 
-    --accent: 263 70% 50%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 330 65% 65%; /* Cherry blossom pink */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217 24% 20%;
-    --input: 217 24% 20%;
-    --ring: 263 70% 50%;
+    --border: 263 25% 85%;
+    --input: 263 25% 88%;
+    --ring: 263 70% 55%;
 
     --radius: 0.75rem;
   }
 
+  /* Dark mode - deep twilight with mystical purple glow */
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
@@ -87,7 +89,7 @@
   body {
     @apply bg-background text-foreground;
     overscroll-behavior: none;
-    background: radial-gradient(circle at top center, #2e1065, #020617);
+    background: linear-gradient(135deg, hsl(280 35% 95%), hsl(270 30% 92%) 40%, hsl(330 30% 94%) 80%);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     font-family:

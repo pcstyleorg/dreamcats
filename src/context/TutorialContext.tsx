@@ -7,8 +7,10 @@ interface LocalTutorialContextType {
   step: TutorialStep;
   startTutorial: () => void;
   nextStep: () => void;
+  prevStep: () => void;
   endTutorial: () => void;
   setStep: (step: TutorialStep) => void;
+  skipToGameplay: () => void;
 }
 
 const TutorialContext = createContext<LocalTutorialContextType | undefined>(undefined);
@@ -19,8 +21,10 @@ export const TutorialProvider = ({ children }: { children: ReactNode }) => {
   const step = useTutorialStore((s: TutorialStore) => s.step);
   const startTutorial = useTutorialStore((s: TutorialStore) => s.startTutorial);
   const nextStep = useTutorialStore((s: TutorialStore) => s.nextStep);
+  const prevStep = useTutorialStore((s: TutorialStore) => s.prevStep);
   const endTutorial = useTutorialStore((s: TutorialStore) => s.endTutorial);
   const setStep = useTutorialStore((s: TutorialStore) => s.setStep);
+  const skipToGameplay = useTutorialStore((s: TutorialStore) => s.skipToGameplay);
 
   useEffect(() => {
     const tutorialCompleted = localStorage.getItem("sen_tutorial_completed");
@@ -30,7 +34,7 @@ export const TutorialProvider = ({ children }: { children: ReactNode }) => {
   }, [setStep]);
 
   return (
-    <TutorialContext.Provider value={{ step, startTutorial, nextStep, endTutorial, setStep }}>
+    <TutorialContext.Provider value={{ step, startTutorial, nextStep, prevStep, endTutorial, setStep, skipToGameplay }}>
       {children}
     </TutorialContext.Provider>
   );
