@@ -199,17 +199,20 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   const handleCardClick = (cardIndex: number) => {
     // Block interaction with opponent cards during normal gameplay
     // Only allow if it's a special action that explicitly targets opponents
+    // or if it's the peeking phase and this is the active peeker's hand
     const isSpecialActionAllowingOpponentTarget = 
       (gamePhase === "action_peek_1" && isMyTurn) || 
       ((gamePhase === "action_swap_2_select_1" || gamePhase === "action_swap_2_select_2") && isMyTurn);
     
-    if (isOpponent && !isSpecialActionAllowingOpponentTarget) {
+    const isPeekingOwnCards = gamePhase === "peeking" && isPeekingTurn;
+    
+    if (isOpponent && !isSpecialActionAllowingOpponentTarget && !isPeekingOwnCards) {
       return; // Silently ignore clicks on opponent cards when not allowed
     }
 
     // Peeking phase (only the peeking player)
     if (gamePhase === "peeking" && isPeekingTurn) {
-      // Online: gate to the viewing player; hotseat allows the active peeker.
+      // Online: gate to the viewing player; hotseat allows any active peeker.
       if (gameMode === "online" && player.id !== myPlayerId) return;
 
       broadcastAction({
@@ -312,11 +315,10 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       className={cn(
         "relative p-3 sm:p-3.5 md:p-4 lg:p-4.5 rounded-2xl border transition-all duration-300 backdrop-blur-md",
         "shadow-soft-lg",
-        isLocalPlayer
-          ? "bg-gradient-to-br from-[hsl(var(--primary)/0.18)] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.18)] border-primary/50 shadow-[0_12px_40px_rgba(0,0,0,0.38)] ring-1 ring-primary/30"
+        // Only show the glow/highlight when it's this player's turn
+        isTurnOwner
+          ? "bg-gradient-to-br from-[hsl(var(--primary)/0.18)] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.18)] border-primary/50 shadow-[0_12px_40px_rgba(0,0,0,0.38)] ring-1 ring-primary/30 outline outline-2 outline-primary/70 shadow-[0_0_32px_hsl(var(--primary)/0.4)]"
           : "bg-gradient-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.12)] border-border/50",
-        isTurnOwner &&
-          "outline outline-2 outline-primary/70 shadow-[0_0_32px_hsl(var(--primary)/0.4)]",
         // Enhanced glow when player hand is interactive swap target
         isSwapTarget && "swap-target-hand border-primary/60 shadow-[0_0_40px_hsl(var(--primary)/0.4),0_0_80px_hsl(var(--primary)/0.2)] ring-2 ring-primary/30 ring-offset-2 ring-offset-background/50",
       )}

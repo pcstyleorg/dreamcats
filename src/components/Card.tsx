@@ -246,6 +246,7 @@ export const GameCard: React.FC<CardProps> = ({
                     <div className="absolute inset-0 ring-0 md:ring-1 ring-white/30 rounded-xl" />
                   </div>
                 )}
+
                 {/* Vignette effect for depth */}
                 <div className="pointer-events-none absolute inset-0 rounded-xl bg-[radial-gradient(ellipse_at_center,transparent_0%,transparent_50%,rgba(0,0,0,0.25)_100%)]" />
                 <div className="pointer-events-none absolute inset-0 rounded-xl mix-blend-soft-light bg-[radial-gradient(ellipse_at_50%_18%,rgba(255,255,255,0.08),transparent_42%),radial-gradient(ellipse_at_50%_62%,rgba(6,7,20,0.6),transparent_65%)]" />

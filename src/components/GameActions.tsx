@@ -22,15 +22,19 @@ export const GameActions = () => {
       ? state.players[peekingState.playerIndex]?.id
       : currentPlayer?.id;
 
+  // In hotseat mode, we always allow the active player to take actions
+  // since everyone is playing from the same device
   const isMyTurn =
-    gameMode === "online"
-      ? currentPlayer?.id === myPlayerId
-      : activeHotseatPlayerId === myPlayerId;
+    gameMode === "hotseat"
+      ? true // Always allow actions in hotseat - the reducer enforces turn order
+      : currentPlayer?.id === myPlayerId;
   const amICurrentPeeker =
-    gamePhase === "peeking" &&
-    peekingState &&
-    peekingState.playerIndex ===
-      state.players.findIndex((p) => p.id === myPlayerId);
+    gameMode === "hotseat"
+      ? gamePhase === "peeking" && peekingState !== undefined
+      : gamePhase === "peeking" &&
+        peekingState &&
+        peekingState.playerIndex ===
+          state.players.findIndex((p) => p.id === myPlayerId);
 
   const handleFinishPeeking = () => {
     if (peekingState?.peekedCount === 2) {

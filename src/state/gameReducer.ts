@@ -223,16 +223,22 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
           const playerIndex = state.peekingState.playerIndex;
           const nextPlayerIndex = (playerIndex + 1) % state.players.length;
 
+          // Hide the current player's cards immediately after they finish peeking
+          const playersWithHiddenCards = state.players.map((p, idx) => {
+            if (idx === playerIndex) {
+              return {
+                ...p,
+                hand: p.hand.map((h) => ({ ...h, isFaceUp: false })),
+              };
+            }
+            return p;
+          });
+
           // All players peeked, start the game
           if (nextPlayerIndex === 0) {
-            const resetPlayers = state.players.map((p) => ({
-              ...p,
-              hand: p.hand.map((h) => ({ ...h, isFaceUp: false })),
-            }));
-
             return {
               ...state,
-              players: resetPlayers,
+              players: playersWithHiddenCards,
               gamePhase: "playing",
               currentPlayerIndex: 0,
               turnCount: 0,
@@ -245,6 +251,7 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
 
           return {
             ...state,
+            players: playersWithHiddenCards,
             peekingState: { playerIndex: nextPlayerIndex, peekedCount: 0 },
             actionMessage: i18n.t("game.peekTwoCards", {
               player: state.players[nextPlayerIndex]?.name ?? "",

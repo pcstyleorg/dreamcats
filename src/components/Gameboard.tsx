@@ -57,7 +57,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     }
     return false;
   });
-  const [boardScale, setBoardScale] = useState(0.9);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const currentPlayer = players[currentPlayerIndex];
@@ -103,36 +102,17 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     }
   }
 
+  // In hotseat mode, always allow actions since everyone plays from the same device
   const isMyTurn =
-    gameMode === "online"
-      ? currentPlayer?.id === myPlayerId
-      : activeHotseatPlayerId === myPlayerId;
+    gameMode === "hotseat"
+      ? true
+      : currentPlayer?.id === myPlayerId;
 
   useEffect(() => {
     const updateLayout = () => {
       const h = window.innerHeight;
       const w = window.innerWidth;
       setIsCompact(h < 860 || w < 1300);
-
-      // Improved scaling algorithm for better fit on various screen sizes
-      const playerCount = players.length;
-
-      let scale = h > 1100 && w > 1680 ? 0.96 : 0.9;
-      if (h < 980) scale = Math.min(scale, 0.88);
-      if (h < 900) scale = Math.min(scale, 0.86);
-      if (h < 820) scale = Math.min(scale, 0.84);
-      if (h < 760) scale = Math.min(scale, 0.8);
-      if (h < 700) scale = Math.min(scale, 0.76);
-
-      // Adjust for narrow screens
-      if (w < 1400) scale = Math.min(scale, 0.88);
-      if (w < 1220) scale = Math.min(scale, 0.84);
-      if (w < 1080) scale = Math.min(scale, 0.82);
-
-      const countScale =
-        playerCount <= 2 ? 0.86 : playerCount === 3 ? 0.84 : 0.8;
-
-      setBoardScale(Math.min(scale, countScale));
     };
     updateLayout();
     window.addEventListener("resize", updateLayout);
@@ -323,7 +303,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   }
 
   const isFocusPhase = [
-    "peeking",
     "holding_card",
     "action_peek_1",
     "action_swap_2_select_1",
@@ -369,7 +348,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     <div
       ref={containerRef}
       className={cn(
-        "relative w-full max-w-screen-2xl mx-auto min-h-[100svh] lg:min-h-[100dvh] lg:h-full text-foreground px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 bg-cover bg-center overflow-x-hidden overflow-y-auto styled-scrollbar",
+        "relative w-full min-h-[100svh] lg:min-h-[100dvh] lg:h-full text-foreground px-1 sm:px-2 md:px-3 lg:px-4 py-2 sm:py-3 flex flex-col lg:flex-row gap-2 sm:gap-3 md:gap-4 bg-cover bg-center overflow-x-hidden overflow-y-auto styled-scrollbar",
         isCompact && "game-compact"
       )}
       style={{
@@ -404,15 +383,9 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
       )}
 
       <div
-        className="flex-grow flex flex-col relative z-10 min-h-0"
-        style={{
-          transform: `scale(${boardScale})`,
-          transformOrigin: "top center",
-          width: "100%",
-          maxWidth: "100%",
-        }}
+        className="flex-grow flex flex-col relative z-10 min-h-0 w-full"
       >
-      <main className="flex-grow flex flex-col min-h-0 gap-3 sm:gap-4 overflow-visible">
+      <main className="flex-grow flex flex-col min-h-0 gap-3 sm:gap-4 overflow-visible w-full">
         <div
 
           className={cn(
@@ -481,12 +454,12 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         {/* Ring Layout: top/left/right around piles, bottom stays anchored */}
         <div
           className={cn(
-            "grid grid-cols-[auto_minmax(0,1fr)_auto] grid-rows-[auto_auto_auto] gap-4 sm:gap-5 lg:gap-6 xl:gap-7 items-center justify-items-center w-full max-w-6xl mx-auto mt-6 sm:mt-8 mb-6 sm:mb-8",
-            isCompact && "gap-3 sm:gap-4 mt-4 sm:mt-5"
+            "grid grid-cols-[minmax(80px,auto)_minmax(0,1fr)_minmax(80px,auto)] grid-rows-[auto_1fr_auto] gap-2 sm:gap-3 lg:gap-4 xl:gap-5 items-center justify-items-center w-full flex-1 px-2 sm:px-4 lg:px-6 mt-4 sm:mt-6 mb-4 sm:mb-6",
+            isCompact && "gap-2 sm:gap-3 mt-3 sm:mt-4"
           )}
         >
-          {/* Top seat */}
-          <div className="col-start-2 row-start-1">
+          {/* Top seat - rotated 180deg for tablet play */}
+          <div className="col-start-2 row-start-1 rotate-180">
             {seatMap.top && (
               <PlayerHand
                 player={seatMap.top}
@@ -502,12 +475,12 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
             )}
           </div>
 
-          {/* Left seat */}
-          <div className="col-start-1 row-start-2 self-center">
+          {/* Left seat - rotated 90deg for tablet play, cards face center */}
+          <div className="col-start-1 row-start-2 self-center rotate-90 origin-center">
             {seatMap.left && (
               <PlayerHand
                 player={seatMap.left}
-                orientation="vertical"
+                orientation="horizontal"
                 isCurrentPlayer={
                   gameMode === "hotseat"
                     ? activeHotseatPlayerId === seatMap.left.id
@@ -664,12 +637,12 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
             </div>
           </div>
 
-          {/* Right seat */}
-          <div className="col-start-3 row-start-2 self-center">
+          {/* Right seat - rotated -90deg for tablet play, cards face center */}
+          <div className="col-start-3 row-start-2 self-center -rotate-90 origin-center">
             {seatMap.right && (
               <PlayerHand
                 player={seatMap.right}
-                orientation="vertical"
+                orientation="horizontal"
                 isCurrentPlayer={
                   gameMode === "hotseat"
                     ? activeHotseatPlayerId === seatMap.right.id
