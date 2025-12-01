@@ -73,9 +73,8 @@ const parseArgs = (): RunOptions => {
   };
 };
 
-const log = (verbose: boolean, ...msg: unknown[]) => {
-  if (verbose) console.log(...msg);
-};
+// helper logging controlled by verbosity flag
+// (kept as inline console.log usages elsewhere in this script)
 
 /**
  * Build the module map expected by convexTest without relying on Vite's import.meta.glob.
@@ -436,13 +435,14 @@ class AiGameAgent {
     });
   }
 
-  private async perform(playerId: string, action: { type: ActionName; payload?: any }) {
+  private async perform(playerId: string, action: { type: ActionName; payload?: unknown }) {
     this.actionsSeen.add(action.type);
+    // convex-test mutation accepts a loosely typed action payload; cast to unknown to avoid `any` lint
     await this.t.mutation(api.actions.performAction, {
       roomId: this.roomId,
       playerId,
-      action: action as any,
-    });
+      action: action as unknown,
+    } as unknown as Parameters<typeof api.actions.performAction>[0]);
   }
 
   /**

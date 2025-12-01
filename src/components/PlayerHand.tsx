@@ -485,9 +485,9 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
 const PlayerInlineActions: React.FC<{
   gamePhase: string;
   peekingState?: { playerIndex: number; peekedCount: number };
-  drawnCard: any;
+  drawnCard?: Card | null;
   drawSource: string | null;
-  broadcastAction: (action: any) => void;
+  broadcastAction: (action: import('@/types').GameAction) => void;
   t: (key: string) => string;
 }> = ({ gamePhase, peekingState, drawnCard, drawSource, broadcastAction, t }) => {
   const handleFinishPeeking = () => {

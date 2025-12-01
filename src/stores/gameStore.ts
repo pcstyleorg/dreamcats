@@ -1,4 +1,5 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
+import { shallow } from 'zustand/shallow';
 import i18n from '@/i18n/config';
 import { GameState } from '@/types';
 
@@ -28,15 +29,22 @@ type GameStore = {
   setMyPlayerId: (id: string | null) => void;
 };
 
-export const useGameStore = create<GameStore>((set) => ({
-  state: initialState,
-  myPlayerId: null,
-  setState: (updater) =>
-    set((prev) => ({
-      state:
-        typeof updater === 'function'
-          ? (updater as (prev: GameState) => GameState)(prev.state)
-          : updater,
-    })),
-  setMyPlayerId: (id) => set({ myPlayerId: id }),
-}));
+/**
+ * Zustand v5: Using createWithEqualityFn with shallow comparison
+ * to prevent unnecessary re-renders when state is structurally identical.
+ */
+export const useGameStore = createWithEqualityFn<GameStore>()(
+  (set) => ({
+    state: initialState,
+    myPlayerId: null,
+    setState: (updater) =>
+      set((prev) => ({
+        state:
+          typeof updater === 'function'
+            ? (updater as (prev: GameState) => GameState)(prev.state)
+            : updater,
+      })),
+    setMyPlayerId: (id) => set({ myPlayerId: id }),
+  }),
+  shallow,
+);
