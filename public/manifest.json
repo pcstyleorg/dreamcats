@@ -1,7 +1,7 @@
 {
-  "name": "Dream Cats",
-  "short_name": "Dream Cats",
-  "description": "Collect sweet dreams and avoid the nightmares in this dreamy card game.",
+  "name": "Dreamcats",
+  "short_name": "Dreamcats",
+  "description": "A dreamy card game about collecting dreams and avoiding nightmares.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",

@@ -11,7 +11,7 @@ export type SoundType =
   | "pobudka"
   | "shuffle";
 
-// Map sound types to file paths
+// map sound types to file paths
 const SOUND_FILES: Record<SoundType, string> = {
   flip: "/sounds/flip.mp3",
   draw: "/sounds/draw.mp3",
@@ -24,13 +24,17 @@ const SOUND_FILES: Record<SoundType, string> = {
 };
 
 export const useSounds = () => {
-  // Use a ref to store Howl instances
+  // use a ref to store Howl instances
   const soundsRef = useRef<Record<string, Howl>>({});
 
   const playSound = useCallback((sound: SoundType) => {
+    // check if sounds are enabled (default true)
+    const soundEnabled = localStorage.getItem("soundEnabled") !== "false";
+    if (!soundEnabled) return;
+
     try {
       if (!soundsRef.current[sound]) {
-        // Lazy load on first play
+        // lazy load on first play
         soundsRef.current[sound] = new Howl({
           src: [SOUND_FILES[sound]],
           volume: 0.5,

@@ -5,7 +5,6 @@ import { Player, Card } from "@/types";
 import { GameCard } from "./Card";
 import { useGame } from "@/state/useGame";
 import { cn } from "@/lib/utils";
-import { SoundType } from "@/hooks/use-sounds";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
@@ -17,7 +16,6 @@ interface PlayerHandProps {
   isOpponent?: boolean;
   isLocalPlayer?: boolean;
   orientation?: "horizontal" | "vertical";
-  playSound: (sound: SoundType) => void;
 }
 
 export const PlayerHand: React.FC<PlayerHandProps> = ({
@@ -26,7 +24,6 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   isOpponent,
   isLocalPlayer,
   orientation = "horizontal",
-  playSound,
 }) => {
   const { t } = useTranslation();
   const { state, broadcastAction, myPlayerId } = useGame();
@@ -468,7 +465,6 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                       maxCardWidth,
                       getCardInteractionClass(index),
                     )}
-                    playSound={playSound}
                   />
                 </div>
               </div>

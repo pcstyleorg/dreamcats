@@ -1,10 +1,11 @@
+import React from "react";
 import { useGame } from "@/state/useGame";
 import { Button } from "./ui/button";
 import { Wand2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-export const GameActions = () => {
-  const { t } = useTranslation();
+export const GameActions: React.FC = () => {
+  const { t } = useTranslation("translation");
   const { state, broadcastAction, myPlayerId } = useGame();
   const {
     gamePhase,
@@ -53,6 +54,9 @@ export const GameActions = () => {
   const isPeekingPhase =
     gamePhase === "peeking" && peekingState !== undefined;
 
+  const finishPeekingDisabled = peekingState?.peekedCount !== 2;
+  const finishPeekingTitle = finishPeekingDisabled ? t("game.finishPeekingHint") : undefined;
+
   if (
     isPeekingPhase &&
     (gameMode === "hotseat" || amICurrentPeeker)
@@ -60,10 +64,11 @@ export const GameActions = () => {
     return (
       <Button
         onClick={handleFinishPeeking}
-        disabled={peekingState?.peekedCount !== 2}
+        disabled={finishPeekingDisabled}
         variant="secondary"
         className="w-auto min-w-[160px] sm:min-w-[180px] min-h-[52px] sm:min-h-[56px] text-base sm:text-lg font-semibold shadow-xs hover:bg-secondary/80"
         size="lg"
+        title={finishPeekingTitle}
       >
         {t('game.finishPeeking')}
       </Button>
@@ -94,6 +99,7 @@ export const GameActions = () => {
           disabled={mustSwap}
           className="flex-1 sm:flex-none min-w-[100px] sm:min-w-[140px] h-12 sm:h-[54px] text-sm sm:text-lg rounded-full border-border/70 bg-card/70 shadow-xs"
           size="lg"
+          title={mustSwap ? t("game.mustSwapHint") : undefined}
         >
           {t('game.discard')}
         </Button>
@@ -102,6 +108,7 @@ export const GameActions = () => {
           disabled={!canUseSpecial}
           className="flex-1 sm:flex-none min-w-[110px] sm:min-w-[150px] h-12 sm:h-[54px] text-sm sm:text-lg rounded-full bg-linear-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-[hsl(var(--primary-foreground))] shadow-soft-lg disabled:opacity-60"
           size="lg"
+          title={!canUseSpecial ? t("game.specialActionHint") : undefined}
         >
           <Wand2 className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />
           {t('game.action')}

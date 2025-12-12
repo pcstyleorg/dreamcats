@@ -202,8 +202,8 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
-          title: 'Dream Cats',
-          text: `Join my game of Dream Cats! Room: ${roomId}`,
+          title: 'Dreamcats',
+          text: `Join my game of Dreamcats! Room: ${roomId}`,
           url,
         });
         playSound('click');
@@ -602,7 +602,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                 }
                 isOpponent
                 isLocalPlayer={false}
-                playSound={playSound}
               />
             )}
           </div>
@@ -620,7 +619,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                 }
                 isOpponent
                 isLocalPlayer={false}
-                playSound={playSound}
               />
             )}
           </div>
@@ -693,7 +691,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                           isFaceUp={true}
                           isGlowing
                           className={cn(pileCardClass, "shadow-2xl ring-2 ring-primary/60")}
-                          playSound={playSound}
                         />
                       </div>
                       <div className="mt-3 sm:mt-4 bg-primary/20 backdrop-blur-md px-3 py-1 rounded-full border border-primary/30 shadow-sm animate-in slide-in-from-top-2 duration-300 whitespace-nowrap">
@@ -768,7 +765,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                 }
                 isOpponent
                 isLocalPlayer={false}
-                playSound={playSound}
               />
             )}
           </div>
@@ -802,7 +798,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                       : false
                   }
                   isLocalPlayer
-                  playSound={playSound}
                 />
               </div>
             </div>
@@ -824,7 +819,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                   }
                   isOpponent
                   isLocalPlayer={false}
-                  playSound={playSound}
                 />
               ))}
             </div>
@@ -842,7 +836,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
       >
         <div className={cn("transition-opacity duration-200", isSidebarOpen ? "opacity-100" : "opacity-0")}>
           <h2 className="text-3xl font-bold mb-3 text-center font-heading text-foreground">
-            Dream Cats
+            Dreamcats
           </h2>
           {gameMode === "hotseat" && (
             <div className="flex items-center justify-center gap-2 mb-2 text-sm text-muted-foreground">

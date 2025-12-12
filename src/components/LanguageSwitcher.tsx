@@ -8,7 +8,7 @@ import { useUserPreferences } from "@/hooks/useUserPreferences";
 export const LanguageSwitcher: React.FC<{ className?: string }> = ({
   className,
 }) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation("common");
   const { setLanguage } = useUserPreferences();
   const currentLang = i18n.language?.split('-')[0] || 'en';
 
@@ -18,11 +18,16 @@ export const LanguageSwitcher: React.FC<{ className?: string }> = ({
     setLanguage(newLang);
   };
 
+  const ariaLabel =
+    currentLang === "en"
+      ? t("language.switchTo", { lang: t("language.pl") })
+      : t("language.switchTo", { lang: t("language.en") });
+
   return (
     <Button
       variant="outline"
       size="icon"
-      aria-label={`Switch to ${currentLang === 'en' ? 'Polish' : 'English'}`}
+      aria-label={ariaLabel}
       onClick={toggleLanguage}
       className={cn(
         "rounded-full h-10 w-10 border-border/60 bg-card/80 backdrop-blur-xs shadow-soft",
@@ -32,7 +37,7 @@ export const LanguageSwitcher: React.FC<{ className?: string }> = ({
     >
       <Languages className="h-4 w-4" />
       <span className="sr-only">
-        {currentLang === 'en' ? 'Switch to Polish' : 'Switch to English'}
+        {ariaLabel}
       </span>
     </Button>
   );

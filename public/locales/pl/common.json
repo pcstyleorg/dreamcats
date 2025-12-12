@@ -1,4 +1,40 @@
 {
+  "auth": {
+    "welcomeTitle": "Witaj w Dreamcats",
+    "welcomeSubtitle": "Marzycielska gra karciana o zbieraniu snów i unikaniu koszmarów",
+    "signIn": "Zaloguj się",
+    "signUp": "Utwórz konto",
+    "playAsGuest": "Graj jako gość",
+    "orContinueWith": "Lub kontynuuj z",
+    "email": "Email",
+    "emailPlaceholder": "ty@przyklad.com",
+    "password": "Hasło",
+    "passwordPlaceholder": "••••••••",
+    "noAccount": "Nie masz konta?",
+    "haveAccount": "Masz już konto?",
+    "loading": "Ładowanie...",
+    "profile": "Profil",
+    "settings": "Ustawienia",
+    "displayName": "Nazwa",
+    "displayNamePlaceholder": "Wpisz swoje imię",
+    "saveChanges": "Zapisz zmiany",
+    "saved": "Zapisano!",
+    "edit": "Edytuj",
+    "signOut": "Wyloguj",
+    "playingAsGuest": "Grasz jako gość",
+    "upgradeAccount": "Załóż pełne konto",
+    "upgradeDescription": "Utwórz konto, aby zapisać postępy na różnych urządzeniach"
+  },
+  "preferences": {
+    "title": "Preferencje",
+    "sound": "Dźwięki",
+    "soundOn": "Wł.",
+    "soundOff": "Wył.",
+    "theme": "Motyw",
+    "themeLight": "Jasny",
+    "themeDark": "Ciemny",
+    "language": "Język"
+  },
   "errors": {
     "enterName": "Wpisz swoje imie.",
     "enterRoomId": "Wpisz kod pokoju.",
@@ -24,23 +60,26 @@
   "success": {
     "roomIdCopied": "Kod pokoju skopiowany do schowka!",
     "idCopied": "Kod pokoju skopiowany!",
-    "roomCreated": "Pokoj utworzony! Kod: {{roomId}}.",
-    "joinedRoom": "Dolaczono do pokoju {{room}}. Oczekiwanie na synchronizacje.",
-    "rejoinedRoom": "Ponownie dolaczono do pokoju {{room}}.",
-    "hotseatStarted": "Gra lokalna rozpoczeta!",
-    "rejoinedGame": "Ponownie dolaczono do gry!",
+    "linkCopied": "Link skopiowany do schowka!",
+    "roomCreated": "Pokój utworzony! Kod: {{roomId}}.",
+    "joinedRoom": "Dołączono do pokoju {{room}}. Oczekiwanie na synchronizację.",
+    "rejoinedRoom": "Ponownie dołączono do pokoju {{room}}.",
+    "hotseatStarted": "Gra lokalna rozpoczęta!",
+    "rejoinedGame": "Ponownie dołączono do gry!",
     "gameResumed": "Gra wznowiona!",
-    "playingAsGuest": "Grasz jako gosc.",
+    "playingAsGuest": "Grasz jako gość.",
     "signedIn": "Zalogowano!",
     "accountCreated": "Konto utworzone!",
-    "signedOut": "Wylogowano."
+    "signedOut": "Wylogowano.",
+    "profileSaved": "Ustawienia zapisane!"
   },
   "theme": {
     "switchToLight": "Tryb jasny",
     "switchToDark": "Tryb ciemny"
   },
   "language": {
-    "switchLanguage": "Zmien jezyk",
+    "switchLanguage": "Zmień język",
+    "switchTo": "Przełącz na {{lang}}",
     "en": "Angielski",
     "pl": "Polski"
   }

@@ -1,15 +1,15 @@
 {
   "landing": {
-    "title": "Sen",
-    "subtitle": "Gra o snach i kotach.",
-    "enterButton": "Wejdz w Sen",
+    "title": "Dreamcats",
+    "subtitle": "Marzycielska gra karciana o zbieraniu snów i unikaniu koszmarów.",
+    "enterButton": "Wejdź w Sen",
     "rejoinGame": "Wroc do Gry",
     "startFresh": "Zacznij od Nowa",
     "enterLobby": "Wejdz do Lobby"
   },
   "lobby": {
-    "title": "Sen",
-    "subtitle": "Gra o snach i kotach.",
+    "title": "Dreamcats",
+    "subtitle": "Marzycielska gra karciana o zbieraniu snów i unikaniu koszmarów.",
     "onlineMultiplayer": "Gra online",
     "localHotseat": "Gra lokalna",
     "online": {
@@ -74,11 +74,14 @@
     "player": "Gracz",
     "score": "Punkty",
     "finishPeeking": "Zakoncz podgladanie",
+    "finishPeekingHint": "Podejrzyj dwie karty zanim zakoncysz.",
     "pobudka": "POBUDKA!",
     "action": "Akcja",
+    "specialActionHint": "Uzyj karty specjalnej dobranej ze Stosu Zakrytego lub Wez 2.",
+    "mustSwapHint": "Wziales ze Stosu Odkrytego. Musisz zamienic.",
     "noMessagesYet": "Brak wiadomosci.",
     "chatPlaceholder": "Napisz cos...",
-    "welcomeMessage": "Witaj w Snie! Wybierz swoja sciezke.",
+    "welcomeMessage": "Witaj w Dreamcats! Wybierz swoją ścieżkę.",
     "playerTurn": "Kolej gracza {{player}}.",
     "gameBegins": "Gra sie zaczyna! {{player}}, twoja kolej.",
     "peekTwoCards": "{{player}}, podejrzyj dwie ze swoich kart.",
@@ -134,7 +137,7 @@
     "finalScores": "Wyniki koncowe"
   },
   "tutorial": {
-    "welcomeTitle": "Witaj w Snie!",
+    "welcomeTitle": "Witaj w Dreamcats!",
     "welcomeDescription": "Wyglada na to, ze to twoja pierwsza wizyta. Chcesz przejsc krotki samouczek, zeby poznac podstawy gry?",
     "noThanks": "Nie, dziekuje",
     "yesPlease": "Tak, prosze!",

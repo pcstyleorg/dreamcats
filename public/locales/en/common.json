@@ -1,4 +1,40 @@
 {
+  "auth": {
+    "welcomeTitle": "Welcome to Dreamcats",
+    "welcomeSubtitle": "A dreamy card game about collecting dreams and avoiding nightmares",
+    "signIn": "Sign In",
+    "signUp": "Create Account",
+    "playAsGuest": "Play as Guest",
+    "orContinueWith": "Or continue with",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "loading": "Loading...",
+    "profile": "Profile",
+    "settings": "Settings",
+    "displayName": "Display Name",
+    "displayNamePlaceholder": "Enter your name",
+    "saveChanges": "Save Changes",
+    "saved": "Saved!",
+    "edit": "Edit",
+    "signOut": "Sign Out",
+    "playingAsGuest": "Playing as Guest",
+    "upgradeAccount": "Upgrade to Full Account",
+    "upgradeDescription": "Create an account to save your progress across devices"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "sound": "Sound Effects",
+    "soundOn": "On",
+    "soundOff": "Off",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "language": "Language"
+  },
   "errors": {
     "enterName": "Please enter your name.",
     "enterRoomId": "Please enter a Room ID.",
@@ -24,6 +60,7 @@
   "success": {
     "roomIdCopied": "Room ID copied to clipboard!",
     "idCopied": "Room ID copied!",
+    "linkCopied": "Link copied to clipboard!",
     "roomCreated": "Room created! Share code {{roomId}}.",
     "joinedRoom": "Joined room {{room}}. Waiting for sync.",
     "rejoinedRoom": "Rejoined room {{room}}.",
@@ -33,7 +70,8 @@
     "playingAsGuest": "Playing as guest.",
     "signedIn": "Signed in!",
     "accountCreated": "Account created!",
-    "signedOut": "Signed out."
+    "signedOut": "Signed out.",
+    "profileSaved": "Settings saved!"
   },
   "theme": {
     "switchToLight": "Switch to light mode",
@@ -41,6 +79,7 @@
   },
   "language": {
     "switchLanguage": "Switch language",
+    "switchTo": "Switch to {{lang}}",
     "en": "English",
     "pl": "Polish"
   }

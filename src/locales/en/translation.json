@@ -1,15 +1,15 @@
 {
   "landing": {
-    "title": "Sen",
-    "subtitle": "A game of dreams and crows.",
+    "title": "Dreamcats",
+    "subtitle": "A dreamy card game about collecting dreams and avoiding nightmares.",
     "enterButton": "Enter the Dream",
     "rejoinGame": "Rejoin Game",
     "startFresh": "Start Fresh",
     "enterLobby": "Enter Lobby"
   },
   "lobby": {
-    "title": "Sen",
-    "subtitle": "A game of dreams and crows.",
+    "title": "Dreamcats",
+    "subtitle": "A dreamy card game about collecting dreams and avoiding nightmares.",
     "onlineMultiplayer": "Online Multiplayer",
     "localHotseat": "Local Hot-Seat",
     "online": {
@@ -74,11 +74,14 @@
     "player": "Player",
     "score": "Score",
     "finishPeeking": "Finish Peeking",
+    "finishPeekingHint": "Peek two cards before finishing.",
     "pobudka": "POBUDKA!",
     "action": "Action",
+    "specialActionHint": "Use a special card drawn from the deck or Take 2.",
+    "mustSwapHint": "You took from discard. You must swap.",
     "noMessagesYet": "No messages yet.",
     "chatPlaceholder": "Say something...",
-    "welcomeMessage": "Welcome to Sen! Choose your path.",
+    "welcomeMessage": "Welcome to Dreamcats! Choose your path.",
     "playerTurn": "It's {{player}}'s turn.",
     "gameBegins": "The game begins! {{player}}, your turn.",
     "peekTwoCards": "{{player}}, it's your turn to peek at two cards.",
@@ -134,7 +137,7 @@
     "finalScores": "Final Scores"
   },
   "tutorial": {
-    "welcomeTitle": "Welcome to Sen!",
+    "welcomeTitle": "Welcome to Dreamcats!",
     "welcomeDescription": "It looks like this is your first time here. Would you like a quick tutorial to learn the basics of the game?",
     "noThanks": "No, thanks",
     "yesPlease": "Yes, please!",

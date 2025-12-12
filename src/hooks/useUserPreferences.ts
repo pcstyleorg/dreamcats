@@ -8,6 +8,7 @@ export interface UserPreferences {
   displayName?: string;
   theme?: "light" | "dark";
   language?: string;
+  soundEnabled?: boolean;
 }
 
 export interface ActiveGameSession {
@@ -35,6 +36,7 @@ export function useUserPreferences() {
   const setThemeMutation = useMutation(api.userPreferences.setTheme);
   const setLanguageMutation = useMutation(api.userPreferences.setLanguage);
   const setDisplayNameMutation = useMutation(api.userPreferences.setDisplayName);
+  const setSoundEnabledMutation = useMutation(api.userPreferences.setSoundEnabled);
   const setActiveSessionMutation = useMutation(api.userPreferences.setActiveSession);
   const clearActiveSessionMutation = useMutation(api.userPreferences.clearActiveSession);
   const saveLocalGameStateMutation = useMutation(api.userPreferences.saveLocalGameState);
@@ -52,12 +54,15 @@ export function useUserPreferences() {
         const localTheme = localStorage.getItem("theme");
         const localLanguage = localStorage.getItem("i18nextLng");
         const localName = localStorage.getItem("playerName");
+        const localSoundRaw = localStorage.getItem("soundEnabled");
+        const localSound = localSoundRaw === null ? undefined : localSoundRaw !== "false";
         
         if (localTheme || localLanguage || localName) {
           updatePreferences({
             theme: localTheme || undefined,
             language: localLanguage || undefined,
             displayName: localName || undefined,
+            soundEnabled: localSound,
           }).catch(console.error);
         }
       }
@@ -79,12 +84,20 @@ export function useUserPreferences() {
       if (preferences.displayName) {
         localStorage.setItem("playerName", preferences.displayName);
       }
+      if (preferences.soundEnabled !== undefined) {
+        localStorage.setItem("soundEnabled", String(preferences.soundEnabled));
+      }
     }
   }, [preferences]);
 
   const setTheme = useCallback(
     async (theme: "light" | "dark") => {
       localStorage.setItem("theme", theme);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("sen-theme-changed", { detail: theme }),
+        );
+      }
       if (isAuthenticated) {
         try {
           await setThemeMutation({ theme });
@@ -123,6 +136,15 @@ export function useUserPreferences() {
     },
     [isAuthenticated, setDisplayNameMutation]
   );
+
+  const setSoundEnabled = useCallback((enabled: boolean) => {
+    localStorage.setItem("soundEnabled", String(enabled));
+    if (isAuthenticated) {
+      setSoundEnabledMutation({ enabled }).catch((error) =>
+        console.error("Failed to save sound preference:", error),
+      );
+    }
+  }, [isAuthenticated, setSoundEnabledMutation]);
 
   // Save active game session (for rejoin after refresh)
   const saveActiveSession = useCallback(
@@ -217,6 +239,7 @@ export function useUserPreferences() {
   const displayName = preferences?.displayName ?? localStorage.getItem("playerName") ?? "";
   const theme = (preferences?.theme ?? localStorage.getItem("theme") ?? "light") as "light" | "dark";
   const language = preferences?.language ?? localStorage.getItem("i18nextLng") ?? "en";
+  const soundEnabled = localStorage.getItem("soundEnabled") !== "false"; // default true
   const activeSession = getActiveSession();
 
   return {
@@ -224,10 +247,12 @@ export function useUserPreferences() {
     displayName,
     theme,
     language,
+    soundEnabled,
     activeSession,
     setTheme,
     setLanguage,
     setDisplayName,
+    setSoundEnabled,
     saveActiveSession,
     clearActiveSession,
     saveLocalGameState,
