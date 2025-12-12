@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,9 +17,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { User, LogOut, Mail, Lock, UserCircle } from "lucide-react";
+import { User, LogOut, Mail, Lock, UserCircle, Settings } from "lucide-react";
 import { useConvexAuth } from "convex/react";
 import { useTranslation } from "react-i18next";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 
 interface AuthDialogProps {
   trigger?: React.ReactNode;
@@ -29,7 +30,7 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
   const { signIn } = useAuthActions();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const [open, setOpen] = useState(false);
-  const { t } = useTranslation();
+  const { t } = useTranslation("common");
   const [mode, setMode] = useState<"signIn" | "signUp">("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,10 +40,10 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
     setIsSubmitting(true);
     try {
       await signIn("anonymous");
-      toast.success(t("common:success.playingAsGuest"));
+      toast.success(t("success.playingAsGuest"));
       setOpen(false);
     } catch (error) {
-      toast.error(t("common:errors.guestFailed"));
+      toast.error(t("errors.guestFailed"));
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -52,14 +53,14 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
-      toast.error(t("common:errors.enterEmailPassword"));
+      toast.error(t("errors.enterEmailPassword"));
       return;
     }
 
     setIsSubmitting(true);
     try {
       await signIn("password", { email, password, flow: mode });
-      toast.success(mode === "signIn" ? t("common:success.signedIn") : t("common:success.accountCreated"));
+      toast.success(mode === "signIn" ? t("success.signedIn") : t("success.accountCreated"));
       setOpen(false);
       setEmail("");
       setPassword("");
@@ -87,19 +88,17 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
         {trigger || (
           <Button variant="ghost" size="sm" className="gap-2">
             <User className="h-4 w-4" />
-            Sign In
+            {t("auth.signIn")}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl font-heading">
-            {mode === "signIn" ? "Welcome Back" : "Create Account"}
+            {t("auth.welcomeTitle")}
           </DialogTitle>
           <DialogDescription>
-            {mode === "signIn"
-              ? "Sign in to save your progress and scores"
-              : "Create an account to save your progress"}
+            {t("auth.welcomeSubtitle")}
           </DialogDescription>
         </DialogHeader>
 
@@ -112,7 +111,7 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
             disabled={isSubmitting}
           >
             <User className="mr-2 h-4 w-4" />
-            Play as Guest
+            {t("auth.playAsGuest")}
           </Button>
 
           <div className="relative">
@@ -121,7 +120,7 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                Or with email
+                {t("auth.orContinueWith")}
               </span>
             </div>
           </div>
@@ -129,13 +128,13 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
           {/* Email/Password Form */}
           <form onSubmit={handleEmailAuth} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("auth.email")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder={t("auth.emailPlaceholder")}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
@@ -145,13 +144,13 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("auth.password")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={t("auth.passwordPlaceholder")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10"
@@ -166,10 +165,10 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
               disabled={isSubmitting}
             >
               {isSubmitting
-                ? "Loading..."
+                ? t("auth.loading")
                 : mode === "signIn"
-                ? "Sign In"
-                : "Create Account"}
+                ? t("auth.signIn")
+                : t("auth.signUp")}
             </Button>
           </form>
 
@@ -181,8 +180,8 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
               disabled={isSubmitting}
             >
               {mode === "signIn"
-                ? "Don't have an account? Sign up"
-                : "Already have an account? Sign in"}
+                ? t("auth.noAccount")
+                : t("auth.haveAccount")}
             </button>
           </div>
         </div>
@@ -192,72 +191,240 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
 };
 
 /**
- * AuthButton - A header button that shows auth state and provides quick access to sign in/out
- * Also auto-signs in anonymously when entering the app for seamless play
+ * AuthButton - A header button that shows auth state and provides quick access to profile/settings
  */
-interface AuthButtonProps {
-  autoSignIn?: boolean;
-}
-
-export const AuthButton: React.FC<AuthButtonProps> = ({ autoSignIn = true }) => {
-  const { signIn, signOut } = useAuthActions();
+export const AuthButton: React.FC = () => {
+  const { signOut } = useAuthActions();
   const { isAuthenticated, isLoading } = useConvexAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation("common");
+  const {
+    displayName,
+    setDisplayName,
+    theme,
+    setTheme,
+    setLanguage,
+    soundEnabled,
+    setSoundEnabled,
+  } = useUserPreferences();
   const [popoverOpen, setPopoverOpen] = useState(false);
-  const [hasAttemptedAutoSignIn, setHasAttemptedAutoSignIn] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState(displayName);
+  const [soundEnabledValue, setSoundEnabledValue] = useState(soundEnabled);
+  const [themeValue, setThemeValue] = useState<"light" | "dark">(theme);
 
-  // Auto sign-in as anonymous for seamless experience
-  useEffect(() => {
-    if (autoSignIn && !isLoading && !isAuthenticated && !hasAttemptedAutoSignIn) {
-      setHasAttemptedAutoSignIn(true);
-      signIn("anonymous").catch((error) => {
-        console.error("Auto sign-in failed:", error);
-      });
+  const currentLang = (i18n.language?.split("-")[0] || "en") as "en" | "pl";
+
+  const applyThemeToDocument = useCallback((next: "light" | "dark") => {
+    const root = document.documentElement;
+    if (next === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
     }
-  }, [autoSignIn, isLoading, isAuthenticated, hasAttemptedAutoSignIn, signIn]);
+  }, []);
 
   const handleSignOut = useCallback(async () => {
     try {
       await signOut();
       setPopoverOpen(false);
-      toast.success(t("common:success.signedOut"));
+      toast.success(t("success.signedOut"));
     } catch (error) {
-      toast.error(t("common:errors.signOutFailed"));
+      toast.error(t("errors.signOutFailed"));
       console.error(error);
     }
   }, [signOut, t]);
 
-  if (isLoading) {
-    return (
-      <Button variant="ghost" size="icon" disabled className="h-9 w-9">
-        <UserCircle className="h-5 w-5 animate-pulse" />
-      </Button>
-    );
-  }
+  const handleSaveName = useCallback(async () => {
+    if (nameValue.trim()) {
+      await setDisplayName(nameValue.trim());
+      toast.success(t("success.profileSaved"));
+      setEditingName(false);
+    }
+  }, [nameValue, setDisplayName, t]);
 
-  if (isAuthenticated) {
-    return (
-      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-9 w-9">
-            <UserCircle className="h-5 w-5" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-56" align="end">
-          <div className="space-y-3">
-            <p className="text-sm font-medium">Playing as Guest</p>
-            <p className="text-xs text-muted-foreground">
-              Sign in with email to save your progress across devices.
-            </p>
-            <div className="flex flex-col gap-2">
-              <AuthDialog
-                trigger={
-                  <Button variant="outline" size="sm" className="w-full gap-2">
-                    <Mail className="h-4 w-4" />
-                    Upgrade Account
+  const handleThemeChange = useCallback(
+    async (nextTheme: "light" | "dark") => {
+      setThemeValue(nextTheme);
+      applyThemeToDocument(nextTheme);
+      await setTheme(nextTheme);
+    },
+    [applyThemeToDocument, setTheme],
+  );
+
+  const handleLanguageChange = useCallback(
+    async (nextLanguage: "en" | "pl") => {
+      await i18n.changeLanguage(nextLanguage);
+      await setLanguage(nextLanguage);
+    },
+    [i18n, setLanguage],
+  );
+
+  const handleSoundChange = useCallback(
+    (enabled: boolean) => {
+      setSoundEnabledValue(enabled);
+      setSoundEnabled(enabled);
+    },
+    [setSoundEnabled],
+  );
+
+  return (
+    <Popover
+      open={popoverOpen}
+      onOpenChange={(nextOpen) => {
+        setPopoverOpen(nextOpen);
+        if (nextOpen) {
+          setNameValue(displayName);
+          setSoundEnabledValue(localStorage.getItem("soundEnabled") !== "false");
+          setThemeValue(
+            (localStorage.getItem("theme") ?? "light") as "light" | "dark",
+          );
+          setEditingName(false);
+        }
+      }}
+    >
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-9 w-9" disabled={isLoading}>
+          <UserCircle className="h-5 w-5" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-64" align="end">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Settings className="h-4 w-4 text-muted-foreground" />
+            <span className="font-semibold">{t("auth.settings")}</span>
+          </div>
+
+          {isAuthenticated && (
+            <div className="space-y-2">
+              <Label htmlFor="displayName" className="text-xs text-muted-foreground">
+                {t("auth.displayName")}
+              </Label>
+              {editingName ? (
+                <div className="flex gap-2">
+                  <Input
+                    id="displayName"
+                    value={nameValue}
+                    onChange={(e) => setNameValue(e.target.value)}
+                    placeholder={t("auth.displayNamePlaceholder")}
+                    className="h-8 text-sm"
+                  />
+                  <Button size="sm" className="h-8" onClick={handleSaveName}>
+                    {t("auth.saveChanges")}
                   </Button>
-                }
-              />
+                </div>
+              ) : (
+                <div
+                  className="flex items-center justify-between p-2 bg-muted/50 rounded cursor-pointer hover:bg-muted transition-colors"
+                  onClick={() => {
+                    setNameValue(displayName);
+                    setEditingName(true);
+                  }}
+                >
+                  <span className="text-sm">{displayName || t("auth.displayNamePlaceholder")}</span>
+                  <span className="text-xs text-muted-foreground">{t("auth.edit")}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="pt-2 border-t border-border space-y-3">
+            <div className="text-sm font-semibold">{t("preferences.title")}</div>
+
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">
+                {t("preferences.sound")}
+              </Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={soundEnabledValue ? "default" : "outline"}
+                  className="flex-1 h-8"
+                  onClick={() => handleSoundChange(true)}
+                >
+                  {t("preferences.soundOn")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={!soundEnabledValue ? "default" : "outline"}
+                  className="flex-1 h-8"
+                  onClick={() => handleSoundChange(false)}
+                >
+                  {t("preferences.soundOff")}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">
+                {t("preferences.theme")}
+              </Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={themeValue === "light" ? "default" : "outline"}
+                  className="flex-1 h-8"
+                  onClick={() => handleThemeChange("light")}
+                >
+                  {t("preferences.themeLight")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={themeValue === "dark" ? "default" : "outline"}
+                  className="flex-1 h-8"
+                  onClick={() => handleThemeChange("dark")}
+                >
+                  {t("preferences.themeDark")}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">
+                {t("preferences.language")}
+              </Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={currentLang === "en" ? "default" : "outline"}
+                  className="flex-1 h-8"
+                  onClick={() => handleLanguageChange("en")}
+                >
+                  {t("language.en")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={currentLang === "pl" ? "default" : "outline"}
+                  className="flex-1 h-8"
+                  onClick={() => handleLanguageChange("pl")}
+                >
+                  {t("language.pl")}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {isAuthenticated ? (
+            <>
+              <div className="pt-2 border-t border-border">
+                <p className="text-xs text-muted-foreground mb-2">
+                  {t("auth.playingAsGuest")}
+                </p>
+                <AuthDialog
+                  trigger={
+                    <Button variant="outline" size="sm" className="w-full gap-2">
+                      <Mail className="h-4 w-4" />
+                      {t("auth.upgradeAccount")}
+                    </Button>
+                  }
+                />
+              </div>
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -265,15 +432,25 @@ export const AuthButton: React.FC<AuthButtonProps> = ({ autoSignIn = true }) => 
                 className="w-full gap-2 text-muted-foreground"
               >
                 <LogOut className="h-4 w-4" />
-                Sign Out
+                {t("auth.signOut")}
               </Button>
+            </>
+          ) : (
+            <div className="pt-2 border-t border-border space-y-2">
+              <p className="text-xs text-muted-foreground">
+                {t("auth.upgradeDescription")}
+              </p>
+              <AuthDialog
+                trigger={
+                  <Button size="sm" className="w-full h-9">
+                    {t("auth.signIn")}
+                  </Button>
+                }
+              />
             </div>
-          </div>
-        </PopoverContent>
-      </Popover>
-    );
-  }
-
-  // Not authenticated - show sign in button
-  return <AuthDialog />;
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 };

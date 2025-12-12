@@ -4,7 +4,6 @@ import { useGSAP } from "@gsap/react";
 import { Card as CardType } from "@/types";
 import { cn } from "@/lib/utils";
 import { getCardAsset, getCardBackAsset } from "@/lib/cardAssets";
-import { SoundType } from "@/hooks/use-sounds";
 import { useTranslation } from "react-i18next";
 
 interface CardProps {
@@ -14,7 +13,6 @@ interface CardProps {
   className?: string;
   hasBeenPeeked?: boolean;
   isGlowing?: boolean;
-  playSound?: (sound: SoundType) => void;
   disableSpecialAnimation?: boolean;
   /** Render without 3D flip (useful for static piles / Safari glitches) */
   staticMode?: boolean;
@@ -27,7 +25,6 @@ export const GameCard: React.FC<CardProps> = ({
   className,
   hasBeenPeeked,
   isGlowing,
-  playSound,
   disableSpecialAnimation,
   staticMode,
 }) => {
@@ -60,8 +57,8 @@ export const GameCard: React.FC<CardProps> = ({
   const { contextSafe } = useGSAP({ scope: containerRef });
 
   const handleClick = contextSafe(() => {
+    // sounds are played by the action handlers in useGame.ts when actions are valid
     if (onClick) {
-      if (playSound) playSound("flip");
       onClick();
     }
   });

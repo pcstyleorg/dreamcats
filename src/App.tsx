@@ -10,7 +10,6 @@ import { LandingPage } from './components/LandingPage';
 import { ThemeToggle } from './components/ThemeToggle';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { AuthButton } from './components/AuthDialog';
-import { RejoinPrompt } from './components/RejoinPrompt';
 import { useUserPreferences } from './hooks/useUserPreferences';
 import { useSessionPersistence } from './hooks/useSessionPersistence';
 import './i18n/config';
@@ -21,7 +20,7 @@ function App() {
   const [hasEntered, setHasEntered] = useState(false);
   const { theme, setTheme: saveTheme } = useUserPreferences();
   const [localTheme, setLocalTheme] = useState<'light' | 'dark'>('light');
-  
+
   // Track active game sessions for rejoin
   useSessionPersistence();
 
@@ -29,6 +28,19 @@ function App() {
   useEffect(() => {
     setLocalTheme(theme);
   }, [theme]);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const nextTheme =
+        (event as CustomEvent).detail ??
+        ((localStorage.getItem("theme") ?? "light") as "light" | "dark");
+      setLocalTheme((prev) => (prev === nextTheme ? prev : nextTheme));
+    };
+    window.addEventListener("sen-theme-changed", handler as EventListener);
+    return () => {
+      window.removeEventListener("sen-theme-changed", handler as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -45,6 +57,7 @@ function App() {
     saveTheme(newTheme);
   };
 
+  // auth is optional; landing is always reachable
   const showLanding = !hasEntered;
   const showLobby = hasEntered && state.gamePhase === 'lobby';
   const showGameboard = hasEntered && state.gamePhase !== 'lobby';
@@ -54,12 +67,11 @@ function App() {
       <TutorialProvider>
         <div className="bg-background w-full min-h-dvh">
           <main className="font-sans bg-background text-foreground transition-colors relative flex flex-col w-full min-h-dvh">
+            {/* Rejoin logic moved to LandingPage */}
             <ConvexSync />
-            {/* Rejoin prompt shows on landing if there's an active session */}
-            {showLanding && <RejoinPrompt onEnter={() => setHasEntered(true)} />}
             {!showGameboard && (
               <div className="fixed top-3 sm:top-4 right-3 sm:right-4 z-50 flex gap-2">
-                <AuthButton autoSignIn={hasEntered} />
+                <AuthButton />
                 <LanguageSwitcher />
                 <ThemeToggle theme={localTheme} onToggle={toggleTheme} />
               </div>

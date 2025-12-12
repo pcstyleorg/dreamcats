@@ -78,6 +78,7 @@ export default defineSchema({
     displayName: v.optional(v.string()),
     theme: v.optional(v.string()), // "light" | "dark"
     language: v.optional(v.string()), // "en" | "pl" etc.
+    soundEnabled: v.optional(v.boolean()),
     // Active game session for rejoin capability
     activeRoomId: v.optional(v.string()),
     activePlayerId: v.optional(v.string()),

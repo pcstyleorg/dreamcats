@@ -30,6 +30,7 @@ export const update = mutation({
     displayName: v.optional(v.string()),
     theme: v.optional(v.string()),
     language: v.optional(v.string()),
+    soundEnabled: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -48,6 +49,7 @@ export const update = mutation({
         ...(args.displayName !== undefined && { displayName: args.displayName }),
         ...(args.theme !== undefined && { theme: args.theme }),
         ...(args.language !== undefined && { language: args.language }),
+        ...(args.soundEnabled !== undefined && { soundEnabled: args.soundEnabled }),
         updatedAt: Date.now(),
       });
       return existing._id;
@@ -58,6 +60,7 @@ export const update = mutation({
         displayName: args.displayName,
         theme: args.theme,
         language: args.language,
+        soundEnabled: args.soundEnabled,
         updatedAt: Date.now(),
       });
       return id;
@@ -152,6 +155,37 @@ export const setLanguage = mutation({
       await ctx.db.insert("userPreferences", {
         userId,
         language,
+        updatedAt: Date.now(),
+      });
+    }
+  },
+});
+
+/**
+ * Set sound preference
+ */
+export const setSoundEnabled = mutation({
+  args: { enabled: v.boolean() },
+  handler: async (ctx, { enabled }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Not authenticated");
+    }
+
+    const existing = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .unique();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        soundEnabled: enabled,
+        updatedAt: Date.now(),
+      });
+    } else {
+      await ctx.db.insert("userPreferences", {
+        userId,
+        soundEnabled: enabled,
         updatedAt: Date.now(),
       });
     }

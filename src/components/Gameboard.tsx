@@ -9,7 +9,7 @@ import { Button } from "./ui/button";
 import { Scoreboard } from "./Scoreboard";
 import { Separator } from "./ui/separator";
 import { toast } from "sonner";
-import { Copy, Menu, Users, Cloud, ScrollText, Sparkles, LogOut } from "lucide-react";
+import { Copy, Menu, Users, Cloud, ScrollText, Sparkles, LogOut, Share2 } from "lucide-react";
 import { ActionModal } from "./ActionModal";
 import {
   Sheet,
@@ -162,11 +162,11 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   };
 
   const handleDiscardPileClick = () => {
-    // If holding a card, clicking discard pile discards it
+    // if holding a card, clicking discard pile discards it
     if (isMyTurn && gamePhase === "holding_card") {
       broadcastAction({ type: "DISCARD_HELD_CARD" });
     } else {
-      // Otherwise, draw from discard
+      // otherwise draw from discard
       handleDrawFromDiscard();
     }
   };
@@ -175,6 +175,47 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     if (roomId) {
       navigator.clipboard.writeText(roomId);
       toast.success(t('common:success.roomIdCopied'));
+      playSound('click');
+    }
+  };
+
+  // game over sounds (win/lose have no action equivalent)
+  useEffect(() => {
+    if (gamePhase === "game_over") {
+      const myScore = players.find((p) => p.id === myPlayerId)?.score ?? 999;
+      const winnerScore = Math.min(...players.map((p) => p.score));
+
+      if (myScore === winnerScore) {
+        playSound("win");
+      } else {
+        playSound("lose");
+      }
+    }
+  }, [gamePhase, myPlayerId, players, playSound]);
+
+  const shareRoom = async () => {
+    if (!roomId) return;
+    const url = `${window.location.origin}?room=${roomId}`;
+    
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Dreamcats',
+          text: `Join my game of Dreamcats! Room: ${roomId}`,
+          url,
+        });
+        playSound('click');
+      } catch (err) {
+        // Share cancelled or failed, fall back to copy
+        console.debug('Share API failed, falling back to clipboard', err);
+        navigator.clipboard.writeText(url);
+        toast.success(t('common:success.linkCopied'));
+        playSound('click');
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      toast.success(t('common:success.linkCopied'));
+      playSound('click');
     }
   };
 
@@ -202,9 +243,14 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         <div className={`h-2.5 w-2.5 rounded-full ${dotClass}`} />
         <Cloud className="w-4 h-4 text-secondary" />
         <span className="font-mono text-sm text-foreground">{roomId}</span>
-        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={copyRoomId}>
-          <Copy className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center -mr-1">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={copyRoomId} title={t('common:copyRoomId')}>
+            <Copy className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary/80" onClick={shareRoom} title={t('common:shareRoom')}>
+            <Share2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
     );
   };
@@ -331,7 +377,28 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
         gsap.to(aura, { opacity: 0, scale: 0.95, duration: 0.4 });
       }
     }
-  }, { scope: containerRef, dependencies: [recentMoveLabel, specialAuraGradient] });
+
+    // Juice: Shake and Vibrate on significant actions
+    if (recentMove) {
+       // Simple haptic feedback if available for all moves
+       if (typeof navigator !== 'undefined' && typeof navigator.vibrate === "function") {
+         navigator.vibrate(20);
+       }
+
+       if (recentMove.action === 'swap_2' || recentMove.action === 'take_2') {
+         // Screen shake
+         gsap.fromTo(containerRef.current, 
+           { x: -5 },
+           { x: 5, duration: 0.1, repeat: 3, yoyo: true, ease: "sine.inOut", onComplete: () => {
+             gsap.set(containerRef.current, { x: 0 });
+           }}
+         );
+         if (typeof navigator !== 'undefined' && typeof navigator.vibrate === "function") {
+            navigator.vibrate([30, 50, 30]); // Heavy impact
+         }
+       }
+    }
+  }, { scope: containerRef, dependencies: [recentMoveLabel, specialAuraGradient, recentMove] });
 
   if (players.length === 0) {
     return (
@@ -533,7 +600,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                 }
                 isOpponent
                 isLocalPlayer={false}
-                playSound={playSound}
               />
             )}
           </div>
@@ -551,7 +617,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                 }
                 isOpponent
                 isLocalPlayer={false}
-                playSound={playSound}
               />
             )}
           </div>
@@ -624,7 +689,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                           isFaceUp={true}
                           isGlowing
                           className={cn(pileCardClass, "shadow-2xl ring-2 ring-primary/60")}
-                          playSound={playSound}
                         />
                       </div>
                       <div className="mt-3 sm:mt-4 bg-primary/20 backdrop-blur-md px-3 py-1 rounded-full border border-primary/30 shadow-sm animate-in slide-in-from-top-2 duration-300 whitespace-nowrap">
@@ -699,7 +763,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                 }
                 isOpponent
                 isLocalPlayer={false}
-                playSound={playSound}
               />
             )}
           </div>
@@ -733,7 +796,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                       : false
                   }
                   isLocalPlayer
-                  playSound={playSound}
                 />
               </div>
             </div>
@@ -755,7 +817,6 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                   }
                   isOpponent
                   isLocalPlayer={false}
-                  playSound={playSound}
                 />
               ))}
             </div>
@@ -773,7 +834,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
       >
         <div className={cn("transition-opacity duration-200", isSidebarOpen ? "opacity-100" : "opacity-0")}>
           <h2 className="text-3xl font-bold mb-3 text-center font-heading text-foreground">
-            Sen
+            Dreamcats
           </h2>
           {gameMode === "hotseat" && (
             <div className="flex items-center justify-center gap-2 mb-2 text-sm text-muted-foreground">

@@ -16,6 +16,11 @@ export default defineConfig({
     assetsDir: 'assets',
     rollupOptions: {
       output: {
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          motion: ['framer-motion'],
+          convex: ['convex'],
+        },
         assetFileNames: 'assets/[name].[hash][extname]',
         chunkFileNames: 'assets/[name].[hash].js',
         entryFileNames: 'assets/[name].[hash].js',

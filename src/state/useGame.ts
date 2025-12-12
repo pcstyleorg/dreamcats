@@ -280,11 +280,13 @@ export const useGame = () => {
 
   const broadcastAction = useCallback(
     async (action: GameAction) => {
-      // Optimistic UI updates (sounds)
+      // sounds for actions
       switch (action.type) {
         case "PEEK_CARD":
         case "SWAP_HELD_CARD":
         case "ACTION_PEEK_1_SELECT":
+        case "DISCARD_HELD_CARD":
+        case "ACTION_SWAP_2_SELECT":
           playSound("flip");
           break;
         case "DRAW_FROM_DECK":
@@ -293,6 +295,12 @@ export const useGame = () => {
           break;
         case "CALL_POBUDKA":
           playSound("pobudka");
+          break;
+        case "USE_SPECIAL_ACTION":
+        case "FINISH_PEEKING":
+        case "ACTION_TAKE_2_CHOOSE":
+        case "START_NEW_ROUND":
+          playSound("click");
           break;
       }
 
