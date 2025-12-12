@@ -2,7 +2,10 @@
   "landing": {
     "title": "Sen",
     "subtitle": "Gra o snach i kotach.",
-    "enterButton": "Wejdz w Sen"
+    "enterButton": "Wejdz w Sen",
+    "rejoinGame": "Wroc do Gry",
+    "startFresh": "Zacznij od Nowa",
+    "enterLobby": "Wejdz do Lobby"
   },
   "lobby": {
     "title": "Sen",
@@ -18,6 +21,7 @@
       "creating": "Tworzenie...",
       "roomId": "Kod pokoju",
       "roomIdPlaceholder": "Wpisz kod pokoju",
+      "roomCodeApplied": "Zastosowano kod pokoju: {{code}}",
       "join": "Dolacz",
       "joining": "...",
       "shareId": "Udostepnij ten kod znajomemu",

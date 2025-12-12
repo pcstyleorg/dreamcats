@@ -162,11 +162,11 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   };
 
   const handleDiscardPileClick = () => {
-    // If holding a card, clicking discard pile discards it
+    // if holding a card, clicking discard pile discards it
     if (isMyTurn && gamePhase === "holding_card") {
       broadcastAction({ type: "DISCARD_HELD_CARD" });
     } else {
-      // Otherwise, draw from discard
+      // otherwise draw from discard
       handleDrawFromDiscard();
     }
   };
@@ -178,6 +178,22 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
       playSound('click');
     }
   };
+
+  // game over sounds (win/lose have no action equivalent)
+  useEffect(() => {
+    if (gamePhase === "game_over") {
+      // Determine if I won (lowest score)
+      // This is a simplified check, ideally we compare scores from state
+      const myScore = players.find(p => p.id === myPlayerId)?.score ?? 999;
+      const winnerScore = Math.min(...players.map(p => p.score));
+      
+      if (myScore === winnerScore) {
+        playSound("win");
+      } else {
+        playSound("lose");
+      }
+    }
+  }, [gamePhase, myPlayerId, players, playSound]);
 
   const shareRoom = async () => {
     if (!roomId) return;

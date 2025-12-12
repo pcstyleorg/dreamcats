@@ -1,4 +1,4 @@
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef } from "react";
 import { Howl } from "howler";
 
 export type SoundType =
@@ -24,35 +24,18 @@ const SOUND_FILES: Record<SoundType, string> = {
 };
 
 export const useSounds = () => {
-  // Use a ref to store Howl instances to prevent recreation
+  // Use a ref to store Howl instances
   const soundsRef = useRef<Record<string, Howl>>({});
-
-  useEffect(() => {
-    // Preload sounds
-    Object.entries(SOUND_FILES).forEach(([key, src]) => {
-      if (!soundsRef.current[key]) {
-        soundsRef.current[key] = new Howl({
-          src: [src],
-          volume: 0.5,
-          preload: true,
-        });
-      }
-    });
-
-    return () => {
-      // Cleanup sounds on unmount
-      Object.values(soundsRef.current).forEach((sound) => sound.unload());
-    };
-  }, []);
 
   const playSound = useCallback((sound: SoundType) => {
     try {
       if (!soundsRef.current[sound]) {
-          // Lazy load if not preloaded (fallback)
-           soundsRef.current[sound] = new Howl({
-            src: [SOUND_FILES[sound]],
-            volume: 0.5,
-          });
+        // Lazy load on first play
+        soundsRef.current[sound] = new Howl({
+          src: [SOUND_FILES[sound]],
+          volume: 0.5,
+          html5: false,
+        });
       }
       soundsRef.current[sound].play();
     } catch (error) {

@@ -2,7 +2,10 @@
   "landing": {
     "title": "Sen",
     "subtitle": "A game of dreams and crows.",
-    "enterButton": "Enter the Dream"
+    "enterButton": "Enter the Dream",
+    "rejoinGame": "Rejoin Game",
+    "startFresh": "Start Fresh",
+    "enterLobby": "Enter Lobby"
   },
   "lobby": {
     "title": "Sen",
@@ -18,6 +21,7 @@
       "creating": "Creating...",
       "roomId": "Room ID",
       "roomIdPlaceholder": "Enter Room ID",
+      "roomCodeApplied": "Room Code Applied: {{code}}",
       "join": "Join",
       "joining": "...",
       "shareId": "Share this ID with your friend",

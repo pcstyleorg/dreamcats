@@ -18,14 +18,28 @@ import { useUserPreferences } from "@/hooks/useUserPreferences";
 
 export const LobbyScreen: React.FC = () => {
   const { t } = useTranslation();
-  const { createRoom, joinRoom, startHotseatGame, startGame, state, myPlayerId } = useGame();
+  const { createRoom, joinRoom, startHotseatGame, startGame, state, myPlayerId, playSound } = useGame();
   const { displayName, setDisplayName } = useUserPreferences();
-  const [mode, setMode] = useState<"select" | "online" | "hotseat">("select");
+  // if already in a room, skip mode selection
+  const [mode, setMode] = useState<"select" | "online" | "hotseat">(() => {
+    if (state.gameMode === "online" && state.roomId) return "online";
+    if (state.gameMode === "hotseat") return "hotseat";
+    return "select";
+  });
   const [roomIdInput, setRoomIdInput] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [hotseatPlayers, setHotseatPlayers] = useState<string[]>(["", ""]);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // sync mode with store state (for rejoin flow)
+  useEffect(() => {
+    if (state.gameMode === "online" && state.roomId && mode === "select") {
+      setMode("online");
+    } else if (state.gameMode === "hotseat" && mode === "select") {
+      setMode("hotseat");
+    }
+  }, [state.gameMode, state.roomId, mode]);
 
   // Auto-fill player name from preferences
   useEffect(() => {
@@ -64,6 +78,7 @@ export const LobbyScreen: React.FC = () => {
 
 
   const handleCreateRoom = async () => {
+    playSound('click');
     if (isLoading) return;
     if (!playerName.trim()) {
       toast.error(t('common:errors.enterName'));
@@ -83,6 +98,7 @@ export const LobbyScreen: React.FC = () => {
   };
 
   const handleJoinRoom = async () => {
+    playSound('click');
     if (isLoading) return;
     if (!playerName.trim()) {
       toast.error(t('common:errors.enterName'));
@@ -107,6 +123,7 @@ export const LobbyScreen: React.FC = () => {
   };
 
   const handleStartHotseat = () => {
+    playSound('click');
     if (hotseatPlayers.some((name) => !name.trim())) {
       toast.error(t('common:errors.enterAllNames'));
       return;
@@ -135,6 +152,7 @@ export const LobbyScreen: React.FC = () => {
   };
 
   const handleStartOnlineGame = async () => {
+    playSound('click');
     if (isLoading) return;
     if (state.players.length < 2) {
       toast.error(t('common:errors.needTwoPlayers'));
@@ -182,14 +200,14 @@ export const LobbyScreen: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <Button
-          onClick={() => setMode("online")}
+          onClick={() => { setMode("online"); playSound('click'); }}
           className="w-full h-16 text-lg font-semibold bg-linear-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] hover:from-[hsl(var(--primary))] hover:to-[hsl(var(--secondary))] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           size="lg"
         >
           <Cloud className="mr-3 h-6 w-6" /> {t('lobby.onlineMultiplayer')}
         </Button>
         <Button
-          onClick={() => setMode("hotseat")}
+          onClick={() => { setMode("hotseat"); playSound('click'); }}
           className="w-full h-16 text-lg font-semibold bg-card text-foreground border-2 border-border hover:bg-muted hover:border-muted-foreground/30 shadow-xs hover:shadow-md transition-all duration-300"
           size="lg"
           variant="ghost"
@@ -211,7 +229,7 @@ export const LobbyScreen: React.FC = () => {
           variant="ghost"
           size="icon"
           className="absolute top-0 left-0 rounded-full hover:bg-muted"
-          onClick={() => setMode("select")}
+          onClick={() => { setMode("select"); playSound('click'); }}
         >
           <ArrowLeft className="h-5 w-5 text-muted-foreground" />
         </Button>
@@ -390,7 +408,7 @@ export const LobbyScreen: React.FC = () => {
           variant="ghost"
           size="icon"
           className="absolute top-0 left-0 rounded-full hover:bg-muted"
-          onClick={() => setMode("select")}
+          onClick={() => { setMode("select"); playSound('click'); }}
         >
           <ArrowLeft className="h-5 w-5 text-muted-foreground" />
         </Button>
