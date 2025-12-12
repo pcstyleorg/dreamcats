@@ -180,6 +180,17 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   };
 
   // game over sounds (win/lose have no action equivalent)
+  useEffect(() => {
+    if (gamePhase === "game_over") {
+      const myScore = players.find((p) => p.id === myPlayerId)?.score ?? 999;
+      const winnerScore = Math.min(...players.map((p) => p.score));
+
+      if (myScore === winnerScore) {
+        playSound("win");
+      } else {
+        playSound("lose");
+      }
+    }
   }, [gamePhase, myPlayerId, players, playSound]);
 
   const shareRoom = async () => {
