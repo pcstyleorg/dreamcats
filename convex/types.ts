@@ -41,6 +41,8 @@ export interface GameState {
   drawPile: Card[];
   discardPile: Card[];
   players: Player[];
+  /** Index of the player who starts the current round. Rotates each round. */
+  startingPlayerIndex: number;
   currentPlayerIndex: number;
   gamePhase: GamePhase;
   actionMessage: string;

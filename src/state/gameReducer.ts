@@ -35,7 +35,7 @@ export const getVisibleStateForViewer = (
       hand: player.hand.map((slot) => ({
         ...slot,
         isFaceUp: false,
-        hasBeenPeeked: false,
+        hasBeenPeeked: slot.hasBeenPeeked,
       })),
     };
   });
@@ -223,6 +223,10 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
 
           const playerIndex = state.peekingState.playerIndex;
           const nextPlayerIndex = (playerIndex + 1) % state.players.length;
+          const startIndex =
+            state.peekingState.startIndex ??
+            (state as unknown as { startingPlayerIndex?: number }).startingPlayerIndex ??
+            0;
 
           // Hide the current player's cards immediately after they finish peeking
           const playersWithHiddenCards = state.players.map((p, idx) => {
@@ -236,16 +240,17 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
           });
 
           // All players peeked, start the game
-          if (nextPlayerIndex === 0) {
+          if (nextPlayerIndex === startIndex) {
             return {
               ...state,
               players: playersWithHiddenCards,
               gamePhase: "playing",
-              currentPlayerIndex: 0,
+              startingPlayerIndex: startIndex,
+              currentPlayerIndex: startIndex,
               turnCount: 0,
               peekingState: undefined,
               actionMessage: i18n.t("game.playerTurn", {
-                player: state.players[0]?.name ?? "",
+                player: state.players[startIndex]?.name ?? "",
               }),
             };
           }
@@ -253,7 +258,11 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
           return {
             ...state,
             players: playersWithHiddenCards,
-            peekingState: { playerIndex: nextPlayerIndex, peekedCount: 0 },
+            peekingState: {
+              playerIndex: nextPlayerIndex,
+              peekedCount: 0,
+              startIndex,
+            },
             actionMessage: i18n.t("game.peekTwoCards", {
               player: state.players[nextPlayerIndex]?.name ?? "",
             }),
@@ -263,27 +272,12 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
         case "DRAW_FROM_DECK": {
           if (state.gamePhase !== "playing") return state;
 
-          let drawPile = [...state.drawPile];
-          let discardPile = state.discardPile;
+          const drawPile = [...state.drawPile];
+          const discardPile = [...state.discardPile];
 
-          // If deck is empty, reshuffle discard pile back into deck
+          // Per RULES: no reshuffle. If deck is empty, round ends immediately.
           if (drawPile.length === 0) {
-            // Keep the top card of discard pile, shuffle rest back
-            if (state.discardPile.length > 1) {
-              const discardClone = [...state.discardPile];
-              const topDiscardCard = discardClone.pop()!;
-              const deckRebuilt = discardClone.sort(() => Math.random() - 0.5);
-              drawPile = deckRebuilt;
-              discardPile = [topDiscardCard];
-
-              // If still no cards after reshuffle, end round
-              if (drawPile.length === 0) {
-                return endRoundWithScores(state, { reason: "deck_exhausted" });
-              }
-            } else {
-              // Can't reshuffle with only 0-1 cards in discard pile, end round
-              return endRoundWithScores(state, { reason: "deck_exhausted" });
-            }
+            return endRoundWithScores(state, { reason: "deck_exhausted" });
           }
 
           const drawnCard = drawPile.pop()!;
@@ -417,6 +411,18 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
 
           if (specialAction === "take_2") {
             const drawPile = [...state.drawPile];
+            const discardPile = [...state.discardPile, state.drawnCard];
+            const newState = {
+              ...state,
+              discardPile,
+              drawnCard: null,
+              drawSource: null,
+            };
+
+            if (drawPile.length === 0) {
+              return endRoundWithScores(newState, { reason: "deck_exhausted" });
+            }
+
             const tempCards: Card[] = [];
             for (let i = 0; i < 2; i++) {
               if (drawPile.length > 0) {
@@ -424,14 +430,10 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
               }
             }
 
-            const discardPile = [...state.discardPile, state.drawnCard];
-
             return {
-              ...state,
+              ...newState,
               gamePhase: "action_take_2",
               drawPile,
-              discardPile,
-              drawnCard: null,
               tempCards,
               actionMessage: i18n.t("game.specialAction", {
                 action: specialAction,
@@ -534,8 +536,17 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
           const cardB = getCard(playerB, gameAction.payload.cardIndex);
           if (!cardA || !cardB) return state;
 
-          players[playerAIndex] = setCard(playerA, card1.cardIndex, cardB);
-          players[playerBIndex] = setCard(playerB, gameAction.payload.cardIndex, cardA);
+          if (playerAIndex === playerBIndex) {
+            const hand = [...playerA.hand];
+            [hand[card1.cardIndex], hand[gameAction.payload.cardIndex]] = [
+              hand[gameAction.payload.cardIndex],
+              hand[card1.cardIndex],
+            ];
+            players[playerAIndex] = { ...playerA, hand };
+          } else {
+            players[playerAIndex] = setCard(playerA, card1.cardIndex, cardB);
+            players[playerBIndex] = setCard(playerB, gameAction.payload.cardIndex, cardA);
+          }
 
           if (!state.drawnCard) return state;
           const discardPile = [...state.discardPile, state.drawnCard];
@@ -643,16 +654,28 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
 
           const discardPile = [shuffled.pop()!];
 
+          const previousStartIndex =
+            (state as unknown as { startingPlayerIndex?: number }).startingPlayerIndex ?? 0;
+          const nextStarterIndex =
+            state.players.length > 0
+              ? (previousStartIndex + 1) % state.players.length
+              : 0;
+
           return {
             ...state,
             players,
             drawPile: shuffled,
             discardPile,
-            currentPlayerIndex: 0,
+            startingPlayerIndex: nextStarterIndex,
+            currentPlayerIndex: nextStarterIndex,
             gamePhase: "peeking",
-            peekingState: { playerIndex: 0, peekedCount: 0 },
+            peekingState: {
+              playerIndex: nextStarterIndex,
+              peekedCount: 0,
+              startIndex: nextStarterIndex,
+            },
             actionMessage: i18n.t("game.peekTwoCards", {
-              player: players[0].name,
+              player: players[nextStarterIndex].name,
             }),
             drawnCard: null,
             drawSource: null,

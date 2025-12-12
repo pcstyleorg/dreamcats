@@ -272,7 +272,7 @@ describe('gameReducer', () => {
       expect(result).toEqual(state);
     });
 
-    it('reshuffles discard pile when deck is empty', () => {
+    it('ends round when deck is empty (no reshuffle)', () => {
       const stateWithEmptyDeck: GameState = {
         ...baseState,
         drawPile: [],
@@ -288,9 +288,8 @@ describe('gameReducer', () => {
         payload: { action: { type: 'DRAW_FROM_DECK' } },
       });
 
-      // Should have drawn a card after reshuffling
-      expect(result.drawnCard).not.toBeNull();
-      expect(result.gamePhase).toBe('holding_card');
+      expect(result.gamePhase).toBe('round_end');
+      expect(result.drawnCard).toBeUndefined();
     });
 
     it('ends round when deck and discard are exhausted', () => {
@@ -308,13 +307,11 @@ describe('gameReducer', () => {
       expect(result.gamePhase).toBe('round_end');
     });
 
-    it('ends round when reshuffle results in empty deck', () => {
-      // Edge case: discard has exactly 2 cards but one becomes the new discard top
-      // leaving the deck empty after reshuffle
+    it('ends round when deck is empty even with minimal discard', () => {
       const stateWithMinimalDiscard: GameState = {
         ...baseState,
         drawPile: [],
-        discardPile: [createCard(11, 5), createCard(12, 3)], // 2 cards, 1 stays in discard, 1 goes to deck
+        discardPile: [createCard(11, 5), createCard(12, 3)],
       };
 
       const result = gameReducer(stateWithMinimalDiscard, {
@@ -322,9 +319,8 @@ describe('gameReducer', () => {
         payload: { action: { type: 'DRAW_FROM_DECK' } },
       });
 
-      // After reshuffle: 1 card in deck (drawn), 1 card in discard
-      expect(result.drawnCard).toBeDefined();
-      expect(result.gamePhase).toBe('holding_card');
+      expect(result.gamePhase).toBe('round_end');
+      expect(result.drawnCard).toBeUndefined();
     });
 
     it('sets lastMove with draw action', () => {
@@ -898,8 +894,9 @@ describe('gameReducer', () => {
       });
 
       expect(result.gamePhase).toBe('peeking');
-      expect(result.peekingState).toEqual({ playerIndex: 0, peekedCount: 0 });
-      expect(result.currentPlayerIndex).toBe(0);
+      expect(result.peekingState).toEqual({ playerIndex: 1, peekedCount: 0, startIndex: 1 });
+      expect(result.currentPlayerIndex).toBe(1);
+      expect(result.startingPlayerIndex).toBe(1);
       expect(result.drawnCard).toBeNull();
       expect(result.tempCards).toBeUndefined();
       expect(result.swapState).toBeUndefined();
@@ -1028,7 +1025,7 @@ describe('getVisibleStateForViewer', () => {
     
     // Bob (p2) cards should all be face down for Alice
     expect(visibleState.players[1].hand[0].isFaceUp).toBe(false);
-    expect(visibleState.players[1].hand[0].hasBeenPeeked).toBe(false);
+    expect(visibleState.players[1].hand[0].hasBeenPeeked).toBe(true);
   });
 
   it('reveals all cards during round_end phase', () => {

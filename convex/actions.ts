@@ -165,6 +165,9 @@ export const performAction = mutation({
         // Validate bounds
         if (action.payload.cardIndex < 0 || action.payload.cardIndex >= peekingPlayer.hand.length) throw new Error("Invalid card index");
 
+        // Disallow peeking more than 2 cards per RULES §3
+        if (state.peekingState.peekedCount >= 2) return;
+
         const players = [...state.players];
         const playerIndex = state.peekingState.playerIndex;
         const player = players[playerIndex];
@@ -208,10 +211,16 @@ export const performAction = mutation({
           if (player.id !== playerId) throw new Error("Not your turn to finish peeking");
           if (state.peekingState.peekedCount < 2) throw new Error("Must peek 2 cards first");
 
+          const startIndex =
+            state.peekingState.startIndex ??
+            // Backward-compat: older states may not have startingPlayerIndex
+            (state as unknown as { startingPlayerIndex?: number }).startingPlayerIndex ??
+            0;
+
           const nextPlayerIndex = (playerIndex + 1) % state.players.length;
           
-          // If we circled back to 0, everyone is done
-          if (nextPlayerIndex === 0) {
+          // If we circled back to the peeking start, everyone is done
+          if (nextPlayerIndex === startIndex) {
               // Reset all cards to face down for the game start
               const playingPlayers = state.players.map(p => ({
                   ...p,
@@ -222,15 +231,16 @@ export const performAction = mutation({
                  ...state,
                  players: playingPlayers,
                  gamePhase: "playing",
-                 currentPlayerIndex: 0,
+                 startingPlayerIndex: startIndex,
+                 currentPlayerIndex: startIndex,
                  turnCount: 0,
                  peekingState: undefined,
-                 actionMessage: `Game started! ${state.players[0].name}'s turn.`,
+                 actionMessage: `Game started! ${state.players[startIndex].name}'s turn.`,
               });
           } else {
               await saveState({
                  ...state,
-                 peekingState: { playerIndex: nextPlayerIndex, peekedCount: 0 },
+                 peekingState: { playerIndex: nextPlayerIndex, peekedCount: 0, startIndex },
                  actionMessage: `${state.players[nextPlayerIndex].name} is peeking...`,
               });
           }
@@ -241,24 +251,13 @@ export const performAction = mutation({
         if (!isMyTurn) throw new Error("Not your turn");
         if (state.gamePhase !== "playing") throw new Error("Invalid phase");
 
-        let drawPile = [...state.drawPile];
-        let discardPile = [...state.discardPile];
+        const drawPile = [...state.drawPile];
+        const discardPile = [...state.discardPile];
 
-        // If deck is empty, reshuffle discard pile back into deck
+        // Per RULES §4/§2: no reshuffle. If deck is empty, round ends immediately.
         if (drawPile.length === 0) {
-          if (discardPile.length > 1) {
-            const topDiscard = discardPile.pop()!; // Keep the top card on discard
-            drawPile = shuffleDeck(discardPile);
-            discardPile = [topDiscard];
-
-            if (drawPile.length === 0) {
-              await saveState(endRoundWithScores(state, { reason: "deck_exhausted" }));
-              return;
-            }
-          } else {
-            await saveState(endRoundWithScores(state, { reason: "deck_exhausted" }));
-            return;
-          }
+          await saveState(endRoundWithScores(state, { reason: "deck_exhausted" }));
+          return;
         }
 
         const drawnCard = drawPile.pop()!;
@@ -385,6 +384,10 @@ export const performAction = mutation({
 
               // Draw 2 cards for selection
               const drawPile = [...state.drawPile];
+              if (drawPile.length === 0) {
+                  await saveState(endRoundWithScores(newState, { reason: "deck_exhausted" }));
+                  return;
+              }
               const tempCards: Card[] = [];
               for (let i = 0; i < 2; i++) {
                   if (drawPile.length > 0) tempCards.push(drawPile.pop()!);
@@ -397,7 +400,7 @@ export const performAction = mutation({
                   drawPile,
                   tempCards,
                   gamePhase: "action_take_2",
-                  actionMessage: `${currentPlayer.name} is choosing from 2 cards...`,
+                  actionMessage: `${currentPlayer.name} is choosing from ${tempCards.length} card${tempCards.length === 1 ? "" : "s"}...`,
               });
           } else if (specialAction === "peek_1") {
               // Keep drawnCard until action completes; discard once in action handler
@@ -599,6 +602,15 @@ export const performAction = mutation({
               }));
           }
 
+          const previousStartIndex =
+            state.gamePhase === "round_end"
+              ? (state as unknown as { startingPlayerIndex?: number }).startingPlayerIndex ?? 0
+              : 0;
+          const nextStarterIndex =
+            currentPlayers.length > 0
+              ? (previousStartIndex + (state.gamePhase === "round_end" ? 1 : 0)) % currentPlayers.length
+              : 0;
+
           // Hand validation: ensure deck has enough cards for all players plus one for discard pile
           const requiredCards = currentPlayers.length * 4 + 1;
           if (deck.length < requiredCards) {
@@ -625,10 +637,11 @@ export const performAction = mutation({
               players,
               drawPile: deck,
               discardPile,
-              currentPlayerIndex: 0,
+              startingPlayerIndex: nextStarterIndex,
+              currentPlayerIndex: nextStarterIndex,
               gamePhase: "peeking",
-              peekingState: { playerIndex: 0, peekedCount: 0 },
-              actionMessage: `New round! ${players[0].name} is peeking...`,
+              peekingState: { playerIndex: nextStarterIndex, peekedCount: 0, startIndex: nextStarterIndex },
+              actionMessage: `New round! ${players[nextStarterIndex].name} is peeking...`,
               drawnCard: null,
               drawSource: null,
               tempCards: undefined,

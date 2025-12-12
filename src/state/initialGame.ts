@@ -8,6 +8,7 @@ export const initialGameState: GameState = {
   players: [],
   drawPile: [],
   discardPile: [],
+  startingPlayerIndex: 0,
   currentPlayerIndex: 0,
   gamePhase: "lobby",
   actionMessage: i18n.t("game.welcomeMessage"),

@@ -24,16 +24,20 @@ export const getMessages = query({
   args: { roomId: v.string(), cursor: v.optional(v.number()), limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
     const limit = args.limit ?? 100;
-    const all = await ctx.db
+    const cursor = args.cursor;
+
+    const baseQuery = ctx.db
       .query("messages")
       .withIndex("by_room_time", (q) => q.eq("roomId", args.roomId))
-      .order("asc")
-      .collect();
+      .order("desc");
 
-    const filtered = args.cursor
-      ? all.filter((m) => m.timestamp <= args.cursor!)
-      : all;
+    const page = cursor
+      ? await baseQuery
+          .filter((q) => q.lt(q.field("timestamp"), cursor))
+          .take(limit)
+      : await baseQuery.take(limit);
 
-    return args.cursor ? filtered.slice(0, limit) : filtered.slice(-limit);
+    // Return chronological order (oldest -> newest) for UI rendering
+    return page.reverse();
   },
 });
