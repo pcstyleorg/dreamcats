@@ -1,12 +1,8 @@
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, lazy } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from '@/state/useGame';
-import { LobbyScreen } from './components/LobbyScreen';
-import { Gameboard } from './components/Gameboard';
 import { Toaster } from "@/components/ui/sonner"
 import { TutorialProvider } from './context/TutorialContext';
-import { Tutorial } from './components/Tutorial';
-import { LandingPage } from './components/LandingPage';
 import { ThemeToggle } from './components/ThemeToggle';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { AuthButton } from './components/AuthDialog';
@@ -14,6 +10,19 @@ import { useUserPreferences } from './hooks/useUserPreferences';
 import { useSessionPersistence } from './hooks/useSessionPersistence';
 import './i18n/config';
 import { ConvexSync } from "@/state/ConvexSync";
+
+const LandingPage = lazy(() =>
+  import('./components/LandingPage').then((m) => ({ default: m.LandingPage })),
+);
+const LobbyScreen = lazy(() =>
+  import('./components/LobbyScreen').then((m) => ({ default: m.LobbyScreen })),
+);
+const Gameboard = lazy(() =>
+  import('./components/Gameboard').then((m) => ({ default: m.Gameboard })),
+);
+const Tutorial = lazy(() =>
+  import('./components/Tutorial').then((m) => ({ default: m.Tutorial })),
+);
 
 function App() {
   const { state } = useGame();
