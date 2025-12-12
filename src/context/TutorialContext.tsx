@@ -27,7 +27,7 @@ export const TutorialProvider = ({ children }: { children: ReactNode }) => {
   const skipToGameplay = useTutorialStore((s: TutorialStore) => s.skipToGameplay);
 
   useEffect(() => {
-    const tutorialCompleted = localStorage.getItem("sen_tutorial_completed");
+    const tutorialCompleted = localStorage.getItem("dreamcats_tutorial_completed");
     if (!tutorialCompleted) {
       setStep("welcome");
     }

@@ -18,7 +18,7 @@ export interface ActiveGameSession {
   localGameState?: GameState;
 }
 
-const SESSION_STORAGE_KEY = "sen-active-session";
+const SESSION_STORAGE_KEY = "dreamcats-active-session";
 
 /**
  * Hook to manage user preferences synced with Convex
@@ -95,7 +95,7 @@ export function useUserPreferences() {
       localStorage.setItem("theme", theme);
       if (typeof window !== "undefined") {
         window.dispatchEvent(
-          new CustomEvent("sen-theme-changed", { detail: theme }),
+          new CustomEvent("dreamcats-theme-changed", { detail: theme }),
         );
       }
       if (isAuthenticated) {
@@ -184,7 +184,7 @@ export function useUserPreferences() {
   const saveLocalGameState = useCallback(
     async (gameState: GameState) => {
       // Always save to localStorage
-      localStorage.setItem("sen-local-game", JSON.stringify(gameState));
+      localStorage.setItem("dreamcats-local-game", JSON.stringify(gameState));
       
       if (isAuthenticated) {
         try {
@@ -220,7 +220,7 @@ export function useUserPreferences() {
     }
     
     // Check for local game state
-    const localGame = localStorage.getItem("sen-local-game");
+    const localGame = localStorage.getItem("dreamcats-local-game");
     if (localGame) {
       try {
         return {

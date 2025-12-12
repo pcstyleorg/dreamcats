@@ -193,6 +193,35 @@ export const setSoundEnabled = mutation({
 });
 
 /**
+ * Mark tutorial as completed (hide welcome dialog on future visits)
+ */
+export const setTutorialCompleted = mutation({
+  args: { completed: v.boolean() },
+  handler: async (ctx, { completed }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return;
+
+    const existing = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .unique();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        tutorialCompleted: completed,
+        updatedAt: Date.now(),
+      });
+    } else {
+      await ctx.db.insert("userPreferences", {
+        userId,
+        tutorialCompleted: completed,
+        updatedAt: Date.now(),
+      });
+    }
+  },
+});
+
+/**
  * Set active game session (for rejoin after refresh)
  */
 export const setActiveSession = mutation({

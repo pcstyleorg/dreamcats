@@ -84,6 +84,27 @@ export interface GameState {
   } | null;
 }
 
+export interface UserStats {
+  gamesPlayed: number;
+  gamesWon: number;
+  totalScore: number;
+  bestScore: number | null;
+  lastPlayedAt: number | null;
+}
+
+export interface MatchHistoryItem {
+  matchId: string;
+  roomId: string;
+  endedAt: number;
+  mode: string;
+  winnerName: string;
+  winningScore: number;
+  yourName: string;
+  yourScore: number;
+  yourPlace: number;
+  playerCount: number;
+}
+
 export type GameAction =
   | { type: "PEEK_CARD"; payload: { playerId: string; cardIndex: number } }
   | { type: "FINISH_PEEKING" }

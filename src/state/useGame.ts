@@ -80,16 +80,16 @@ export const useGame = () => {
 
   const persistSession = useCallback(
     (id: string, name: string, room: string) => {
-      sessionStorage.setItem("sen-playerId", id);
-      sessionStorage.setItem("sen-roomId", room);
-      sessionStorage.setItem("sen-playerName", name);
+      sessionStorage.setItem("dreamcats-playerId", id);
+      sessionStorage.setItem("dreamcats-roomId", room);
+      sessionStorage.setItem("dreamcats-playerName", name);
     },
     [],
   );
 
   const createRoom = useCallback(
     async (name: string) => {
-      const newRoomId = `sen-${Math.random().toString(36).slice(2, 6)}`;
+      const newRoomId = `dreamcats-${Math.random().toString(36).slice(2, 6)}`;
       const newPlayerId = `player-${Math.random().toString(36).slice(2, 9)}`;
 
       const newPlayer: Player = {

@@ -36,9 +36,9 @@ function App() {
         ((localStorage.getItem("theme") ?? "light") as "light" | "dark");
       setLocalTheme((prev) => (prev === nextTheme ? prev : nextTheme));
     };
-    window.addEventListener("sen-theme-changed", handler as EventListener);
+    window.addEventListener("dreamcats-theme-changed", handler as EventListener);
     return () => {
-      window.removeEventListener("sen-theme-changed", handler as EventListener);
+      window.removeEventListener("dreamcats-theme-changed", handler as EventListener);
     };
   }, []);
 

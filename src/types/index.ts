@@ -14,4 +14,6 @@ export {
   type ChatMessage,
   type GameState,
   type GameAction,
+  type UserStats,
+  type MatchHistoryItem,
 } from "../../convex/types";

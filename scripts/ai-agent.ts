@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * AI test agent for Sen (online + hotseat).
+ * AI test agent for Dreamcats (online + hotseat).
  *
  * Goals:
  * - Exercise Convex game logic end‑to‑end (no mocks).

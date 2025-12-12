@@ -149,7 +149,7 @@
     "goalDescription": "Your objective is simple: have the lowest score (the fewest cats) at the end of each round. The game ends when someone reaches 100 points - the player with the lowest total wins!",
     "goalTip": "Cards range from 0 (best!) to 9 (worst). 9s are especially common, so watch out!",
     "handTitle": "Your Dream",
-    "handDescription": "These 4 face-down cards are your Dream (Sen). You cannot freely look at them during the game, so memory is key! Each card has a value - you want low numbers.",
+    "handDescription": "These 4 face-down cards are your Dream. You cannot freely look at them during the game, so memory is key! Each card has a value - you want low numbers.",
     "handTip": "Try to remember which cards are where. A good memory gives you a huge advantage!",
     "firstPeekTitle": "First Peek",
     "firstPeekDescription": "At the start of each round, you get to peek at exactly 2 of your 4 cards. Choose wisely and remember their positions! Click any two cards to reveal them.",

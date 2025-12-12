@@ -62,6 +62,119 @@ export const performAction = mutation({
       });
     };
 
+    const recordMatchIfNeeded = async (prev: GameState, next: GameState) => {
+      if (prev.gamePhase === "game_over") return;
+      if (next.gamePhase !== "game_over") return;
+
+      const existingMatch = await ctx.db
+        .query("matches")
+        .withIndex("by_roomId", (q) => q.eq("roomId", roomId))
+        .first();
+      if (existingMatch) return;
+
+      const endedAt = Date.now();
+      const playerScores = next.players.map((p) => ({
+        playerId: p.id,
+        name: p.name,
+        finalScore: p.score,
+      }));
+      const winner = playerScores.reduce((best, cur) =>
+        best.finalScore < cur.finalScore ? best : cur,
+      );
+
+      const matchId = await ctx.db.insert("matches", {
+        roomId,
+        mode: next.gameMode,
+        endedAt,
+        winnerPlayerId: winner.playerId,
+        winnerName: winner.name,
+        winningScore: winner.finalScore,
+        playerCount: playerScores.length,
+      });
+
+      const playersById = new Map(
+        (
+          await ctx.db
+            .query("players")
+            .withIndex("by_roomId", (q) => q.eq("roomId", roomId))
+            .collect()
+        ).map((p) => [p.playerId, p] as const),
+      );
+
+      const sorted = [...playerScores].sort(
+        (a, b) => a.finalScore - b.finalScore,
+      );
+      let lastScore: number | null = null;
+      let lastPlace = 0;
+      const placeByPlayerId = new Map<string, number>();
+      for (let i = 0; i < sorted.length; i++) {
+        const score = sorted[i].finalScore;
+        if (lastScore === null || score !== lastScore) {
+          lastScore = score;
+          lastPlace = i + 1;
+        }
+        placeByPlayerId.set(sorted[i].playerId, lastPlace);
+      }
+
+      for (const p of playerScores) {
+        const playerDoc = playersById.get(p.playerId);
+        const place = placeByPlayerId.get(p.playerId) ?? playerScores.length;
+        await ctx.db.insert("matchPlayers", {
+          matchId,
+          roomId,
+          userId: playerDoc?.userId,
+          playerId: p.playerId,
+          name: p.name,
+          finalScore: p.finalScore,
+          place,
+          endedAt,
+        });
+
+        if (!playerDoc?.userId) continue;
+
+        const userId = playerDoc.userId;
+        const existingStats = await ctx.db
+          .query("userStats")
+          .withIndex("by_userId", (q) => q.eq("userId", userId))
+          .unique();
+
+        const gamesPlayed = (existingStats?.gamesPlayed ?? 0) + 1;
+        const gamesWon =
+          (existingStats?.gamesWon ?? 0) + (p.playerId === winner.playerId ? 1 : 0);
+        const totalScore = (existingStats?.totalScore ?? 0) + p.finalScore;
+        const bestScore =
+          existingStats?.bestScore === undefined
+            ? p.finalScore
+            : Math.min(existingStats.bestScore, p.finalScore);
+
+        if (existingStats) {
+          await ctx.db.patch(existingStats._id, {
+            gamesPlayed,
+            gamesWon,
+            totalScore,
+            bestScore,
+            lastPlayedAt: endedAt,
+            updatedAt: endedAt,
+          });
+        } else {
+          await ctx.db.insert("userStats", {
+            userId,
+            gamesPlayed,
+            gamesWon,
+            totalScore,
+            bestScore,
+            lastPlayedAt: endedAt,
+            updatedAt: endedAt,
+          });
+        }
+      }
+    };
+
+    const saveStateWithSideEffects = async (newState: GameState) => {
+      await saveState(newState);
+      await recordMatchIfNeeded(state, newState);
+    };
+
     const currentPlayer = state.players[state.currentPlayerIndex];
     const isMyTurn = currentPlayer?.id === playerId;
 
@@ -269,7 +382,8 @@ export const performAction = mutation({
 
         // Per RULES §4/§2: no reshuffle. If deck is empty, round ends immediately.
         if (drawPile.length === 0) {
-          await saveState(endRoundWithScores(state, { reason: "deck_exhausted" }));
+          const nextState = endRoundWithScores(state, { reason: "deck_exhausted" });
+          await saveStateWithSideEffects(nextState);
           break;
         }
 
@@ -587,7 +701,8 @@ export const performAction = mutation({
           if (!isMyTurn) throw new Error("Not your turn");
           if (state.gamePhase !== "playing") throw new Error("Invalid phase");
           
-          await saveState(endRoundWithScores(state, { reason: "pobudka", callerId: playerId }));
+          const nextState = endRoundWithScores(state, { reason: "pobudka", callerId: playerId });
+          await saveStateWithSideEffects(nextState);
           break;
       }
       

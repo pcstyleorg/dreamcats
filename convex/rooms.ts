@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const createRoom = mutation({
   args: {
@@ -11,6 +12,7 @@ export const createRoom = mutation({
   handler: async (ctx, args) => {
     const now = Date.now();
     const mode = args.mode ?? "online";
+    const userId = await getAuthUserId(ctx);
 
     // Prevent duplicate room codes
     const existing = await ctx.db
@@ -34,6 +36,7 @@ export const createRoom = mutation({
     await ctx.db.insert("players", {
       roomId: args.roomId,
       playerId: args.hostId,
+      userId: userId ?? undefined,
       name: args.hostName,
         seat: 0,
         score: 0,
@@ -82,6 +85,7 @@ export const joinRoom = mutation({
     name: v.string(),
   },
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
     // Check if room exists
     const room = await ctx.db
       .query("rooms")
@@ -112,12 +116,14 @@ export const joinRoom = mutation({
       await ctx.db.patch(existingPlayer._id, {
         lastSeenAt: now,
         connected: true,
+        ...(userId && !existingPlayer.userId ? { userId } : {}),
       });
     } else {
       // Add new player
       await ctx.db.insert("players", {
         roomId: args.roomId,
         playerId: args.playerId,
+        userId: userId ?? undefined,
         name: args.name,
         seat,
         score: 0,

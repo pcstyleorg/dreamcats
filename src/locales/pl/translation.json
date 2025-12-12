@@ -2,7 +2,7 @@
   "landing": {
     "title": "Dreamcats",
     "subtitle": "Marzycielska gra karciana o zbieraniu snów i unikaniu koszmarów.",
-    "enterButton": "Wejdź w Sen",
+    "enterButton": "Wejdź do Marzenia",
     "rejoinGame": "Wroc do Gry",
     "startFresh": "Zacznij od Nowa",
     "enterLobby": "Wejdz do Lobby"
@@ -148,8 +148,8 @@
     "goalTitle": "Cel gry",
     "goalDescription": "Twoj cel jest prosty: miec najnizszy wynik (najmniej kotow) na koniec kazdej rundy. Gra konczy sie, gdy ktos osiagnie 100 punktow - wygrywa gracz z najnizsza suma!",
     "goalTip": "Karty maja wartosci od 0 (najlepsza!) do 9 (najgorsza). Dziewiatek jest szczegolnie duzo, wiec uwazaj!",
-    "handTitle": "Twoj Sen",
-    "handDescription": "Te 4 zakryte karty to twoj Sen. Nie mozesz na nie swobodnie patrzec podczas gry, wiec pamiec jest kluczowa! Kazda karta ma wartosc - zalezy ci na niskich liczbach.",
+    "handTitle": "Twoje Marzenie",
+    "handDescription": "Te 4 zakryte karty to twoje Marzenie. Nie mozesz na nie swobodnie patrzec podczas gry, wiec pamiec jest kluczowa! Kazda karta ma wartosc - zalezy ci na niskich liczbach.",
     "handTip": "Staraj sie zapamietac, ktore karty sa gdzie. Dobra pamiec daje ogromna przewage!",
     "firstPeekTitle": "Pierwsze podejrzenie",
     "firstPeekDescription": "Na poczatku kazdej rundy mozesz podejrzec dokladnie 2 ze swoich 4 kart. Wybierz madrze i zapamietaj ich pozycje! Kliknij dowolne dwie karty, aby je zobaczyc.",
@@ -161,7 +161,7 @@
     "discardDescription": "To jest Stos Odkryty. Widzisz gorna karte! Jesli ja wezmiesz, MUSISZ ja zamienic z jedna ze swoich kart - bez podgladania, bez odrzucania.",
     "discardTip": "Branie ze Stosu Odkrytego jest bezpieczne, gdy widzisz niska liczbe, ale ryzykowne przy wysokich!",
     "drawingTitle": "Przebieg tury",
-    "drawingDescription": "W swojej turze wybierz jeden stos, z ktorego dobierasz. Ze Stosu Zakrytego: mozesz zamienic, odrzucic lub uzyc mocy specjalnej. Ze Stosu Odkrytego: musisz zamienic z karta ze swojego Snu.",
+    "drawingDescription": "W swojej turze wybierz jeden stos, z ktorego dobierasz. Ze Stosu Zakrytego: mozesz zamienic, odrzucic lub uzyc mocy specjalnej. Ze Stosu Odkrytego: musisz zamienic z karta ze swojego Marzenia.",
     "drawingTip": "Mysl strategicznie - czasem znana karta jest lepsza niz tajemnica!",
     "specialCardsTitle": "Karty specjalne",
     "specialCardsDescription": "Trzy magiczne karty maja specjalne moce, gdy dobierzesz je ze Stosu Zakrytego: Wez 2 (dobierz 2, zatrzymaj 1), Podejrzyj 1 (obejrzyj dowolna karte), Zamien 2 (zamien dowolne dwie karty na slepo).",
