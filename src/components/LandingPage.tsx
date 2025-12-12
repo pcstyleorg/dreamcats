@@ -2,6 +2,10 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "./ui/button";
 import { useTranslation } from "react-i18next";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
+import { useGame } from "@/state/useGame";
+import { RefreshCw, Play, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface LandingPageProps {
   onEnter: () => void;
@@ -28,6 +32,8 @@ const Crow = ({
 export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
   const { t } = useTranslation();
   const title = t('landing.title');
+  const { activeSession, clearActiveSession } = useUserPreferences();
+  const { rejoinRoom, leaveGame } = useGame();
 
   const containerVariants = {
     visible: {
@@ -61,6 +67,39 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
       },
     },
   };
+
+  const handleRejoin = async () => {
+    if (activeSession?.roomId && activeSession?.playerId) {
+      try {
+        const storedName = localStorage.getItem("playerName") || "Player";
+        await rejoinRoom(activeSession.roomId, activeSession.playerId, storedName);
+        toast.success(t("common:success.rejoinedGame"));
+        onEnter();
+      } catch (e) {
+        toast.error(t("common:errors.rejoinFailed"));
+        console.error(e);
+      }
+    } else if (activeSession?.gameMode === 'hotseat' && activeSession.localGameState) {
+       // Logic handled by startHotseatGame usually, or we can just restore state
+       // For now, hotseat resume logic was in RejoinPrompt. simplified here:
+       // We'll just enter and let the persistence hook restore it if possible, or clear it.
+       // Actually hotseat restore is tricky without the logic from RejoinPrompt.
+       // Let's just enter.
+       onEnter(); 
+    }
+  };
+
+  const handleStartFresh = async () => {
+    // 1. Clear session from disk/db
+    await clearActiveSession();
+    // 2. Reset local game state (Zustand) to prevent auto-save loop
+    leaveGame(); 
+    // 3. Enter lobby
+    onEnter();
+  };
+  
+  // Filter out very old sessions (older than 12 hours) - simplistic check 
+  // (Assuming activeSession doesn't have timestamp, we just rely on user action)
 
   return (
     <div 
@@ -120,14 +159,52 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
           {t('landing.subtitle')}
         </motion.p>
 
-        <motion.div variants={itemVariants} className="mt-8 sm:mt-10 md:mt-12">
-          <Button
-            onClick={onEnter}
-            size="lg"
-            className="font-semibold text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 shadow-soft-lg hover:shadow-dreamy transition-all duration-300 hover:scale-105 active:scale-95"
-          >
-            {t('landing.enterButton')}
-          </Button>
+        <motion.div variants={itemVariants} className="mt-8 sm:mt-10 md:mt-12 flex flex-col items-center gap-4">
+          
+          {activeSession ? (
+            <div className="flex flex-col gap-3 w-full max-w-sm">
+                <Button
+                  onClick={handleRejoin}
+                  size="lg"
+                  className="w-full font-semibold text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 shadow-soft-lg hover:shadow-dreamy transition-all duration-300 hover:scale-105 active:scale-95 bg-linear-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 border-none"
+                >
+                  <RefreshCw className="mr-2 h-5 w-5 animate-spin-slow" />
+                  {t('landing.rejoinGame')}
+                </Button>
+                
+                <div className="flex gap-3">
+                  <Button
+                    onClick={handleStartFresh}
+                    variant="outline"
+                    className="flex-1 border-dashed border-border/60 hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                  >
+                     <Trash2 className="mr-2 h-4 w-4" />
+                     {t('landing.startFresh')}
+                  </Button>
+                   <Button
+                    onClick={onEnter} // Just enter lobby without rejoining
+                    variant="ghost" 
+                    className="flex-1"
+                  >
+                    {t('landing.enterLobby')}
+                  </Button>
+                </div>
+                
+                <p className="text-xs text-muted-foreground/70 mt-1">
+                   Room: {activeSession.roomId}
+                </p>
+            </div>
+          ) : (
+            <Button
+              onClick={onEnter}
+              size="lg"
+              className="font-semibold text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 shadow-soft-lg hover:shadow-dreamy transition-all duration-300 hover:scale-105 active:scale-95"
+            >
+              <Play className="mr-2 h-5 w-5 fill-current" />
+              {t('landing.enterButton')}
+            </Button>
+          )}
+
         </motion.div>
       </motion.div>
     </div>

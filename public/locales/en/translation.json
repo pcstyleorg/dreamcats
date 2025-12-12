@@ -1,11 +1,14 @@
 {
   "landing": {
-    "title": "Sen",
+    "title": "Dream Cats",
     "subtitle": "A game of dreams and crows.",
-    "enterButton": "Enter the Dream"
+    "enterButton": "Enter the Dream",
+    "rejoinGame": "Rejoin Game",
+    "startFresh": "Start Fresh",
+    "enterLobby": "Enter Lobby"
   },
   "lobby": {
-    "title": "Sen",
+    "title": "Dream Cats",
     "subtitle": "A game of dreams and crows.",
     "onlineMultiplayer": "Online Multiplayer",
     "localHotseat": "Local Hot-Seat",

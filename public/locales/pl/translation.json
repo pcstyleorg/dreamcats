@@ -1,11 +1,14 @@
 {
   "landing": {
-    "title": "Sen",
+    "title": "Dream Cats",
     "subtitle": "Gra o snach i kotach.",
-    "enterButton": "Wejdz w Sen"
+    "enterButton": "Wejdz w Sen",
+    "rejoinGame": "Wroc do Gry",
+    "startFresh": "Zacznij od Nowa",
+    "enterLobby": "Wejdz do Lobby"
   },
   "lobby": {
-    "title": "Sen",
+    "title": "Dream Cats",
     "subtitle": "Gra o snach i kotach.",
     "onlineMultiplayer": "Gra online",
     "localHotseat": "Gra lokalna",

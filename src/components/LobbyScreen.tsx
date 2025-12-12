@@ -11,7 +11,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Users, Cloud, Copy, Check, Play } from "lucide-react";
+import { ArrowLeft, Users, Cloud, Copy, Check, Play, Share2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
@@ -46,6 +46,22 @@ export const LobbyScreen: React.FC = () => {
       });
     }
   }, [state.roomId, state.gameMode, state.hostId, myPlayerId, state.gamePhase, t]);
+
+  // Check for room ID in URL
+  useEffect(() => {
+    if (window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      const roomParam = params.get("room");
+      if (roomParam) {
+        setRoomIdInput(roomParam);
+        setMode("online");
+        // Clear param so a refresh doesn't separate us from intended nav
+        window.history.replaceState({}, document.title, window.location.pathname);
+        toast.info(t('lobby.online.roomCodeApplied', { code: roomParam }));
+      }
+    }
+  }, [t]);
+
 
   const handleCreateRoom = async () => {
     if (isLoading) return;
@@ -219,8 +235,27 @@ export const LobbyScreen: React.FC = () => {
                     variant="ghost"
                     className="h-8 w-8 text-muted-foreground hover:text-primary"
                     onClick={handleCopyRoomId}
+                    title={t("common:copyRoomId")}
                   >
                     {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost" 
+                    className="h-8 w-8 text-primary hover:text-primary/80"
+                    onClick={() => {
+                        // Inline share logic
+                        const url = `${window.location.origin}?room=${state.roomId}`;
+                        if (typeof navigator !== 'undefined' && navigator.share) {
+                            navigator.share({ title: 'Dream Cats', text: `Join room ${state.roomId}`, url }).catch(console.error);
+                        } else {
+                            navigator.clipboard.writeText(url);
+                            toast.success(t('common:success.linkCopied'));
+                        }
+                    }}
+                    title={t("common:shareRoom")}
+                  >
+                    <Share2 className="h-4 w-4" />
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">{t('lobby.online.shareId')}</p>

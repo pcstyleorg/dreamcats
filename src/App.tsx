@@ -10,7 +10,6 @@ import { LandingPage } from './components/LandingPage';
 import { ThemeToggle } from './components/ThemeToggle';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { AuthButton } from './components/AuthDialog';
-import { RejoinPrompt } from './components/RejoinPrompt';
 import { useUserPreferences } from './hooks/useUserPreferences';
 import { useSessionPersistence } from './hooks/useSessionPersistence';
 import './i18n/config';
@@ -54,9 +53,8 @@ function App() {
       <TutorialProvider>
         <div className="bg-background w-full min-h-dvh">
           <main className="font-sans bg-background text-foreground transition-colors relative flex flex-col w-full min-h-dvh">
+            {/* Rejoin logic moved to LandingPage */}
             <ConvexSync />
-            {/* Rejoin prompt shows on landing if there's an active session */}
-            {showLanding && <RejoinPrompt onEnter={() => setHasEntered(true)} />}
             {!showGameboard && (
               <div className="fixed top-3 sm:top-4 right-3 sm:right-4 z-50 flex gap-2">
                 <AuthButton autoSignIn={hasEntered} />
