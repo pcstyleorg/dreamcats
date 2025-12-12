@@ -3,6 +3,22 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
 /**
+ * Get the current authenticated user with isAnonymous flag
+ */
+export const currentUser = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return null;
+    }
+
+    const user = await ctx.db.get(userId);
+    return user;
+  },
+});
+
+/**
  * Get the current user's preferences
  */
 export const get = query({

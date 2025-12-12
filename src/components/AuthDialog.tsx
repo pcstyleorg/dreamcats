@@ -18,10 +18,33 @@ import {
 } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { User, LogOut, Mail, Lock, UserCircle, Settings } from "lucide-react";
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { useTranslation } from "react-i18next";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { ProfileStatsDialog } from "@/components/ProfileStatsDialog";
+import { api } from "../../convex/_generated/api";
+
+// maps convex auth error messages to friendly translation keys
+function getAuthErrorKey(error: unknown): string {
+  const msg = error instanceof Error ? error.message.toLowerCase() : "";
+
+  if (msg.includes("already") || msg.includes("exists") || msg.includes("duplicate")) {
+    return "errors.authEmailInUse";
+  }
+  if (msg.includes("wrong password") || msg.includes("invalid password") || msg.includes("incorrect")) {
+    return "errors.authWrongPassword";
+  }
+  if (msg.includes("not found") || msg.includes("no user") || msg.includes("does not exist")) {
+    return "errors.authNoAccount";
+  }
+  if (msg.includes("rate") || msg.includes("too many") || msg.includes("limit")) {
+    return "errors.authRateLimited";
+  }
+  if (msg.includes("invalid email") || msg.includes("email format")) {
+    return "errors.authInvalidEmail";
+  }
+  return "errors.authFailed";
+}
 
 interface AuthDialogProps {
   trigger?: React.ReactNode;
@@ -66,8 +89,8 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
       setEmail("");
       setPassword("");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Authentication failed";
-      toast.error(message);
+      const errorKey = getAuthErrorKey(error);
+      toast.error(t(errorKey));
     } finally {
       setIsSubmitting(false);
     }
@@ -197,6 +220,8 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
 export const AuthButton: React.FC = () => {
   const { signOut } = useAuthActions();
   const { isAuthenticated, isLoading } = useConvexAuth();
+  const currentUser = useQuery(api.userPreferences.currentUser);
+  const isAnonymous = currentUser?.isAnonymous ?? true;
   const { t, i18n } = useTranslation("common");
   const {
     displayName,
@@ -430,19 +455,21 @@ export const AuthButton: React.FC = () => {
 
           {isAuthenticated ? (
             <>
-              <div className="pt-2 border-t border-border">
-                <p className="text-xs text-muted-foreground mb-2">
-                  {t("auth.playingAsGuest")}
-                </p>
-                <AuthDialog
-                  trigger={
-                    <Button variant="outline" size="sm" className="w-full gap-2">
-                      <Mail className="h-4 w-4" />
-                      {t("auth.upgradeAccount")}
-                    </Button>
-                  }
-                />
-              </div>
+              {isAnonymous && (
+                <div className="pt-2 border-t border-border">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    {t("auth.playingAsGuest")}
+                  </p>
+                  <AuthDialog
+                    trigger={
+                      <Button variant="outline" size="sm" className="w-full gap-2">
+                        <Mail className="h-4 w-4" />
+                        {t("auth.upgradeAccount")}
+                      </Button>
+                    }
+                  />
+                </div>
+              )}
 
               <Button
                 variant="ghost"

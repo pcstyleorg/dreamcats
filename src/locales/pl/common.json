@@ -69,7 +69,13 @@
     "resumeFailed": "Nie udalo sie wznowic gry.",
     "guestFailed": "Nie udalo sie zalogowac jako gosc.",
     "enterEmailPassword": "Wpisz email i haslo.",
-    "signOutFailed": "Nie udalo sie wylogowac."
+    "signOutFailed": "Nie udalo sie wylogowac.",
+    "authEmailInUse": "Email jest już w użyciu — spróbuj się zalogować",
+    "authWrongPassword": "Nieprawidłowe hasło",
+    "authNoAccount": "Nie znaleziono konta — spróbuj się zarejestrować",
+    "authRateLimited": "Zbyt wiele prób — poczekaj chwilę",
+    "authInvalidEmail": "Nieprawidłowy adres email",
+    "authFailed": "Logowanie nie powiodło się. Spróbuj ponownie."
   },
   "success": {
     "roomIdCopied": "Kod pokoju skopiowany do schowka!",

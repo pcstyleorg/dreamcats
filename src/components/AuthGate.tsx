@@ -11,6 +11,28 @@ import { useTranslation } from "react-i18next";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
+// maps convex auth error messages to friendly translation keys
+function getAuthErrorKey(error: unknown): string {
+  const msg = error instanceof Error ? error.message.toLowerCase() : "";
+
+  if (msg.includes("already") || msg.includes("exists") || msg.includes("duplicate")) {
+    return "errors.authEmailInUse";
+  }
+  if (msg.includes("wrong password") || msg.includes("invalid password") || msg.includes("incorrect")) {
+    return "errors.authWrongPassword";
+  }
+  if (msg.includes("not found") || msg.includes("no user") || msg.includes("does not exist")) {
+    return "errors.authNoAccount";
+  }
+  if (msg.includes("rate") || msg.includes("too many") || msg.includes("limit")) {
+    return "errors.authRateLimited";
+  }
+  if (msg.includes("invalid email") || msg.includes("email format")) {
+    return "errors.authInvalidEmail";
+  }
+  return "errors.authFailed";
+}
+
 interface AuthGateProps {
   theme: "light" | "dark";
   toggleTheme: () => void;
@@ -60,8 +82,8 @@ export const AuthGate: React.FC<AuthGateProps> = ({ theme, toggleTheme, onAuthen
       toast.success(mode === "signIn" ? t("success.signedIn") : t("success.accountCreated"));
       onAuthenticated();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Authentication failed";
-      toast.error(message);
+      const errorKey = getAuthErrorKey(error);
+      toast.error(t(errorKey));
     } finally {
       setIsSubmitting(false);
     }

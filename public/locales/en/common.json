@@ -69,7 +69,13 @@
     "resumeFailed": "Could not resume the game.",
     "guestFailed": "Failed to sign in anonymously.",
     "enterEmailPassword": "Please enter email and password.",
-    "signOutFailed": "Failed to sign out."
+    "signOutFailed": "Failed to sign out.",
+    "authEmailInUse": "Email already in use — try Sign In",
+    "authWrongPassword": "Wrong password",
+    "authNoAccount": "No account found — try Sign Up",
+    "authRateLimited": "Too many attempts — wait a bit",
+    "authInvalidEmail": "Invalid email address",
+    "authFailed": "Authentication failed. Please try again."
   },
   "success": {
     "roomIdCopied": "Room ID copied to clipboard!",
