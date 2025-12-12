@@ -6,6 +6,7 @@ import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useGame } from "@/state/useGame";
 import { RefreshCw, Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useAppStore } from "@/state/store";
 
 interface LandingPageProps {
   onEnter: () => void;
@@ -34,6 +35,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
   const title = t('landing.title');
   const { activeSession, clearActiveSession } = useUserPreferences();
   const { rejoinRoom, leaveGame } = useGame();
+  const setGame = useAppStore((s) => s.setGame);
+  const setPlayer = useAppStore((s) => s.setPlayer);
+  const setRoom = useAppStore((s) => s.setRoom);
 
   const containerVariants = {
     visible: {
@@ -80,12 +84,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
         console.error(e);
       }
     } else if (activeSession?.gameMode === 'hotseat' && activeSession.localGameState) {
-       // Logic handled by startHotseatGame usually, or we can just restore state
-       // For now, hotseat resume logic was in RejoinPrompt. simplified here:
-       // We'll just enter and let the persistence hook restore it if possible, or clear it.
-       // Actually hotseat restore is tricky without the logic from RejoinPrompt.
-       // Let's just enter.
-       onEnter(); 
+       // Restore saved local hotseat state
+       const viewer = activeSession.localGameState.players?.[0];
+       if (viewer) {
+         setPlayer(viewer.id, viewer.name);
+       }
+       setRoom(null);
+       setGame(activeSession.localGameState, { source: "local" });
+       toast.success(t("common:success.rejoinedGame"));
+       // brief feedback so the user sees we're resuming
+       setTimeout(() => onEnter(), 50);
     }
   };
 

@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Howl } from "howler";
 
 export type SoundType =
@@ -45,6 +45,19 @@ export const useSounds = () => {
     } catch (error) {
       console.warn("Failed to play sound:", sound, error);
     }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      Object.values(soundsRef.current).forEach((howl) => {
+        try {
+          howl.unload();
+        } catch (error) {
+          console.warn("Failed to unload sound", error);
+        }
+      });
+      soundsRef.current = {};
+    };
   }, []);
 
   return { playSound };

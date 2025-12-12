@@ -383,7 +383,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     // Juice: Shake and Vibrate on significant actions
     if (recentMove) {
        // Simple haptic feedback if available for all moves
-       if (typeof navigator !== 'undefined' && navigator.vibrate) {
+       if (typeof navigator !== 'undefined' && typeof navigator.vibrate === "function") {
          navigator.vibrate(20);
        }
 
@@ -395,7 +395,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
              gsap.set(containerRef.current, { x: 0 });
            }}
          );
-         if (typeof navigator !== 'undefined' && navigator.vibrate) {
+         if (typeof navigator !== 'undefined' && typeof navigator.vibrate === "function") {
             navigator.vibrate([30, 50, 30]); // Heavy impact
          }
        }
