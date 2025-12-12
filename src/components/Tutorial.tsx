@@ -150,8 +150,11 @@ export const Tutorial: React.FC = () => {
 
   // Skip ahead if player tries to interact during tutorial
   useEffect(() => {
-    if (step === 'pobudka' && state.gamePhase !== 'playing') {
-      setStep('end');
+    if (
+      step === "pobudka" &&
+      (state.gamePhase === "round_end" || state.gamePhase === "game_over")
+    ) {
+      setStep("end");
     }
   }, [state.gamePhase, step, setStep]);
 

@@ -70,7 +70,9 @@ export const getGameState = query({
               isSpecial: false 
           }, 
           isFaceUp: slot.isFaceUp,
-          hasBeenPeeked: false, // Don't show peek status to opponents
+          // Show which positions have been peeked (initial peeking and special peeks)
+          // without revealing the card values.
+          hasBeenPeeked: slot.hasBeenPeeked,
         })),
       };
     });

@@ -127,7 +127,7 @@ export const autoAdvanceAFKPeeking = internalMutation({
 
           const newState = {
             ...state,
-            peekingState: { playerIndex: nextPlayerIndex, peekedCount: 0 },
+            peekingState: { ...state.peekingState, playerIndex: nextPlayerIndex, peekedCount: 0 },
             actionMessage: `${state.players[nextPlayerIndex].name} is peeking (auto-advanced due to AFK)`,
           };
 

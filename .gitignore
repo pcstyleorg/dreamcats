@@ -10,3 +10,5 @@ coverage/
 .claude/
 out.txt
 package-lock.json
+bun.lock
+

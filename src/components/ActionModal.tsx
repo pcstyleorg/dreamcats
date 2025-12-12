@@ -18,6 +18,14 @@ export const ActionModal: React.FC = () => {
   const { gamePhase, tempCards, lastRoundScores, gameWinnerName, players, currentPlayerIndex } =
     state;
 
+  const [dismissedGameOver, setDismissedGameOver] = React.useState(false);
+
+  React.useEffect(() => {
+    if (gamePhase !== "game_over") {
+      setDismissedGameOver(false);
+    }
+  }, [gamePhase]);
+
   const isMyTurn =
     state.gameMode === "hotseat" ||
     players[currentPlayerIndex]?.id === myPlayerId;
@@ -144,16 +152,12 @@ export const ActionModal: React.FC = () => {
   const isOpen =
     (gamePhase === "action_take_2" && isMyTurn) ||
     gamePhase === "round_end" ||
-    gamePhase === "game_over";
-
-  // Only allow dismissing on non-critical phases to prevent players from closing during their action
-  const canDismiss = gamePhase === "round_end" || gamePhase === "game_over";
+    (gamePhase === "game_over" && !dismissedGameOver);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
-      // Only allow closing if it's safe to dismiss
-      if (!open && !canDismiss) {
-        return; // Prevent closing during active game phases
+      if (!open && gamePhase === "game_over") {
+        setDismissedGameOver(true);
       }
     }}>
       <DialogContent className="bg-background/95 backdrop-blur-lg border-2 border-border/50 shadow-dreamy max-w-[calc(100vw-2rem)] sm:max-w-md md:max-w-lg">

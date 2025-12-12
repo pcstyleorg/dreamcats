@@ -10,20 +10,24 @@ Sen-web is a multiplayer card game (based on Polish "Sen" / "Rat-a-Tat Cat") bui
 
 ### Core Commands
 - **Install dependencies**: `bun install`
-- **Dev server**: `bun run dev` (runs Vite dev server on default port)
+- **Dev server (full stack)**: `bun run dev` (runs Convex + Vite concurrently)
+  - **Frontend only**: `bun run dev:ui` (Vite on default port, assumes Convex is running separately)
+  - **Convex only**: `bun run dev:convex` (useful if debugging backend in isolation)
 - **Build**: `bun run build` (runs `tsc -b && vite build`)
 - **Lint**: `bun run lint`
 - **Preview production build**: `bun run preview`
 
 ### Testing
-- **Run tests**: `bun run test` (watch mode)
+- **Run tests** (watch mode): `bun run test`
 - **Run tests once**: `bun run test:run`
+- **Run specific test file**: `bun run test:run convex/__tests__/path/to/file.test.ts`
 - Tests are configured for Convex functions only (see `vitest.config.mts`)
 - Test files should live in `convex/__tests__/**/*.test.ts`
 
 ### Convex Backend
 - **Start Convex dev**: `bunx convex dev` (generates types, deploys functions, watches for changes)
 - **Deploy to production**: `npx convex deploy` (requires `CONVEX_DEPLOYMENT` env var)
+- **Verify deployed functions**: Check Convex dashboard at https://dashboard.convex.dev
 - Convex generates types to `convex/_generated/` - never edit these manually
 
 ## Architecture
@@ -190,16 +194,41 @@ const currentPlayer = useAppStore(selectCurrentPlayer);
 ### Optimistic Updates
 For hotseat mode, update local state immediately. For online mode, let ConvexSync handle remote updates.
 
+## Development & Debugging
+
+### Testing Convex Functions
+- Write tests in `convex/__tests__/**/*.test.ts` using the `convex-test` library
+- Import mutations/queries from `convex/index.ts`
+- Use `ConvexTestingHelper` to simulate client calls
+- Run specific test: `bun run test:run convex/__tests__/games.test.ts`
+
+### Checking Store State
+- Use React DevTools to inspect Zustand store (component props section)
+- Add temporary `console.log` in selectors to trace state updates
+- Check localStorage for persisted SessionSlice state
+
+### Debugging Convex Queries
+- Enable verbose logging: `bunx convex dev --verbose`
+- Check Convex dashboard logs at https://dashboard.convex.dev
+- Review move history in `moves` table for game action tracing
+- Use `listMessages` queries to inspect chat/game events
+
+### Network Issues
+- Check NetSlice state (reconnection status, latency) in component tree
+- Monitor ConvexSync subscription by adding console logs in component
+- Verify `VITE_CONVEX_URL` is set correctly in `.env.local`
+
 ## Deployment
 
 ### Vercel
 - Config in `vercel.json`
-- Build command: `npx convex deploy --cmd 'bun run build'`
-- Required env vars: `CONVEX_DEPLOYMENT`, `CONVEX_URL` (or `VITE_CONVEX_URL`)
+- Build command: `npx convex deploy --cmd 'bun run build'` (auto-configured; deploys Convex functions before frontend)
+- Important: Set environment variables in Vercel dashboard (not in `.env.local` which is gitignored)
 
 ### Environment Variables
-- `VITE_CONVEX_URL` - Convex deployment URL (for client)
-- `CONVEX_DEPLOYMENT` - Convex deployment name (for server/CI)
+- `VITE_CONVEX_URL` - Convex deployment URL (for client); if not set, uses `CONVEX_URL`
+- `CONVEX_DEPLOYMENT` - Convex deployment name in format `prod:project-name` (for server/CI)
+- Both are required for production deployment
 
 ## Game Rules Reference
 

@@ -13,6 +13,7 @@ import type * as auth from "../auth.js";
 import type * as chat from "../chat.js";
 import type * as cleanup from "../cleanup.js";
 import type * as crons from "../crons.js";
+import type * as game_core from "../game_core.js";
 import type * as games from "../games.js";
 import type * as http from "../http.js";
 import type * as presence from "../presence.js";
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   chat: typeof chat;
   cleanup: typeof cleanup;
   crons: typeof crons;
+  game_core: typeof game_core;
   games: typeof games;
   http: typeof http;
   presence: typeof presence;

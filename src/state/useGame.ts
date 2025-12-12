@@ -227,9 +227,10 @@ export const useGame = () => {
         players,
         drawPile: deck,
         discardPile,
+        startingPlayerIndex: 0,
         currentPlayerIndex: 0,
         gamePhase: "peeking",
-        peekingState: { playerIndex: 0, peekedCount: 0 },
+        peekingState: { playerIndex: 0, peekedCount: 0, startIndex: 0 },
         actionMessage: i18n.t("game.peekTwoCards", {
           player: players[0]?.name ?? "",
         }),
