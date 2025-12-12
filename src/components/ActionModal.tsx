@@ -124,7 +124,7 @@ export const ActionModal: React.FC = () => {
           {t('modal.finalScores')}
         </h4>
         <ul className="space-y-3 sm:space-y-4 bg-accent/30 rounded-lg p-3 sm:p-4 border-2 border-border/50">
-          {players
+          {[...players]
             .sort((a, b) => a.score - b.score)
             .map((player, index) => (
               <li

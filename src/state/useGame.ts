@@ -13,6 +13,12 @@ import { createDeck, shuffleDeck } from "@/lib/game-logic";
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const createIdempotencyKey = (): string => {
+  const randomUUID = globalThis.crypto?.randomUUID?.bind(globalThis.crypto);
+  if (randomUUID) return randomUUID();
+  return `idem-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+};
+
 const retryMutation = async <T>({
   attempt,
   maxAttempts = 3,
@@ -36,7 +42,11 @@ const retryMutation = async <T>({
       const nonRetriable =
         errMsg.includes("Not your turn") ||
         errMsg.includes("Invalid phase") ||
-        errMsg.includes("Room not found");
+        errMsg.includes("Room not found") ||
+        errMsg.includes("Game not found") ||
+        errMsg.includes("Target player not found") ||
+        errMsg.includes("Invalid card index") ||
+        errMsg.includes("Missing first card selection");
 
       if (nonRetriable || tries >= maxAttempts - 1) {
         throw error;
@@ -265,7 +275,8 @@ export const useGame = () => {
       await performActionMutation({
           roomId: game.roomId,
           playerId,
-          action: { type: "START_NEW_ROUND" }
+          action: { type: "START_NEW_ROUND" },
+          idempotencyKey: createIdempotencyKey(),
       });
     } catch (error) {
       console.error("Failed to start game:", error);
@@ -327,12 +338,14 @@ export const useGame = () => {
       if (!game.roomId || !playerId) return;
 
       try {
+        const idempotencyKey = createIdempotencyKey();
         const result = await retryMutation({
           fn: () =>
             performActionMutation({
               roomId: game.roomId!,
               playerId,
               action,
+              idempotencyKey,
             }),
         });
         return result;

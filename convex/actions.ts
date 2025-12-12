@@ -18,6 +18,26 @@ export const performAction = mutation({
     const { roomId, playerId, idempotencyKey } = args;
     const action = args.action as GameAction;
 
+    if (!action || typeof action !== "object" || !("type" in action)) {
+      throw new Error("Invalid action");
+    }
+
+    // Strong idempotency: if we've already recorded this key, return the prior result.
+    // This prevents double-application when the client retries after a lost response.
+    if (idempotencyKey) {
+      const prior = await ctx.db
+        .query("moves")
+        .withIndex("by_idem", (q) => q.eq("idempotencyKey", idempotencyKey))
+        .first();
+
+      if (prior) {
+        if (prior.roomId !== roomId || prior.playerId !== playerId) {
+          throw new Error("Idempotency key conflict");
+        }
+        return (prior.payload as { result?: unknown } | undefined)?.result;
+      }
+    }
+
     const gameRecord = await ctx.db
       .query("games")
       .withIndex("by_roomId", (q) => q.eq("roomId", roomId))
@@ -27,15 +47,8 @@ export const performAction = mutation({
       throw new Error("Game not found");
     }
 
-    // Check if this action was already processed (idempotency)
-    if (idempotencyKey) {
-      if (gameRecord.idempotencyKey === idempotencyKey) {
-        // Action already processed, return without error
-        return;
-      }
-    }
-
     const state = gameRecord.state as GameState;
+    let result: unknown = undefined;
 
     // --- VALIDATION & LOGIC ---
 
@@ -166,14 +179,14 @@ export const performAction = mutation({
         if (action.payload.cardIndex < 0 || action.payload.cardIndex >= peekingPlayer.hand.length) throw new Error("Invalid card index");
 
         // Disallow peeking more than 2 cards per RULES §3
-        if (state.peekingState.peekedCount >= 2) return;
+        if (state.peekingState.peekedCount >= 2) break;
 
         const players = [...state.players];
         const playerIndex = state.peekingState.playerIndex;
         const player = players[playerIndex];
         
         // Check if already face up
-        if (player.hand[action.payload.cardIndex].isFaceUp) return; // No-op
+        if (player.hand[action.payload.cardIndex].isFaceUp) break; // No-op
 
         const newHand = [...player.hand];
         newHand[action.payload.cardIndex] = {
@@ -257,7 +270,7 @@ export const performAction = mutation({
         // Per RULES §4/§2: no reshuffle. If deck is empty, round ends immediately.
         if (drawPile.length === 0) {
           await saveState(endRoundWithScores(state, { reason: "deck_exhausted" }));
-          return;
+          break;
         }
 
         const drawnCard = drawPile.pop()!;
@@ -386,7 +399,7 @@ export const performAction = mutation({
               const drawPile = [...state.drawPile];
               if (drawPile.length === 0) {
                   await saveState(endRoundWithScores(newState, { reason: "deck_exhausted" }));
-                  return;
+                  break;
               }
               const tempCards: Card[] = [];
               for (let i = 0; i < 2; i++) {
@@ -461,7 +474,7 @@ export const performAction = mutation({
               }
           }));
 
-          return targetCard; // Return the card so the caller can see it
+          result = targetCard; // Return the card so the caller can see it
           break;
       }
 
@@ -483,11 +496,15 @@ export const performAction = mutation({
               });
           } else {
               // Perform swap
-              const card1 = state.swapState!.card1;
+              const card1 = state.swapState?.card1;
+              if (!card1) throw new Error("Missing first card selection");
               const players = [...state.players];
               
               const playerAIndex = players.findIndex(p => p.id === card1.playerId);
               const playerBIndex = players.findIndex(p => p.id === action.payload.playerId);
+              if (playerAIndex === -1 || playerBIndex === -1) {
+                throw new Error("Target player not found");
+              }
               
               const playerA = players[playerAIndex];
               const playerB = players[playerBIndex];
@@ -653,6 +670,23 @@ export const performAction = mutation({
           });
           break;
       }
+
+      default: {
+        throw new Error("Unknown action type");
+      }
     }
+
+    if (idempotencyKey) {
+      await ctx.db.insert("moves", {
+        roomId,
+        playerId,
+        action: action.type,
+        payload: { action, result },
+        createdAt: Date.now(),
+        idempotencyKey,
+      });
+    }
+
+    return result;
   },
 });
