@@ -21,6 +21,7 @@ import { User, LogOut, Mail, Lock, UserCircle, Settings } from "lucide-react";
 import { useConvexAuth } from "convex/react";
 import { useTranslation } from "react-i18next";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
+import { ProfileStatsDialog } from "@/components/ProfileStatsDialog";
 
 interface AuthDialogProps {
   trigger?: React.ReactNode;
@@ -207,6 +208,7 @@ export const AuthButton: React.FC = () => {
     setSoundEnabled,
   } = useUserPreferences();
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(displayName);
   const [soundEnabledValue, setSoundEnabledValue] = useState(soundEnabled);
@@ -268,27 +270,29 @@ export const AuthButton: React.FC = () => {
   );
 
   return (
-    <Popover
-      open={popoverOpen}
-      onOpenChange={(nextOpen) => {
-        setPopoverOpen(nextOpen);
-        if (nextOpen) {
-          setNameValue(displayName);
-          setSoundEnabledValue(localStorage.getItem("soundEnabled") !== "false");
-          setThemeValue(
-            (localStorage.getItem("theme") ?? "light") as "light" | "dark",
-          );
-          setEditingName(false);
-        }
-      }}
-    >
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9" disabled={isLoading}>
-          <UserCircle className="h-5 w-5" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-64" align="end">
-        <div className="space-y-4">
+    <>
+      <ProfileStatsDialog open={statsOpen} onOpenChange={setStatsOpen} />
+      <Popover
+        open={popoverOpen}
+        onOpenChange={(nextOpen) => {
+          setPopoverOpen(nextOpen);
+          if (nextOpen) {
+            setNameValue(displayName);
+            setSoundEnabledValue(localStorage.getItem("soundEnabled") !== "false");
+            setThemeValue(
+              (localStorage.getItem("theme") ?? "light") as "light" | "dark",
+            );
+            setEditingName(false);
+          }
+        }}
+      >
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-9 w-9" disabled={isLoading}>
+            <UserCircle className="h-5 w-5" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64" align="end">
+          <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Settings className="h-4 w-4 text-muted-foreground" />
             <span className="font-semibold">{t("auth.settings")}</span>
@@ -325,6 +329,21 @@ export const AuthButton: React.FC = () => {
                 </div>
               )}
             </div>
+          )}
+
+          {isAuthenticated && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => {
+                setPopoverOpen(false);
+                setStatsOpen(true);
+              }}
+            >
+              {t("auth.viewStats")}
+            </Button>
           )}
 
           <div className="pt-2 border-t border-border space-y-3">
@@ -450,7 +469,8 @@ export const AuthButton: React.FC = () => {
             </div>
           )}
         </div>
-      </PopoverContent>
-    </Popover>
+        </PopoverContent>
+      </Popover>
+    </>
   );
 };

@@ -23,7 +23,21 @@
     "signOut": "Sign Out",
     "playingAsGuest": "Playing as Guest",
     "upgradeAccount": "Upgrade to Full Account",
-    "upgradeDescription": "Create an account to save your progress across devices"
+    "upgradeDescription": "Create an account to save your progress across devices",
+    "viewStats": "View Stats",
+    "statsTitle": "Your Stats",
+    "statsRequiresSignIn": "Sign in to see your match history and stats.",
+    "loadingStats": "Loading stats...",
+    "gamesPlayed": "Games Played",
+    "gamesWon": "Games Won",
+    "winRate": "Win Rate",
+    "avgScore": "Avg Total Score",
+    "bestScore": "Best (Lowest) Score",
+    "recentMatches": "Recent Matches",
+    "noMatchesYet": "No matches recorded yet.",
+    "matchRow": "Place {{place}}/{{total}} · Score {{score}}",
+    "matchMeta": "Room {{roomId}} · {{mode}} · Winner: {{winner}}",
+    "close": "Close"
   },
   "preferences": {
     "title": "Preferences",

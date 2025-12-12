@@ -23,7 +23,21 @@
     "signOut": "Wyloguj",
     "playingAsGuest": "Grasz jako gość",
     "upgradeAccount": "Załóż pełne konto",
-    "upgradeDescription": "Utwórz konto, aby zapisać postępy na różnych urządzeniach"
+    "upgradeDescription": "Utwórz konto, aby zapisać postępy na różnych urządzeniach",
+    "viewStats": "Zobacz statystyki",
+    "statsTitle": "Twoje statystyki",
+    "statsRequiresSignIn": "Zaloguj się, aby zobaczyć historię i statystyki.",
+    "loadingStats": "Ładowanie statystyk...",
+    "gamesPlayed": "Rozegrane gry",
+    "gamesWon": "Wygrane gry",
+    "winRate": "Procent wygranych",
+    "avgScore": "Średni wynik",
+    "bestScore": "Najlepszy (najniższy) wynik",
+    "recentMatches": "Ostatnie gry",
+    "noMatchesYet": "Brak zapisanych gier.",
+    "matchRow": "Miejsce {{place}}/{{total}} · Wynik {{score}}",
+    "matchMeta": "Pokój {{roomId}} · {{mode}} · Wygrał(a): {{winner}}",
+    "close": "Zamknij"
   },
   "preferences": {
     "title": "Preferencje",

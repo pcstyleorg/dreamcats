@@ -1,6 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, ReactNode, useEffect } from "react";
 import { useTutorialStore, TutorialStore, TutorialStep } from "@/stores/tutorialStore";
+import { useConvexAuth } from "convex/react";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 
 // Small local interface to avoid importing store types all over the app
 interface LocalTutorialContextType {
@@ -18,20 +20,28 @@ const TutorialContext = createContext<LocalTutorialContextType | undefined>(unde
 // Re-export moved to tutorialExports to keep this file component-only for fast refresh
 
 export const TutorialProvider = ({ children }: { children: ReactNode }) => {
+  const { isAuthenticated } = useConvexAuth();
+  const { isLoading: prefsLoading, tutorialCompleted, setTutorialCompleted } =
+    useUserPreferences();
   const step = useTutorialStore((s: TutorialStore) => s.step);
   const startTutorial = useTutorialStore((s: TutorialStore) => s.startTutorial);
   const nextStep = useTutorialStore((s: TutorialStore) => s.nextStep);
   const prevStep = useTutorialStore((s: TutorialStore) => s.prevStep);
-  const endTutorial = useTutorialStore((s: TutorialStore) => s.endTutorial);
+  const endTutorialStore = useTutorialStore((s: TutorialStore) => s.endTutorial);
   const setStep = useTutorialStore((s: TutorialStore) => s.setStep);
   const skipToGameplay = useTutorialStore((s: TutorialStore) => s.skipToGameplay);
 
   useEffect(() => {
-    const tutorialCompleted = localStorage.getItem("dreamcats_tutorial_completed");
+    if (isAuthenticated && prefsLoading) return;
     if (!tutorialCompleted) {
       setStep("welcome");
     }
-  }, [setStep]);
+  }, [isAuthenticated, prefsLoading, setStep, tutorialCompleted]);
+
+  const endTutorial = () => {
+    endTutorialStore();
+    setTutorialCompleted(true);
+  };
 
   return (
     <TutorialContext.Provider value={{ step, startTutorial, nextStep, prevStep, endTutorial, setStep, skipToGameplay }}>
