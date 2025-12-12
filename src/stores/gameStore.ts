@@ -1,18 +1,19 @@
-import { createWithEqualityFn } from 'zustand/traditional';
-import { shallow } from 'zustand/shallow';
-import i18n from '@/i18n/config';
-import { GameState } from '@/types';
+import { createWithEqualityFn } from "zustand/traditional";
+import { shallow } from "zustand/shallow";
+import i18n from "@/i18n/config";
+import { GameState } from "@/types";
 
 export const initialState: GameState = {
-  gameMode: 'lobby',
+  gameMode: "lobby",
   roomId: null,
   hostId: null,
   players: [],
   drawPile: [],
   discardPile: [],
   currentPlayerIndex: 0,
-  gamePhase: 'lobby',
-  actionMessage: i18n.t('game.welcomeMessage'),
+  startingPlayerIndex: 0,
+  gamePhase: "lobby",
+  actionMessage: i18n.t("game.welcomeMessage"),
   roundWinnerName: null,
   gameWinnerName: null,
   turnCount: 0,
@@ -40,11 +41,11 @@ export const useGameStore = createWithEqualityFn<GameStore>()(
     setState: (updater) =>
       set((prev) => ({
         state:
-          typeof updater === 'function'
+          typeof updater === "function"
             ? (updater as (prev: GameState) => GameState)(prev.state)
             : updater,
       })),
     setMyPlayerId: (id) => set({ myPlayerId: id }),
   }),
-  shallow,
+  shallow
 );
