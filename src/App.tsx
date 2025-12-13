@@ -30,9 +30,19 @@ const Tutorial = lazy(() =>
 function App() {
   const { state } = useGame();
   const [hasEntered, setHasEntered] = useState(() => {
-    // Check session storage first, then fall back to local storage backup
+    // Primary source: session storage (resets on new tab/browser session)
     const sessionValue = safeSessionStorage.getItem("dreamcats-has-entered") === "true";
+
+    // Backup: only use localStorage if session storage exists but is false
+    // This handles mid-session reloads, not cross-session persistence
     const localBackup = safeLocalStorage.getItem("dreamcats-has-entered-backup") === "true";
+
+    // If sessionStorage is empty (fresh session), clear stale localStorage backup
+    if (safeSessionStorage.getItem("dreamcats-has-entered") === null) {
+      safeLocalStorage.removeItem("dreamcats-has-entered-backup");
+      return false;
+    }
+
     return sessionValue || localBackup;
   });
   const { theme, setTheme: saveTheme } = useUserPreferences();
@@ -133,12 +143,31 @@ function App() {
     if (import.meta.env.PROD) {
       console.log("[NAV-DEBUG] handleEntered called", {
         timestamp: new Date().toISOString(),
-        url: window.location.href
+        url: window.location.href,
+        currentHasEnteredState: hasEntered,
+        gamePhase: state.gamePhase,
+        willShowLanding: hasEntered === false,
+        willShowLobby: hasEntered === true && state.gamePhase === 'lobby',
+        willShowGameboard: hasEntered === true && state.gamePhase !== 'lobby'
       });
     }
 
     setHasEntered(true);
   };
+
+  // Track hasEntered state changes
+  useEffect(() => {
+    if (import.meta.env.PROD) {
+      console.log("[NAV-DEBUG] State updated", {
+        timestamp: new Date().toISOString(),
+        hasEntered,
+        showLanding,
+        showLobby,
+        showGameboard,
+        gamePhase: state.gamePhase
+      });
+    }
+  }, [hasEntered, showLanding, showLobby, showGameboard, state.gamePhase]);
 
   // Clean up backup flag when user successfully enters lobby
   useEffect(() => {
