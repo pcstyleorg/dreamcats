@@ -223,7 +223,9 @@ export const AuthButton: React.FC = () => {
   const currentUser = useQuery(api.userPreferences.currentUser);
   // Convex Auth sets `isAnonymous: true` for anonymous sessions; for password/OAuth
   // it may be absent (undefined). Treat missing as non-anonymous.
-  const isAnonymous = currentUser?.isAnonymous ?? false;
+  // Important: currentUser === undefined means query is loading, don't assume anything yet
+  const isUserLoading = isAuthenticated && currentUser === undefined;
+  const isAnonymous = currentUser?.isAnonymous === true; // strict check
   const { t, i18n } = useTranslation("common");
   const {
     displayName,
@@ -457,7 +459,8 @@ export const AuthButton: React.FC = () => {
 
           {isAuthenticated ? (
             <>
-              {isAnonymous && (
+              {/* Only show upgrade banner if user is confirmed anonymous, not while loading */}
+              {!isUserLoading && isAnonymous && (
                 <div className="pt-2 border-t border-border">
                   <p className="text-xs text-muted-foreground mb-2">
                     {t("auth.playingAsGuest")}

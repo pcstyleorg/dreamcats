@@ -203,13 +203,19 @@
     "usedSwap2SelectFirst": "{{player}} uzyl karty Zamien 2. Wybierz pierwsza karte.",
     "peekedAtCard": "{{player}} podejrzal karte.",
     "selectSecondCard": "Wybierz druga karte do zamiany.",
+    "peek1Instruction": "Dotknij dowolna karte",
+    "peek1Hint": "Mozesz podejrzec karte dowolnego gracza, rowniez swoja",
+    "swap2SelectFirst": "Dotknij pierwsza karte do zamiany",
+    "swap2SelectSecond": "Teraz dotknij druga karte",
+    "swap2Hint": "Wybierz dwie karty, ktore zamienia sie miejscami",
     "swappedTwoCards": "{{player}} zamienil dwie karty.",
     "choseCardFromTake2": "{{player}} wybral karte z akcji Wez 2.",
     "deckRanOut": "Stos Zakryty sie skonczyl. {{player}} wygrywa runde.",
     "calledPobudka": "{{player}} zawolal POBUDKA! {{winner}} wygrywa runde.",
     "gameOver": "Koniec gry! {{player}} wygrywa z najnizszym wynikiem!",
     "roomCreated": "Pokoj utworzony! Kod: {{roomId}}. Oczekiwanie na przeciwnika...",
-    "joinedRoom": "Dolaczono do pokoju {{roomId}}. Oczekiwanie na gospodarza..."
+    "joinedRoom": "Dolaczono do pokoju {{roomId}}. Oczekiwanie na gospodarza...",
+    "waitYourTurn": "Poczekaj na swoja kolej"
   },
   "actions": {
     "drewFromDeck": "{{player}} dobral ze Stosu Zakrytego",

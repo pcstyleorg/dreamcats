@@ -203,13 +203,19 @@
     "usedSwap2SelectFirst": "{{player}} used 'Swap 2'. Select the first card.",
     "peekedAtCard": "{{player}} peeked at a card.",
     "selectSecondCard": "Select the second card to swap.",
+    "peek1Instruction": "Tap any card to peek",
+    "peek1Hint": "You can peek at any player's card, including your own",
+    "swap2SelectFirst": "Tap the first card to swap",
+    "swap2SelectSecond": "Now tap the second card",
+    "swap2Hint": "Select any two cards to swap their positions",
     "swappedTwoCards": "{{player}} swapped two cards.",
     "choseCardFromTake2": "{{player}} chose a card from 'Take 2'.",
     "deckRanOut": "The deck ran out. {{player}} won the round.",
     "calledPobudka": "{{player}} called 'POBUDKA!'. {{winner}} won the round.",
     "gameOver": "Game Over! {{player}} wins with the lowest score!",
     "roomCreated": "Room created! ID: {{roomId}}. Waiting for opponent...",
-    "joinedRoom": "Joined room {{roomId}}. Waiting for host..."
+    "joinedRoom": "Joined room {{roomId}}. Waiting for host...",
+    "waitYourTurn": "Wait for your turn"
   },
   "actions": {
     "drewFromDeck": "{{player}} drew from deck",

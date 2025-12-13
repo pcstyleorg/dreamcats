@@ -80,10 +80,12 @@ export const useGame = () => {
 
   const botLoopTokenRef = useRef(0);
   const botLoopRunningRef = useRef(false);
+  const botScheduledRef = useRef(false); // prevent double-scheduling
 
   const cancelBotLoop = useCallback(() => {
     botLoopTokenRef.current += 1;
     botLoopRunningRef.current = false;
+    botScheduledRef.current = false;
   }, []);
 
   const createRoomMutation = useMutation(api.rooms.createRoom);
@@ -402,13 +404,19 @@ export const useGame = () => {
   }, [cancelBotLoop, setGame, setRoom]);
 
   // process bot turns in solo mode
+  // uses a single scheduler pattern to avoid recursive timeout issues
   const processBotTurns = useCallback(() => {
-    if (botLoopRunningRef.current) return;
+    // prevent concurrent loops or re-scheduling while already scheduled
+    if (botLoopRunningRef.current || botScheduledRef.current) return;
+    botScheduledRef.current = true;
     botLoopRunningRef.current = true;
     const token = ++botLoopTokenRef.current;
     let steps = 0;
+    const MAX_STEPS = 15; // cap to prevent runaway loops
 
     const tick = () => {
+      botScheduledRef.current = false; // clear scheduled flag when tick starts
+
       if (token !== botLoopTokenRef.current) {
         botLoopRunningRef.current = false;
         return;
@@ -417,11 +425,13 @@ export const useGame = () => {
       const currentGame = useAppStore.getState().game;
       const currentPlayerId = useAppStore.getState().playerId;
 
+      // exit if not in solo mode or player left
       if (currentGame.gameMode !== "solo" || !currentPlayerId) {
         botLoopRunningRef.current = false;
         return;
       }
 
+      // exit if it's not a bot's turn
       if (!isBotTurn(currentGame, currentPlayerId)) {
         botLoopRunningRef.current = false;
         return;
@@ -440,7 +450,8 @@ export const useGame = () => {
       }
 
       steps += 1;
-      if (steps > 30) {
+      if (steps > MAX_STEPS) {
+        console.warn("[bot] max steps reached, pausing bot loop");
         botLoopRunningRef.current = false;
         return;
       }
@@ -510,20 +521,31 @@ export const useGame = () => {
         });
       }, { source: "local" });
 
+      // schedule next tick with safeguard
+      botScheduledRef.current = true;
       setTimeout(tick, 350);
     };
 
+    // start the loop
     setTimeout(tick, 0);
   }, [playSound, updateGame]);
 
   // Ensure bots continue acting whenever solo state enters a bot-controlled turn,
   // including rounds where a bot becomes the next starter/peeker.
+  // Uses specific dependencies to reduce unnecessary re-triggers.
+  const { gameMode, gamePhase, currentPlayerIndex, peekingState } = game;
+  const peekingPlayerIndex = peekingState?.playerIndex;
+
   useEffect(() => {
-    if (game.gameMode !== "solo" || !playerId) return;
-    if (!isBotTurn(game, playerId)) return;
+    if (gameMode !== "solo" || !playerId) return;
+    // get fresh game state to check bot turn
+    const currentGame = useAppStore.getState().game;
+    if (!isBotTurn(currentGame, playerId)) return;
+    // small delay before starting bot turns, with cleanup
     const handle = window.setTimeout(() => processBotTurns(), 250);
     return () => window.clearTimeout(handle);
-  }, [game, playerId, processBotTurns]);
+    // only re-run when these specific values change, not on every game state update
+  }, [gameMode, gamePhase, currentPlayerIndex, peekingPlayerIndex, playerId, processBotTurns]);
 
   const broadcastAction = useCallback(
     async (action: GameAction) => {
