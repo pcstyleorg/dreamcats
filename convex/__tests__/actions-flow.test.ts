@@ -26,22 +26,6 @@ const setupRoom = async (roomId: string) => {
   return { t, roomId, hostId, guestId };
 };
 
-const setGameState = async (
-  t: ReturnType<typeof convexTest>,
-  roomId: string,
-  next: (prev: GameState) => GameState,
-) => {
-  await t.run(async (ctx) => {
-    const game = await ctx.db
-      .query("games")
-      .withIndex("by_roomId", (q) => q.eq("roomId", roomId))
-      .first();
-    if (!game) throw new Error("missing game");
-    const prev = game.state as GameState;
-    await ctx.db.patch(game._id, { state: next(prev) });
-  });
-};
-
 describe("actions: core flow branches", () => {
   it("runs peeking around the table then enters playing", async () => {
     const { t, roomId, hostId, guestId } = await setupRoom("room-peeking-flow");
@@ -145,14 +129,24 @@ describe("actions: core flow branches", () => {
     });
 
     // Jump directly to a deterministic playing state with an empty deck.
-    await setGameState(t, roomId, (prev) => ({
-      ...prev,
-      gamePhase: "playing",
-      peekingState: undefined,
-      currentPlayerIndex: 0,
-      startingPlayerIndex: 0,
-      drawPile: [],
-    }));
+    await t.run(async (ctx) => {
+      const game = await ctx.db
+        .query("games")
+        .withIndex("by_roomId", (q) => q.eq("roomId", roomId))
+        .first();
+      if (!game) throw new Error("missing game");
+      const prev = game.state as GameState;
+      await ctx.db.patch(game._id, {
+        state: {
+          ...prev,
+          gamePhase: "playing",
+          peekingState: undefined,
+          currentPlayerIndex: 0,
+          startingPlayerIndex: 0,
+          drawPile: [],
+        },
+      });
+    });
 
     await t.mutation(api.actions.performAction, {
       roomId,
@@ -183,15 +177,25 @@ describe("actions: core flow branches", () => {
       isSpecial: false,
     });
 
-    await setGameState(t, roomId, (prev) => ({
-      ...prev,
-      gamePhase: "playing",
-      peekingState: undefined,
-      currentPlayerIndex: 0,
-      startingPlayerIndex: 0,
-      drawPile: [makeCard(500)],
-      discardPile: [makeCard(600)],
-    }));
+    await t.run(async (ctx) => {
+      const game = await ctx.db
+        .query("games")
+        .withIndex("by_roomId", (q) => q.eq("roomId", roomId))
+        .first();
+      if (!game) throw new Error("missing game");
+      const prev = game.state as GameState;
+      await ctx.db.patch(game._id, {
+        state: {
+          ...prev,
+          gamePhase: "playing",
+          peekingState: undefined,
+          currentPlayerIndex: 0,
+          startingPlayerIndex: 0,
+          drawPile: [makeCard(500)],
+          discardPile: [makeCard(600)],
+        },
+      });
+    });
 
     await t.mutation(api.actions.performAction, {
       roomId,
@@ -217,15 +221,30 @@ describe("actions: core flow branches", () => {
       action: { type: "START_NEW_ROUND" },
     });
 
-    await setGameState(t, roomId, (prev) => ({
-      ...prev,
-      gamePhase: "action_swap_2_select_1",
-      peekingState: undefined,
-      currentPlayerIndex: 0,
-      startingPlayerIndex: 0,
-      drawnCard: { id: 7000, value: 7, isSpecial: true, specialAction: "swap_2" },
-      drawSource: null,
-    }));
+    await t.run(async (ctx) => {
+      const game = await ctx.db
+        .query("games")
+        .withIndex("by_roomId", (q) => q.eq("roomId", roomId))
+        .first();
+      if (!game) throw new Error("missing game");
+      const prev = game.state as GameState;
+      await ctx.db.patch(game._id, {
+        state: {
+          ...prev,
+          gamePhase: "action_swap_2_select_1",
+          peekingState: undefined,
+          currentPlayerIndex: 0,
+          startingPlayerIndex: 0,
+          drawnCard: {
+            id: 7000,
+            value: 7,
+            isSpecial: true,
+            specialAction: "swap_2",
+          },
+          drawSource: null,
+        },
+      });
+    });
 
     // First selection (same player).
     await t.mutation(api.actions.performAction, {
@@ -264,17 +283,27 @@ describe("actions: core flow branches", () => {
       action: { type: "START_NEW_ROUND" },
     });
 
-    await setGameState(t, roomId, (prev) => ({
-      ...prev,
-      gamePhase: "action_take_2",
-      peekingState: undefined,
-      currentPlayerIndex: 0,
-      startingPlayerIndex: 0,
-      tempCards: [
-        { id: 8001, value: 1, isSpecial: false },
-        { id: 8002, value: 2, isSpecial: false },
-      ],
-    }));
+    await t.run(async (ctx) => {
+      const game = await ctx.db
+        .query("games")
+        .withIndex("by_roomId", (q) => q.eq("roomId", roomId))
+        .first();
+      if (!game) throw new Error("missing game");
+      const prev = game.state as GameState;
+      await ctx.db.patch(game._id, {
+        state: {
+          ...prev,
+          gamePhase: "action_take_2",
+          peekingState: undefined,
+          currentPlayerIndex: 0,
+          startingPlayerIndex: 0,
+          tempCards: [
+            { id: 8001, value: 1, isSpecial: false },
+            { id: 8002, value: 2, isSpecial: false },
+          ],
+        },
+      });
+    });
 
     await expect(
       t.mutation(api.actions.performAction, {
@@ -288,4 +317,3 @@ describe("actions: core flow branches", () => {
     ).rejects.toThrow("Invalid card choice");
   });
 });
-
