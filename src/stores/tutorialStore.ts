@@ -1,6 +1,7 @@
 import { createWithEqualityFn } from 'zustand/traditional';
 import { shallow } from 'zustand/shallow';
 import { StoreApi, UseBoundStore } from 'zustand';
+import { safeLocalStorage } from '@/lib/storage';
 
 export type TutorialStep =
   | 'inactive'
@@ -87,7 +88,7 @@ const useTutorialStoreBase = createWithEqualityFn<TutorialStore>()(
       set({ step: 'peeking' });
     },
     endTutorial: () => {
-      localStorage.setItem(TUTORIAL_FLAG, 'true');
+      safeLocalStorage.setItem(TUTORIAL_FLAG, 'true');
       set({ step: 'inactive' });
     },
     setStep: (step: TutorialStep) => set({ step }),

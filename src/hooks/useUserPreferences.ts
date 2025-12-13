@@ -3,6 +3,7 @@ import { useConvexAuth } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useCallback, useEffect, useRef } from "react";
 import { GameState } from "@/types";
+import { safeLocalStorage } from "@/lib/storage";
 
 export interface UserPreferences {
   displayName?: string;
@@ -53,10 +54,10 @@ export function useUserPreferences() {
       
       // If no remote preferences exist, sync from localStorage
       if (preferences === null) {
-        const localTheme = localStorage.getItem("theme");
-        const localLanguage = localStorage.getItem("i18nextLng");
-        const localName = localStorage.getItem("playerName");
-        const localSoundRaw = localStorage.getItem("soundEnabled");
+        const localTheme = safeLocalStorage.getItem("theme");
+        const localLanguage = safeLocalStorage.getItem("i18nextLng");
+        const localName = safeLocalStorage.getItem("playerName");
+        const localSoundRaw = safeLocalStorage.getItem("soundEnabled");
         const localSound = localSoundRaw === null ? undefined : localSoundRaw !== "false";
         
         if (localTheme || localLanguage || localName) {
@@ -76,25 +77,25 @@ export function useUserPreferences() {
     if (preferences) {
       // Sync theme
       if (preferences.theme) {
-        localStorage.setItem("theme", preferences.theme);
+        safeLocalStorage.setItem("theme", preferences.theme);
       }
       // Sync language
       if (preferences.language) {
-        localStorage.setItem("i18nextLng", preferences.language);
+        safeLocalStorage.setItem("i18nextLng", preferences.language);
       }
       // Sync display name
       if (preferences.displayName) {
-        localStorage.setItem("playerName", preferences.displayName);
+        safeLocalStorage.setItem("playerName", preferences.displayName);
       }
       if (preferences.soundEnabled !== undefined) {
-        localStorage.setItem("soundEnabled", String(preferences.soundEnabled));
+        safeLocalStorage.setItem("soundEnabled", String(preferences.soundEnabled));
       }
     }
   }, [preferences]);
 
   const setTheme = useCallback(
     async (theme: "light" | "dark") => {
-      localStorage.setItem("theme", theme);
+      safeLocalStorage.setItem("theme", theme);
       if (typeof window !== "undefined") {
         window.dispatchEvent(
           new CustomEvent("dreamcats-theme-changed", { detail: theme }),
@@ -113,7 +114,7 @@ export function useUserPreferences() {
 
   const setLanguage = useCallback(
     async (language: string) => {
-      localStorage.setItem("i18nextLng", language);
+      safeLocalStorage.setItem("i18nextLng", language);
       if (isAuthenticated) {
         try {
           await setLanguageMutation({ language });
@@ -127,7 +128,7 @@ export function useUserPreferences() {
 
   const setDisplayName = useCallback(
     async (name: string) => {
-      localStorage.setItem("playerName", name);
+      safeLocalStorage.setItem("playerName", name);
       if (isAuthenticated) {
         try {
           await setDisplayNameMutation({ name });
@@ -140,7 +141,7 @@ export function useUserPreferences() {
   );
 
   const setSoundEnabled = useCallback((enabled: boolean) => {
-    localStorage.setItem("soundEnabled", String(enabled));
+    safeLocalStorage.setItem("soundEnabled", String(enabled));
     if (isAuthenticated) {
       setSoundEnabledMutation({ enabled }).catch((error) =>
         console.error("Failed to save sound preference:", error),
@@ -150,7 +151,7 @@ export function useUserPreferences() {
 
   const setTutorialCompleted = useCallback(
     async (completed: boolean) => {
-      localStorage.setItem(TUTORIAL_COMPLETED_KEY, completed ? "true" : "false");
+      safeLocalStorage.setItem(TUTORIAL_COMPLETED_KEY, completed ? "true" : "false");
       if (isAuthenticated) {
         try {
           await setTutorialCompletedMutation({ completed });
@@ -166,7 +167,7 @@ export function useUserPreferences() {
   const saveActiveSession = useCallback(
     async (session: { roomId: string; playerId: string; gameMode: "online" | "hotseat" }) => {
       // Always save to localStorage for immediate access
-      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+      safeLocalStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
       
       if (isAuthenticated) {
         try {
@@ -185,7 +186,7 @@ export function useUserPreferences() {
 
   // Clear active game session
   const clearActiveSession = useCallback(async () => {
-    localStorage.removeItem(SESSION_STORAGE_KEY);
+    safeLocalStorage.removeItem(SESSION_STORAGE_KEY);
     
     if (isAuthenticated) {
       try {
@@ -200,7 +201,7 @@ export function useUserPreferences() {
   const saveLocalGameState = useCallback(
     async (gameState: GameState) => {
       // Always save to localStorage
-      localStorage.setItem("dreamcats-local-game", JSON.stringify(gameState));
+      safeLocalStorage.setItem("dreamcats-local-game", JSON.stringify(gameState));
       
       if (isAuthenticated) {
         try {
@@ -226,7 +227,7 @@ export function useUserPreferences() {
     }
     
     // Fall back to localStorage
-    const localSession = localStorage.getItem(SESSION_STORAGE_KEY);
+    const localSession = safeLocalStorage.getItem(SESSION_STORAGE_KEY);
     if (localSession) {
       try {
         return JSON.parse(localSession) as ActiveGameSession;
@@ -236,7 +237,7 @@ export function useUserPreferences() {
     }
     
     // Check for local game state
-    const localGame = localStorage.getItem("dreamcats-local-game");
+    const localGame = safeLocalStorage.getItem("dreamcats-local-game");
     if (localGame) {
       try {
         return {
@@ -252,13 +253,13 @@ export function useUserPreferences() {
   }, [preferences]);
 
   // Get current values (prefer remote if available, fallback to local)
-  const displayName = preferences?.displayName ?? localStorage.getItem("playerName") ?? "";
-  const theme = (preferences?.theme ?? localStorage.getItem("theme") ?? "light") as "light" | "dark";
-  const language = preferences?.language ?? localStorage.getItem("i18nextLng") ?? "en";
-  const soundEnabled = localStorage.getItem("soundEnabled") !== "false"; // default true
+  const displayName = preferences?.displayName ?? safeLocalStorage.getItem("playerName") ?? "";
+  const theme = (preferences?.theme ?? safeLocalStorage.getItem("theme") ?? "light") as "light" | "dark";
+  const language = preferences?.language ?? safeLocalStorage.getItem("i18nextLng") ?? "en";
+  const soundEnabled = safeLocalStorage.getItem("soundEnabled") !== "false"; // default true
   const tutorialCompleted =
     preferences?.tutorialCompleted ??
-    (localStorage.getItem(TUTORIAL_COMPLETED_KEY) === "true");
+    (safeLocalStorage.getItem(TUTORIAL_COMPLETED_KEY) === "true");
   const activeSession = getActiveSession();
 
   return {

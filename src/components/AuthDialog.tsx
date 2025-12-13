@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { ProfileStatsDialog } from "@/components/ProfileStatsDialog";
 import { api } from "../../convex/_generated/api";
+import { safeLocalStorage } from "@/lib/storage";
 
 // maps convex auth error messages to friendly translation keys
 function getAuthErrorKey(error: unknown): string {
@@ -307,9 +308,9 @@ export const AuthButton: React.FC = () => {
           setPopoverOpen(nextOpen);
           if (nextOpen) {
             setNameValue(displayName);
-            setSoundEnabledValue(localStorage.getItem("soundEnabled") !== "false");
+            setSoundEnabledValue(safeLocalStorage.getItem("soundEnabled") !== "false");
             setThemeValue(
-              (localStorage.getItem("theme") ?? "light") as "light" | "dark",
+              (safeLocalStorage.getItem("theme") ?? "light") as "light" | "dark",
             );
             setEditingName(false);
           }

@@ -8,6 +8,7 @@ import { RefreshCw, Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAppStore } from "@/state/store";
 import { Footer } from "./Footer";
+import { safeLocalStorage } from "@/lib/storage";
 
 interface LandingPageProps {
   onEnter: () => void;
@@ -23,7 +24,7 @@ const Crow = ({
   <svg
     viewBox="0 0 200 200"
     xmlns="http://www.w3.org/2000/svg"
-    className={className}
+    className={["pointer-events-none select-none", className].filter(Boolean).join(" ")}
     style={style}
     fill="currentColor"
   >
@@ -76,7 +77,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
   const handleRejoin = async () => {
     if (activeSession?.roomId && activeSession?.playerId) {
       try {
-        const storedName = localStorage.getItem("playerName") || "Player";
+        const storedName = safeLocalStorage.getItem("playerName") || "Player";
         await rejoinRoom(activeSession.roomId, activeSession.playerId, storedName);
         toast.success(t("common:success.rejoinedGame"));
         onEnter();
@@ -116,16 +117,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
     >
       {/* Background elements - theme-aware gradients */}
       <motion.div
-        className="absolute inset-0 bg-linear-to-br from-[hsl(var(--primary)/0.16)] via-[hsl(var(--accent)/0.08)] to-[hsl(var(--secondary)/0.2)]"
+        className="absolute inset-0 bg-linear-to-br from-[hsl(var(--primary)/0.16)] via-[hsl(var(--accent)/0.08)] to-[hsl(var(--secondary)/0.2)] pointer-events-none"
         animate={{ opacity: 1 }}
         transition={{ duration: 2 }}
       />
-      <motion.div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-linear-to-br from-[hsl(var(--primary)/0.3)] to-[hsl(var(--secondary)/0.35)] rounded-full blur-3xl animate-float" />
+      <motion.div className="absolute -bottom-1/4 -left-1/4 w-1/2 h-1/2 bg-linear-to-br from-[hsl(var(--primary)/0.3)] to-[hsl(var(--secondary)/0.35)] rounded-full blur-3xl animate-float pointer-events-none" />
       <motion.div
-        className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 bg-linear-to-br from-[hsl(var(--accent)/0.35)] to-[hsl(var(--primary)/0.25)] rounded-full blur-3xl animate-float"
+        className="absolute -top-1/4 -right-1/4 w-1/2 h-1/2 bg-linear-to-br from-[hsl(var(--accent)/0.35)] to-[hsl(var(--primary)/0.25)] rounded-full blur-3xl animate-float pointer-events-none"
         style={{ animationDelay: "-3s" }}
       />
-      <motion.div className="absolute top-1/3 left-10 w-32 h-32 rounded-full bg-[hsl(var(--secondary)/0.25)] blur-2xl opacity-70" />
+      <motion.div className="absolute top-1/3 left-10 w-32 h-32 rounded-full bg-[hsl(var(--secondary)/0.25)] blur-2xl opacity-70 pointer-events-none" />
 
       {/* Flying Crows - theme-aware for visibility */}
       <Crow

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight, X, Sparkles, Eye, RefreshCw, Zap, AlertTriangle, Trophy, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { safeLocalStorage } from '@/lib/storage';
 
 interface TutorialStepContent {
   icon: React.ReactNode;
@@ -177,7 +178,7 @@ export const Tutorial: React.FC = () => {
     // start a quick solo game so the tutorial can continue immediately.
     // Avoid auto-exiting an online room (users may be coordinating multiplayer).
     if (state.gamePhase === "lobby" && state.gameMode !== "online") {
-      const fallbackName = localStorage.getItem("playerName") || "Player";
+      const fallbackName = safeLocalStorage.getItem("playerName") || "Player";
       startSoloGame(fallbackName, { botCount: 1, difficulty: "normal" });
     }
   };
@@ -254,7 +255,7 @@ export const Tutorial: React.FC = () => {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button
                     onClick={() => {
-                      const fallbackName = localStorage.getItem("playerName") || "Player";
+                      const fallbackName = safeLocalStorage.getItem("playerName") || "Player";
                       startSoloGame(fallbackName, { botCount: 1, difficulty: "normal" });
                     }}
                     className="flex-1 bg-linear-to-r from-emerald-500 to-cyan-500 hover:opacity-90"

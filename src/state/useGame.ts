@@ -9,6 +9,7 @@ import { initialGameState } from "./initialGame";
 import i18n from "@/i18n/config";
 import { gameReducer } from "./gameReducer";
 import { createDeck, shuffleDeck } from "@/lib/game-logic";
+import { safeSessionStorage } from "@/lib/storage";
 import {
   getBotAction,
   isBotTurn,
@@ -98,9 +99,9 @@ export const useGame = () => {
 
   const persistSession = useCallback(
     (id: string, name: string, room: string) => {
-      sessionStorage.setItem("dreamcats-playerId", id);
-      sessionStorage.setItem("dreamcats-roomId", room);
-      sessionStorage.setItem("dreamcats-playerName", name);
+      safeSessionStorage.setItem("dreamcats-playerId", id);
+      safeSessionStorage.setItem("dreamcats-roomId", room);
+      safeSessionStorage.setItem("dreamcats-playerName", name);
     },
     [],
   );

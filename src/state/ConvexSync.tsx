@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAppStore } from "./store";
 import { GameState, ChatMessage } from "@/types";
+import { safeSessionStorage } from "@/lib/storage";
 
 export const ConvexSync: React.FC = () => {
   const roomId = useAppStore((s) => s.roomId);
@@ -38,9 +39,9 @@ export const ConvexSync: React.FC = () => {
   // Restore session from storage (lightweight reconnection)
   useEffect(() => {
     if (playerId) return;
-    const storedId = sessionStorage.getItem("dreamcats-playerId");
-    const storedRoom = sessionStorage.getItem("dreamcats-roomId");
-    const storedName = sessionStorage.getItem("dreamcats-playerName");
+    const storedId = safeSessionStorage.getItem("dreamcats-playerId");
+    const storedRoom = safeSessionStorage.getItem("dreamcats-roomId");
+    const storedName = safeSessionStorage.getItem("dreamcats-playerName");
     if (storedId && storedName) {
       setPlayer(storedId, storedName);
     }

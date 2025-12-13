@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useShallow } from "zustand/shallow";
 import { useUserPreferences } from "./useUserPreferences";
 import { useAppStore } from "@/state/store";
+import { safeSessionStorage } from "@/lib/storage";
 
 /**
  * Hook to automatically persist game sessions for rejoin capability
@@ -78,9 +79,9 @@ export function useSessionPersistence() {
   const clearSession = useCallback(() => {
     lastSavedRef.current = null;
     clearActiveSession();
-    sessionStorage.removeItem("dreamcats-playerId");
-    sessionStorage.removeItem("dreamcats-roomId");
-    sessionStorage.removeItem("dreamcats-playerName");
+    safeSessionStorage.removeItem("dreamcats-playerId");
+    safeSessionStorage.removeItem("dreamcats-roomId");
+    safeSessionStorage.removeItem("dreamcats-playerName");
   }, [clearActiveSession]);
 
   return { clearSession };

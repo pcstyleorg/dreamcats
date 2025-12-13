@@ -10,6 +10,7 @@ import { useUserPreferences } from './hooks/useUserPreferences';
 import { useSessionPersistence } from './hooks/useSessionPersistence';
 import './i18n/config';
 import { ConvexSync } from "@/state/ConvexSync";
+import { safeLocalStorage } from "@/lib/storage";
 
 const LandingPage = lazy(() =>
   import('./components/LandingPage').then((m) => ({ default: m.LandingPage })),
@@ -42,7 +43,7 @@ function App() {
     const handler = (event: Event) => {
       const nextTheme =
         (event as CustomEvent).detail ??
-        ((localStorage.getItem("theme") ?? "light") as "light" | "dark");
+        ((safeLocalStorage.getItem("theme") ?? "light") as "light" | "dark");
       setLocalTheme((prev) => (prev === nextTheme ? prev : nextTheme));
     };
     window.addEventListener("dreamcats-theme-changed", handler as EventListener);
