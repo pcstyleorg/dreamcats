@@ -10,6 +10,7 @@ export {
   type Card,
   type Player,
   type GameMode,
+  type BotDifficulty,
   type GamePhase,
   type ChatMessage,
   type GameState,

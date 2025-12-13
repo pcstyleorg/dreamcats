@@ -11,21 +11,26 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Users, Cloud, Copy, Check, Play, Share2 } from "lucide-react";
+import { ArrowLeft, Users, Cloud, Copy, Check, Play, Share2, Bot } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
+import { Footer } from "./Footer";
+import { BotDifficulty } from "@/types";
 
 export const LobbyScreen: React.FC = () => {
   const { t } = useTranslation();
-  const { createRoom, joinRoom, startHotseatGame, startGame, state, myPlayerId, playSound } = useGame();
+  const { createRoom, joinRoom, startHotseatGame, startSoloGame, startGame, state, myPlayerId, playSound } = useGame();
   const { displayName, setDisplayName } = useUserPreferences();
   // if already in a room, skip mode selection
-  const [mode, setMode] = useState<"select" | "online" | "hotseat">(() => {
+  const [mode, setMode] = useState<"select" | "online" | "hotseat" | "solo">(() => {
     if (state.gameMode === "online" && state.roomId) return "online";
     if (state.gameMode === "hotseat") return "hotseat";
+    if (state.gameMode === "solo") return "solo";
     return "select";
   });
+  const [soloPlayerName, setSoloPlayerName] = useState("");
+  const [soloDifficulty, setSoloDifficulty] = useState<BotDifficulty>("normal");
   const [roomIdInput, setRoomIdInput] = useState("");
   const [playerName, setPlayerName] = useState("");
   const [hotseatPlayers, setHotseatPlayers] = useState<string[]>(["", ""]);
@@ -38,6 +43,8 @@ export const LobbyScreen: React.FC = () => {
       setMode("online");
     } else if (state.gameMode === "hotseat" && mode === "select") {
       setMode("hotseat");
+    } else if (state.gameMode === "solo" && mode === "select") {
+      setMode("solo");
     }
   }, [state.gameMode, state.roomId, mode]);
 
@@ -46,7 +53,10 @@ export const LobbyScreen: React.FC = () => {
     if (displayName && !playerName) {
       setPlayerName(displayName);
     }
-  }, [displayName, playerName]);
+    if (displayName && !soloPlayerName) {
+      setSoloPlayerName(displayName);
+    }
+  }, [displayName, playerName, soloPlayerName]);
 
   // Auto-copy room ID when created
   useEffect(() => {
@@ -131,6 +141,16 @@ export const LobbyScreen: React.FC = () => {
     startHotseatGame(hotseatPlayers);
   };
 
+  const handleStartSolo = () => {
+    playSound('click');
+    if (!soloPlayerName.trim()) {
+      toast.error(t('common:errors.enterName'));
+      return;
+    }
+    setDisplayName(soloPlayerName.trim());
+    startSoloGame(soloPlayerName.trim(), { botCount: 1, difficulty: soloDifficulty });
+  };
+
   const handleAddHotseatPlayer = () => {
     if (hotseatPlayers.length < 5) {
       setHotseatPlayers([...hotseatPlayers, ""]);
@@ -199,6 +219,13 @@ export const LobbyScreen: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        <Button
+          onClick={() => { setMode("solo"); playSound('click'); }}
+          className="w-full h-16 text-lg font-semibold bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          size="lg"
+        >
+          <Bot className="mr-3 h-6 w-6" /> {t('lobby.soloVsBot')}
+        </Button>
         <Button
           onClick={() => { setMode("online"); playSound('click'); }}
           className="w-full h-16 text-lg font-semibold bg-linear-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] hover:from-[hsl(var(--primary))] hover:to-[hsl(var(--secondary))] shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
@@ -397,6 +424,91 @@ export const LobbyScreen: React.FC = () => {
     </motion.div>
   );
 
+  const renderSoloMode = () => (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+    >
+      <CardHeader className="relative space-y-2 pb-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-0 left-0 rounded-full hover:bg-muted"
+          onClick={() => { setMode("select"); playSound('click'); }}
+        >
+          <ArrowLeft className="h-5 w-5 text-muted-foreground" />
+        </Button>
+        <CardTitle className="text-3xl text-center font-heading text-foreground pt-4">
+          {t('lobby.solo.title')}
+        </CardTitle>
+        <CardDescription className="text-center text-muted-foreground">
+          {t('lobby.solo.subtitle')}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6 pt-6">
+        <div className="space-y-2">
+          <Label htmlFor="solo-name" className="text-foreground font-medium">
+            {t('lobby.solo.yourName')}
+          </Label>
+          <Input
+            id="solo-name"
+            placeholder={t('lobby.solo.namePlaceholder')}
+            value={soloPlayerName}
+            onChange={(e) => setSoloPlayerName(e.target.value)}
+            className="h-12 text-lg bg-muted border-border focus:border-primary focus:ring-primary"
+          />
+        </div>
+
+        <div className="bg-muted/50 p-4 rounded-lg border border-border">
+          <p className="text-sm text-muted-foreground">
+            {t('lobby.solo.description')}
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-foreground font-medium">
+            {t('lobby.solo.difficulty')}
+          </Label>
+          <div className="grid grid-cols-3 gap-2">
+            <Button
+              type="button"
+              variant={soloDifficulty === "easy" ? "default" : "outline"}
+              onClick={() => { setSoloDifficulty("easy"); playSound('click'); }}
+              className="h-11"
+            >
+              {t('lobby.solo.difficultyEasy')}
+            </Button>
+            <Button
+              type="button"
+              variant={soloDifficulty === "normal" ? "default" : "outline"}
+              onClick={() => { setSoloDifficulty("normal"); playSound('click'); }}
+              className="h-11"
+            >
+              {t('lobby.solo.difficultyNormal')}
+            </Button>
+            <Button
+              type="button"
+              variant={soloDifficulty === "hard" ? "default" : "outline"}
+              onClick={() => { setSoloDifficulty("hard"); playSound('click'); }}
+              className="h-11"
+            >
+              {t('lobby.solo.difficultyHard')}
+            </Button>
+          </div>
+        </div>
+
+        <Button
+          onClick={handleStartSolo}
+          className="w-full h-14 text-lg font-bold bg-linear-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+          size="lg"
+        >
+          <Play className="mr-2 h-5 w-5 fill-current" /> {t('lobby.solo.startGame')}
+        </Button>
+      </CardContent>
+    </motion.div>
+  );
+
   const renderHotseatMode = () => (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -471,19 +583,27 @@ export const LobbyScreen: React.FC = () => {
   );
 
   return (
-    <div 
-      className="min-h-dvh flex items-center justify-center p-4 sm:p-6 bg-linear-to-br from-[hsl(var(--background))] via-[hsl(var(--background))] to-[hsl(var(--accent)/0.2)] relative overflow-hidden"
+    <div
+      className="min-h-dvh flex flex-col bg-linear-to-br from-[hsl(var(--background))] via-[hsl(var(--background))] to-[hsl(var(--accent)/0.2)] relative overflow-hidden"
     >
       <div className="absolute -left-10 top-12 w-48 h-48 rounded-full bg-[hsl(var(--primary)/0.18)] blur-3xl" />
       <div className="absolute right-0 bottom-6 w-56 h-56 rounded-full bg-[hsl(var(--secondary)/0.22)] blur-3xl" />
-      <Card className="w-full max-w-md sm:max-w-lg bg-linear-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.08)] backdrop-blur-xl shadow-2xl border border-border/50 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-[hsl(var(--secondary))] via-[hsl(var(--primary))] to-[hsl(var(--accent))]" />
-        <AnimatePresence mode="wait">
-          {mode === "select" && renderSelectMode()}
-          {mode === "online" && renderOnlineMode()}
-          {mode === "hotseat" && renderHotseatMode()}
-        </AnimatePresence>
-      </Card>
+
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
+        <Card className="w-full max-w-md sm:max-w-lg bg-linear-to-br from-[hsl(var(--card))] via-[hsl(var(--card))] to-[hsl(var(--accent)/0.08)] backdrop-blur-xl shadow-2xl border border-border/50 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-[hsl(var(--secondary))] via-[hsl(var(--primary))] to-[hsl(var(--accent))]" />
+          <AnimatePresence mode="wait">
+            {mode === "select" && renderSelectMode()}
+            {mode === "online" && renderOnlineMode()}
+            {mode === "solo" && renderSoloMode()}
+            {mode === "hotseat" && renderHotseatMode()}
+          </AnimatePresence>
+        </Card>
+      </div>
+
+      <div className="relative z-20">
+        <Footer />
+      </div>
     </div>
   );
 };

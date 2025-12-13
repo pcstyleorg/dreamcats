@@ -85,6 +85,7 @@
     "joinedRoom": "Joined room {{room}}. Waiting for sync.",
     "rejoinedRoom": "Rejoined room {{room}}.",
     "hotseatStarted": "Hotseat game started!",
+    "soloStarted": "Solo game started!",
     "rejoinedGame": "Rejoined game!",
     "gameResumed": "Game resumed!",
     "playingAsGuest": "Playing as guest.",

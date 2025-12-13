@@ -12,7 +12,9 @@ export interface Player {
   score: number;
 }
 
-export type GameMode = "lobby" | "online" | "hotseat";
+export type GameMode = "lobby" | "online" | "hotseat" | "solo";
+
+export type BotDifficulty = "easy" | "normal" | "hard";
 
 export type GamePhase =
   | "lobby"
@@ -38,6 +40,7 @@ export interface GameState {
   gameMode: GameMode;
   roomId: string | null;
   hostId: string | null;
+  botDifficulty?: BotDifficulty;
   drawPile: Card[];
   discardPile: Card[];
   players: Player[];

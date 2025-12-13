@@ -30,6 +30,16 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   const { gamePhase, gameMode, lastMove, peekingState, drawnCard, drawSource } = state;
   const containerRef = useRef<HTMLDivElement>(null);
   const currentPlayer = state.players[state.currentPlayerIndex];
+  const activePlayerId =
+    gamePhase === "peeking" && peekingState !== undefined
+      ? state.players[peekingState.playerIndex]?.id
+      : currentPlayer?.id;
+  const canActNow =
+    gameMode === "hotseat"
+      ? true
+      : gameMode === "online" || gameMode === "solo"
+        ? activePlayerId === myPlayerId
+        : false;
   const isMyTurn =
     gameMode === "online"
       ? currentPlayer?.id === myPlayerId
@@ -217,8 +227,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     // or if it's the peeking phase and this is the active peeker's hand
     // or if it's holding_card phase and this is the current player's hand
     const isSpecialActionAllowingOpponentTarget = 
-      (gamePhase === "action_peek_1" && isMyTurn) || 
-      ((gamePhase === "action_swap_2_select_1" || gamePhase === "action_swap_2_select_2") && isMyTurn);
+      (gamePhase === "action_peek_1" && canActNow) || 
+      ((gamePhase === "action_swap_2_select_1" || gamePhase === "action_swap_2_select_2") && canActNow);
     
     const isPeekingOwnCards = gamePhase === "peeking" && isPeekingTurn;
     const isSwappingOwnCards = gamePhase === "holding_card" && isCurrentPlayer;
@@ -249,7 +259,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     }
 
     // 'Peek 1' special action (can target any hand while it's my turn)
-    if (gamePhase === "action_peek_1" && isMyTurn) {
+    if (gamePhase === "action_peek_1" && canActNow) {
       broadcastAction({
         type: "ACTION_PEEK_1_SELECT",
         payload: { playerId: player.id, cardIndex },
@@ -277,7 +287,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     if (
       (gamePhase === "action_swap_2_select_1" ||
         gamePhase === "action_swap_2_select_2") &&
-      isMyTurn
+      canActNow
     ) {
       broadcastAction({
         type: "ACTION_SWAP_2_SELECT",
@@ -306,14 +316,14 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       return "cursor-pointer";
     }
 
-    if (gamePhase === "action_peek_1" && isMyTurn) {
+    if (gamePhase === "action_peek_1" && canActNow) {
       return "cursor-pointer";
     }
 
     if (
       (gamePhase === "action_swap_2_select_1" ||
         gamePhase === "action_swap_2_select_2") &&
-      isMyTurn
+      canActNow
     ) {
       return "cursor-pointer";
     }
@@ -408,7 +418,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
               typeof recentMoveForPlayer.cardIndex === "number" &&
               recentMoveForPlayer.cardIndex === index;
             const shouldPulseCard =
-              isMyTurn && isSpecialSelectionPhase && !cardInHand.isFaceUp;
+              canActNow && isSpecialSelectionPhase && !cardInHand.isFaceUp;
             const isSwapCandidate = isSwapTarget;
 
             return (

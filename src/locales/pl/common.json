@@ -85,6 +85,7 @@
     "joinedRoom": "Dołączono do pokoju {{room}}. Oczekiwanie na synchronizację.",
     "rejoinedRoom": "Ponownie dołączono do pokoju {{room}}.",
     "hotseatStarted": "Gra lokalna rozpoczęta!",
+    "soloStarted": "Gra solo rozpoczęta!",
     "rejoinedGame": "Ponownie dołączono do gry!",
     "gameResumed": "Gra wznowiona!",
     "playingAsGuest": "Grasz jako gość.",
