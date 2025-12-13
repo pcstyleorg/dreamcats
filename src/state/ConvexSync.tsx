@@ -38,9 +38,9 @@ export const ConvexSync: React.FC = () => {
   // Restore session from storage (lightweight reconnection)
   useEffect(() => {
     if (playerId) return;
-    const storedId = sessionStorage.getItem("sen-playerId");
-    const storedRoom = sessionStorage.getItem("sen-roomId");
-    const storedName = sessionStorage.getItem("sen-playerName");
+    const storedId = sessionStorage.getItem("dreamcats-playerId");
+    const storedRoom = sessionStorage.getItem("dreamcats-roomId");
+    const storedName = sessionStorage.getItem("dreamcats-playerName");
     if (storedId && storedName) {
       setPlayer(storedId, storedName);
     }

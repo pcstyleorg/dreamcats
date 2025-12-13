@@ -18,6 +18,7 @@ import type * as games from "../games.js";
 import type * as http from "../http.js";
 import type * as presence from "../presence.js";
 import type * as rooms from "../rooms.js";
+import type * as stats from "../stats.js";
 import type * as types from "../types.js";
 import type * as userPreferences from "../userPreferences.js";
 
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   presence: typeof presence;
   rooms: typeof rooms;
+  stats: typeof stats;
   types: typeof types;
   userPreferences: typeof userPreferences;
 }>;

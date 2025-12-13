@@ -1,4 +1,4 @@
-const LOCAL_FLAG_KEY = "sen_use_new_state";
+const LOCAL_FLAG_KEY = "dreamcats_use_new_state";
 
 export const isNewStateEnabled = (): boolean => {
   if (typeof window === "undefined") return false;

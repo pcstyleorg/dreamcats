@@ -53,7 +53,7 @@ const useAppStoreBase = createWithEqualityFn<AppState>()(
           ...createNetSlice(set, get, api),
         }),
         {
-          name: "sen-app-store",
+          name: "dreamcats-app-store",
           partialize: (state) => persistKeys(state) as unknown as AppState,
           version: 1,
           /**
@@ -87,7 +87,7 @@ const useAppStoreBase = createWithEqualityFn<AppState>()(
         },
       ),
     ),
-    { name: "sen-app" },
+    { name: "dreamcats-app" },
   ),
   shallow, // Default equality function for all selectors
 );

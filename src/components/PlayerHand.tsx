@@ -30,6 +30,16 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   const { gamePhase, gameMode, lastMove, peekingState, drawnCard, drawSource } = state;
   const containerRef = useRef<HTMLDivElement>(null);
   const currentPlayer = state.players[state.currentPlayerIndex];
+  const activePlayerId =
+    gamePhase === "peeking" && peekingState !== undefined
+      ? state.players[peekingState.playerIndex]?.id
+      : currentPlayer?.id;
+  const canActNow =
+    gameMode === "hotseat"
+      ? true
+      : gameMode === "online" || gameMode === "solo"
+        ? activePlayerId === myPlayerId
+        : false;
   const isMyTurn =
     gameMode === "online"
       ? currentPlayer?.id === myPlayerId
@@ -39,6 +49,9 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     gamePhase === "action_swap_2_select_2";
   const isPeekPhase = gamePhase === "action_peek_1";
   const isTake2Phase = gamePhase === "action_take_2";
+  // special selection phases that allow targeting ANY card (including opponent cards)
+  const isOpponentTargetablePhase = isSwap2Phase || isPeekPhase;
+  // all special selection phases (take_2 only allows selecting from drawn cards, not opponent cards)
   const isSpecialSelectionPhase = isSwap2Phase || isPeekPhase || isTake2Phase;
 
   const [animatingIndex, setAnimatingIndex] = React.useState<number | null>(
@@ -131,6 +144,10 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   }, { scope: containerRef, dependencies: [isMyTurn, isSpecialSelectionPhase] });
 
   // Enhanced pulse effect for individual cards with better visual feedback
+  // Pulses cards that are valid targets during special action phases
+  const shouldPulseHand =
+    canActNow && isOpponentTargetablePhase;
+
   useGSAP(() => {
     if (!containerRef.current) return;
 
@@ -138,7 +155,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     const cards = containerRef.current.querySelectorAll(".hand-card");
     cards.forEach(card => gsap.killTweensOf(card));
 
-    if (isMyTurn && isSpecialSelectionPhase) {
+    if (shouldPulseHand) {
        // Enhanced animation with more visible effects
        const pulsingCards = containerRef.current.querySelectorAll(".pulsing-card");
        if (pulsingCards.length > 0) {
@@ -167,7 +184,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
         allCards.forEach(card => gsap.killTweensOf(card));
       }
     };
-  }, { scope: containerRef, dependencies: [isMyTurn, isSpecialSelectionPhase, player.hand.length] });
+  }, { scope: containerRef, dependencies: [shouldPulseHand, player.hand.length] });
 
 
   const actionLabel = React.useMemo(() => {
@@ -216,15 +233,18 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     // Only allow if it's a special action that explicitly targets opponents
     // or if it's the peeking phase and this is the active peeker's hand
     // or if it's holding_card phase and this is the current player's hand
-    const isSpecialActionAllowingOpponentTarget = 
-      (gamePhase === "action_peek_1" && isMyTurn) || 
-      ((gamePhase === "action_swap_2_select_1" || gamePhase === "action_swap_2_select_2") && isMyTurn);
-    
+    const isSpecialActionAllowingOpponentTarget =
+      isOpponentTargetablePhase && canActNow;
+
     const isPeekingOwnCards = gamePhase === "peeking" && isPeekingTurn;
     const isSwappingOwnCards = gamePhase === "holding_card" && isCurrentPlayer;
-    
+
     if (isOpponent && !isSpecialActionAllowingOpponentTarget && !isPeekingOwnCards && !isSwappingOwnCards) {
-      return; // Silently ignore clicks on opponent cards when not allowed
+      // show feedback for blocked clicks during special phases where user might expect to click
+      if (isOpponentTargetablePhase && !canActNow) {
+        toast.info(t('game.waitYourTurn'));
+      }
+      return;
     }
 
     // Peeking phase (only the peeking player)
@@ -249,7 +269,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     }
 
     // 'Peek 1' special action (can target any hand while it's my turn)
-    if (gamePhase === "action_peek_1" && isMyTurn) {
+    if (gamePhase === "action_peek_1" && canActNow) {
       broadcastAction({
         type: "ACTION_PEEK_1_SELECT",
         payload: { playerId: player.id, cardIndex },
@@ -277,7 +297,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     if (
       (gamePhase === "action_swap_2_select_1" ||
         gamePhase === "action_swap_2_select_2") &&
-      isMyTurn
+      canActNow
     ) {
       broadcastAction({
         type: "ACTION_SWAP_2_SELECT",
@@ -306,15 +326,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       return "cursor-pointer";
     }
 
-    if (gamePhase === "action_peek_1" && isMyTurn) {
-      return "cursor-pointer";
-    }
-
-    if (
-      (gamePhase === "action_swap_2_select_1" ||
-        gamePhase === "action_swap_2_select_2") &&
-      isMyTurn
-    ) {
+    // For opponent-targetable phases (peek_1, swap_2), allow interaction when it's player's turn
+    if (isOpponentTargetablePhase && canActNow) {
       return "cursor-pointer";
     }
 
@@ -407,8 +420,11 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
               recentMoveForPlayer &&
               typeof recentMoveForPlayer.cardIndex === "number" &&
               recentMoveForPlayer.cardIndex === index;
+            // pulse cards that are valid targets during opponent-targetable phases
+            // also pulse during initial peeking for the active peeker's cards
             const shouldPulseCard =
-              isMyTurn && isSpecialSelectionPhase && !cardInHand.isFaceUp;
+              (canActNow && isOpponentTargetablePhase && !cardInHand.isFaceUp) ||
+              (isPeekingTurn && !cardInHand.isFaceUp && state.peekingState && state.peekingState.peekedCount < 2);
             const isSwapCandidate = isSwapTarget;
 
             return (

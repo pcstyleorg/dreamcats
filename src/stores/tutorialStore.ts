@@ -26,7 +26,7 @@ export interface TutorialStore {
   skipToGameplay: () => void;
 }
 
-const TUTORIAL_FLAG = 'sen_tutorial_completed';
+const TUTORIAL_FLAG = 'dreamcats_tutorial_completed';
 
 const stepOrder: TutorialStep[] = [
   'inactive',

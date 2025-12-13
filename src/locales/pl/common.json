@@ -23,7 +23,21 @@
     "signOut": "Wyloguj",
     "playingAsGuest": "Grasz jako gość",
     "upgradeAccount": "Załóż pełne konto",
-    "upgradeDescription": "Utwórz konto, aby zapisać postępy na różnych urządzeniach"
+    "upgradeDescription": "Utwórz konto, aby zapisać postępy na różnych urządzeniach",
+    "viewStats": "Zobacz statystyki",
+    "statsTitle": "Twoje statystyki",
+    "statsRequiresSignIn": "Zaloguj się, aby zobaczyć historię i statystyki.",
+    "loadingStats": "Ładowanie statystyk...",
+    "gamesPlayed": "Rozegrane gry",
+    "gamesWon": "Wygrane gry",
+    "winRate": "Procent wygranych",
+    "avgScore": "Średni wynik",
+    "bestScore": "Najlepszy (najniższy) wynik",
+    "recentMatches": "Ostatnie gry",
+    "noMatchesYet": "Brak zapisanych gier.",
+    "matchRow": "Miejsce {{place}}/{{total}} · Wynik {{score}}",
+    "matchMeta": "Pokój {{roomId}} · {{mode}} · Wygrał(a): {{winner}}",
+    "close": "Zamknij"
   },
   "preferences": {
     "title": "Preferencje",
@@ -55,7 +69,13 @@
     "resumeFailed": "Nie udalo sie wznowic gry.",
     "guestFailed": "Nie udalo sie zalogowac jako gosc.",
     "enterEmailPassword": "Wpisz email i haslo.",
-    "signOutFailed": "Nie udalo sie wylogowac."
+    "signOutFailed": "Nie udalo sie wylogowac.",
+    "authEmailInUse": "Email jest już w użyciu — spróbuj się zalogować",
+    "authWrongPassword": "Nieprawidłowe hasło",
+    "authNoAccount": "Nie znaleziono konta — spróbuj się zarejestrować",
+    "authRateLimited": "Zbyt wiele prób — poczekaj chwilę",
+    "authInvalidEmail": "Nieprawidłowy adres email",
+    "authFailed": "Logowanie nie powiodło się. Spróbuj ponownie."
   },
   "success": {
     "roomIdCopied": "Kod pokoju skopiowany do schowka!",
@@ -65,6 +85,7 @@
     "joinedRoom": "Dołączono do pokoju {{room}}. Oczekiwanie na synchronizację.",
     "rejoinedRoom": "Ponownie dołączono do pokoju {{room}}.",
     "hotseatStarted": "Gra lokalna rozpoczęta!",
+    "soloStarted": "Gra solo rozpoczęta!",
     "rejoinedGame": "Ponownie dołączono do gry!",
     "gameResumed": "Gra wznowiona!",
     "playingAsGuest": "Grasz jako gość.",

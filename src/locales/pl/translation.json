@@ -1,8 +1,100 @@
 {
+  "footer": {
+    "privacy": "Polityka prywatności",
+    "terms": "Regulamin",
+    "feedback": "Opinie",
+    "contact": "Kontakt"
+  },
+  "legal": {
+    "privacyTitle": "Polityka prywatności",
+    "privacyLastUpdated": "Ostatnia aktualizacja: grudzień 2024",
+    "termsTitle": "Regulamin",
+    "termsLastUpdated": "Ostatnia aktualizacja: grudzień 2024",
+    "privacy": {
+      "intro": {
+        "title": "Wprowadzenie",
+        "text": "Dreamcats (\"my\", \"nas\" lub \"nasz\") szanuje Twoją prywatność. Ta polityka wyjaśnia, jakie informacje zbieramy, jak ich używamy i jakie masz prawa dotyczące swoich danych."
+      },
+      "dataCollected": {
+        "title": "Zbierane informacje",
+        "text": "Zbieramy minimalne informacje potrzebne do działania i ulepszania gry:",
+        "item1": "Wyświetlana nazwa wybrana podczas gry",
+        "item2": "Statystyki gry (wygrane, przegrane, wyniki)",
+        "item3": "Podstawowe dane analityczne (odwiedzone strony, sesje gry)",
+        "item4": "Opcjonalny email przy tworzeniu konta"
+      },
+      "cookies": {
+        "title": "Pliki cookie i pamięć lokalna",
+        "text": "Używamy lokalnej pamięci przeglądarki do zapisywania preferencji (motyw, język) i informacji o sesji. Te dane pozostają na Twoim urządzeniu i nie są przesyłane na nasze serwery."
+      },
+      "analytics": {
+        "title": "Analityka",
+        "text": "Używamy Vercel Analytics, aby zrozumieć, jak gracze korzystają z Dreamcats. Zbiera to zanonimizowane dane użytkowania i nie śledzi użytkowników między stronami."
+      },
+      "thirdParty": {
+        "title": "Usługi zewnętrzne",
+        "text": "Używamy Convex do funkcji gry w czasie rzeczywistym. Twoje dane gry (udział w pokojach, ruchy, wiadomości czatu) są przetwarzane przez ich serwery. Zobacz politykę prywatności Convex po szczegóły."
+      },
+      "security": {
+        "title": "Bezpieczeństwo danych",
+        "text": "Wdrażamy rozsądne środki bezpieczeństwa w celu ochrony Twoich informacji. Jednak żadna transmisja internetowa nie jest w 100% bezpieczna."
+      },
+      "rights": {
+        "title": "Twoje prawa",
+        "text": "Możesz poprosić o usunięcie konta i powiązanych danych w dowolnym momencie, kontaktując się z nami. Możesz też wyczyścić pamięć lokalną w ustawieniach przeglądarki."
+      },
+      "contact": {
+        "title": "Kontakt",
+        "text": "W sprawach dotyczących prywatności lub danych napisz do nas na"
+      }
+    },
+    "terms": {
+      "acceptance": {
+        "title": "Akceptacja warunków",
+        "text": "Korzystając z Dreamcats, akceptujesz niniejszy Regulamin. Jeśli nie zgadzasz się z którąkolwiek częścią, proszę nie korzystaj z gry."
+      },
+      "description": {
+        "title": "Opis usługi",
+        "text": "Dreamcats to darmowa wieloosobowa gra karciana. Udostępniamy grę \"tak jak jest\" i możemy modyfikować, zawieszać lub wycofywać funkcje w dowolnym momencie."
+      },
+      "accounts": {
+        "title": "Konta",
+        "text": "Możesz grać jako gość lub utworzyć konto. Jesteś odpowiedzialny za bezpieczeństwo swojego konta i wszelką aktywność na nim."
+      },
+      "conduct": {
+        "title": "Zasady zachowania",
+        "text": "Korzystając z Dreamcats, zgadzasz się nie:",
+        "item1": "Nękać, obrażać ani krzywdzić innych graczy",
+        "item2": "Używać obraźliwych lub nieodpowiednich nazw",
+        "item3": "Próbować oszukiwać lub wykorzystywać błędy",
+        "item4": "Zakłócać działania gry lub serwerów"
+      },
+      "ip": {
+        "title": "Własność intelektualna",
+        "text": "Dreamcats i jego zawartość (grafika, kod, design) należą do nas. Nie możesz kopiować, modyfikować ani rozpowszechniać naszej zawartości bez pozwolenia."
+      },
+      "disclaimer": {
+        "title": "Wyłączenie odpowiedzialności",
+        "text": "Dreamcats jest dostarczany \"tak jak jest\" bez żadnych gwarancji. Nie gwarantujemy, że gra będzie dostępna, wolna od błędów lub spełni Twoje oczekiwania."
+      },
+      "liability": {
+        "title": "Ograniczenie odpowiedzialności",
+        "text": "Nie ponosimy odpowiedzialności za szkody wynikające z korzystania z Dreamcats, w tym utracone dane, przerwane rozgrywki lub interakcje z innymi graczami."
+      },
+      "changes": {
+        "title": "Zmiany regulaminu",
+        "text": "Możemy aktualizować ten regulamin w dowolnym momencie. Dalsze korzystanie po zmianach oznacza akceptację nowych warunków."
+      },
+      "contact": {
+        "title": "Kontakt",
+        "text": "W sprawie pytań o regulamin skontaktuj się z nami pod"
+      }
+    }
+  },
   "landing": {
     "title": "Dreamcats",
     "subtitle": "Marzycielska gra karciana o zbieraniu snów i unikaniu koszmarów.",
-    "enterButton": "Wejdź w Sen",
+    "enterButton": "Wejdź do Marzenia",
     "rejoinGame": "Wroc do Gry",
     "startFresh": "Zacznij od Nowa",
     "enterLobby": "Wejdz do Lobby"
@@ -10,8 +102,21 @@
   "lobby": {
     "title": "Dreamcats",
     "subtitle": "Marzycielska gra karciana o zbieraniu snów i unikaniu koszmarów.",
+    "soloVsBot": "Solo vs AI",
     "onlineMultiplayer": "Gra online",
     "localHotseat": "Gra lokalna",
+    "solo": {
+      "title": "Solo vs AI",
+      "subtitle": "Zagraj przeciwko botom",
+      "yourName": "Twoje imie",
+      "namePlaceholder": "Wpisz swoje imie",
+      "description": "Cwicz i ucz sie gry w swoim tempie. Boty wykonuja ruchy automatycznie.",
+      "difficulty": "Poziom trudnosci",
+      "difficultyEasy": "Latwy",
+      "difficultyNormal": "Normalny",
+      "difficultyHard": "Trudny",
+      "startGame": "Rozpocznij gre"
+    },
     "online": {
       "title": "Gra online",
       "subtitle": "Dolacz lub stworz gre dla 2 graczy",
@@ -98,13 +203,19 @@
     "usedSwap2SelectFirst": "{{player}} uzyl karty Zamien 2. Wybierz pierwsza karte.",
     "peekedAtCard": "{{player}} podejrzal karte.",
     "selectSecondCard": "Wybierz druga karte do zamiany.",
+    "peek1Instruction": "Dotknij dowolna karte",
+    "peek1Hint": "Mozesz podejrzec karte dowolnego gracza, rowniez swoja",
+    "swap2SelectFirst": "Dotknij pierwsza karte do zamiany",
+    "swap2SelectSecond": "Teraz dotknij druga karte",
+    "swap2Hint": "Wybierz dwie karty, ktore zamienia sie miejscami",
     "swappedTwoCards": "{{player}} zamienil dwie karty.",
     "choseCardFromTake2": "{{player}} wybral karte z akcji Wez 2.",
     "deckRanOut": "Stos Zakryty sie skonczyl. {{player}} wygrywa runde.",
     "calledPobudka": "{{player}} zawolal POBUDKA! {{winner}} wygrywa runde.",
     "gameOver": "Koniec gry! {{player}} wygrywa z najnizszym wynikiem!",
     "roomCreated": "Pokoj utworzony! Kod: {{roomId}}. Oczekiwanie na przeciwnika...",
-    "joinedRoom": "Dolaczono do pokoju {{roomId}}. Oczekiwanie na gospodarza..."
+    "joinedRoom": "Dolaczono do pokoju {{roomId}}. Oczekiwanie na gospodarza...",
+    "waitYourTurn": "Poczekaj na swoja kolej"
   },
   "actions": {
     "drewFromDeck": "{{player}} dobral ze Stosu Zakrytego",
@@ -138,42 +249,42 @@
   },
   "tutorial": {
     "welcomeTitle": "Witaj w Dreamcats!",
-    "welcomeDescription": "Wyglada na to, ze to twoja pierwsza wizyta. Chcesz przejsc krotki samouczek, zeby poznac podstawy gry?",
-    "noThanks": "Nie, dziekuje",
-    "yesPlease": "Tak, prosze!",
+    "welcomeDescription": "Pierwszy raz? Pokażę ci jak grać w mniej niż minutę.",
+    "noThanks": "Nie, dzięki",
+    "yesPlease": "Pokaż!",
     "next": "Dalej",
     "back": "Wstecz",
     "finish": "Rozumiem!",
     "stepProgress": "Krok {{current}} z {{total}}",
-    "goalTitle": "Cel gry",
-    "goalDescription": "Twoj cel jest prosty: miec najnizszy wynik (najmniej kotow) na koniec kazdej rundy. Gra konczy sie, gdy ktos osiagnie 100 punktow - wygrywa gracz z najnizsza suma!",
-    "goalTip": "Karty maja wartosci od 0 (najlepsza!) do 9 (najgorsza). Dziewiatek jest szczegolnie duzo, wiec uwazaj!",
-    "handTitle": "Twoj Sen",
-    "handDescription": "Te 4 zakryte karty to twoj Sen. Nie mozesz na nie swobodnie patrzec podczas gry, wiec pamiec jest kluczowa! Kazda karta ma wartosc - zalezy ci na niskich liczbach.",
-    "handTip": "Staraj sie zapamietac, ktore karty sa gdzie. Dobra pamiec daje ogromna przewage!",
-    "firstPeekTitle": "Pierwsze podejrzenie",
-    "firstPeekDescription": "Na poczatku kazdej rundy mozesz podejrzec dokladnie 2 ze swoich 4 kart. Wybierz madrze i zapamietaj ich pozycje! Kliknij dowolne dwie karty, aby je zobaczyc.",
-    "firstPeekTip": "Po podejrzeniu kliknij Zakoncz podgladanie, aby rozpoczac runde.",
+    "goalTitle": "Jak wygrać",
+    "goalDescription": "Miej najniższą sumę gdy runda się skończy. Karty są warte 0-9 punktów. Kto pierwszy dobije do 100 - przegrywa, więc trzymaj wynik nisko!",
+    "goalTip": "0 to najlepiej, 9 to najgorzej. W talii jest dużo dziewiątek.",
+    "handTitle": "Twoje 4 karty",
+    "handDescription": "Masz 4 zakryte karty. Nie możesz ich swobodnie oglądać, więc musisz zapamiętać co widziałeś!",
+    "handTip": "Pamięć to twoja największa przewaga w tej grze.",
+    "firstPeekTitle": "Faza podglądania",
+    "firstPeekDescription": "Przed rundą dotknij dowolne 2 karty żeby je podejrzeć. Zapamiętaj ich wartości i pozycje!",
+    "firstPeekTip": "Kliknij 'Zakończ podglądanie' gdy jesteś gotowy.",
     "deckTitle": "Stos Zakryty",
-    "deckDescription": "To jest Stos Zakryty. Dobierz stad zakryta karte, zeby zobaczyc, co przyniesie los. Mozesz ja potem zamienic z jedna ze swoich kart, odrzucic lub uzyc jej specjalnej mocy!",
-    "deckTip": "Dobieranie ze Stosu Zakrytego daje wiecej opcji - mozesz odrzucic, jesli ci nie pasuje.",
+    "deckDescription": "Dotknij tu żeby dobrać tajemniczą kartę. Możesz ją potem zamienić z kartą w ręce, odrzucić, lub użyć jej mocy.",
+    "deckTip": "To elastyczna opcja - nie musisz zatrzymać tego co dobierzesz.",
     "discardTitle": "Stos Odkryty",
-    "discardDescription": "To jest Stos Odkryty. Widzisz gorna karte! Jesli ja wezmiesz, MUSISZ ja zamienic z jedna ze swoich kart - bez podgladania, bez odrzucania.",
-    "discardTip": "Branie ze Stosu Odkrytego jest bezpieczne, gdy widzisz niska liczbe, ale ryzykowne przy wysokich!",
-    "drawingTitle": "Przebieg tury",
-    "drawingDescription": "W swojej turze wybierz jeden stos, z ktorego dobierasz. Ze Stosu Zakrytego: mozesz zamienic, odrzucic lub uzyc mocy specjalnej. Ze Stosu Odkrytego: musisz zamienic z karta ze swojego Snu.",
-    "drawingTip": "Mysl strategicznie - czasem znana karta jest lepsza niz tajemnica!",
+    "discardDescription": "Tę kartę widzisz! Wzięcie jej jest pewne, ale MUSISZ ją zamienić z jedną ze swoich kart - bez odwrotu.",
+    "discardTip": "Świetne do łapania niskich kart. Unikaj brania wysokich!",
+    "drawingTitle": "Twoja tura",
+    "drawingDescription": "Każda tura: wybierz stos, potem zdecyduj co z kartą. Stos Zakryty = więcej opcji. Stos Odkryty = pewna zamiana.",
+    "drawingTip": "Znana niska karta jest często lepsza niż nieznana.",
     "specialCardsTitle": "Karty specjalne",
-    "specialCardsDescription": "Trzy magiczne karty maja specjalne moce, gdy dobierzesz je ze Stosu Zakrytego: Wez 2 (dobierz 2, zatrzymaj 1), Podejrzyj 1 (obejrzyj dowolna karte), Zamien 2 (zamien dowolne dwie karty na slepo).",
-    "specialCardsTip": "Karty specjalne maja wartosci 5-7, wiec uwazaj - uzycie mocy oznacza odrzucenie karty!",
-    "pobudkaTitle": "Zawolaj POBUDKA!",
-    "pobudkaDescription": "Kiedy uwazasz, ze masz najnizszy wynik, nacisnij POBUDKA! na poczatku swojej tury zamiast dobierac. To natychmiast konczy runde!",
-    "pobudkaTip": "Uwaga: Jesli sie mylisz i nie masz najnizszego wyniku, dostajesz +5 punktow karnych!",
+    "specialCardsDescription": "Trzy karty mają moce gdy dobierzesz je ze stosu: Weź 2 (wybierz lepszą z 2 kart), Podejrzyj 1 (obejrzyj dowolną kartę), Zamień 2 (wymień 2 karty na ślepo).",
+    "specialCardsTip": "Użycie mocy odrzuca kartę. Zachowane są warte 5-7 punktów.",
+    "pobudkaTitle": "Kończenie rundy",
+    "pobudkaDescription": "Myślisz że masz najniższy wynik? Zawołaj POBUDKA! na początku swojej tury żeby natychmiast zakończyć rundę.",
+    "pobudkaTip": "Jeśli się mylisz, dostajesz +5 punktów karnych. Bądź pewny!",
     "scoringTitle": "Punktacja",
-    "scoringDescription": "Na koniec rundy wszystkie karty sa odkrywane. Kazdy liczy sume swoich 4 kart. Jesli wolajacy POBUDKA nie ma scisle najnizszego wyniku, dostaje +5 punktow karnych!",
-    "scoringTip": "Gra konczy sie, gdy ktos osiagnie 100 punktow. Wygrywa najnizsza suma!",
-    "readyTitle": "Gotowe!",
-    "readyDescription": "To wszystko, co musisz wiedziec! Pamietaj: niskie karty sa dobre, pamiec to potega, a POBUDKA wolaj, gdy jestes pewien. Niech twoje sny beda wolne od kotow!",
+    "scoringDescription": "Gdy runda się kończy, wszystkie karty się odkrywają. Zsumuj swoje 4 karty. Najniższy wynik wygrywa rundę!",
+    "scoringTip": "Gra kończy się gdy ktoś dobije do 100. Trzymaj wynik nisko żeby wygrać!",
+    "readyTitle": "Jesteś gotowy!",
+    "readyDescription": "To wszystko! Niskie karty dobre, pamiętaj co podglądasz, wołaj POBUDKA gdy jesteś pewny. Powodzenia!",
     "letsPlay": "Zaczynamy!"
   },
   "cardInfo": {

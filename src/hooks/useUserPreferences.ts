@@ -18,7 +18,8 @@ export interface ActiveGameSession {
   localGameState?: GameState;
 }
 
-const SESSION_STORAGE_KEY = "sen-active-session";
+const SESSION_STORAGE_KEY = "dreamcats-active-session";
+const TUTORIAL_COMPLETED_KEY = "dreamcats_tutorial_completed";
 
 /**
  * Hook to manage user preferences synced with Convex
@@ -37,6 +38,7 @@ export function useUserPreferences() {
   const setLanguageMutation = useMutation(api.userPreferences.setLanguage);
   const setDisplayNameMutation = useMutation(api.userPreferences.setDisplayName);
   const setSoundEnabledMutation = useMutation(api.userPreferences.setSoundEnabled);
+  const setTutorialCompletedMutation = useMutation(api.userPreferences.setTutorialCompleted);
   const setActiveSessionMutation = useMutation(api.userPreferences.setActiveSession);
   const clearActiveSessionMutation = useMutation(api.userPreferences.clearActiveSession);
   const saveLocalGameStateMutation = useMutation(api.userPreferences.saveLocalGameState);
@@ -95,7 +97,7 @@ export function useUserPreferences() {
       localStorage.setItem("theme", theme);
       if (typeof window !== "undefined") {
         window.dispatchEvent(
-          new CustomEvent("sen-theme-changed", { detail: theme }),
+          new CustomEvent("dreamcats-theme-changed", { detail: theme }),
         );
       }
       if (isAuthenticated) {
@@ -146,6 +148,20 @@ export function useUserPreferences() {
     }
   }, [isAuthenticated, setSoundEnabledMutation]);
 
+  const setTutorialCompleted = useCallback(
+    async (completed: boolean) => {
+      localStorage.setItem(TUTORIAL_COMPLETED_KEY, completed ? "true" : "false");
+      if (isAuthenticated) {
+        try {
+          await setTutorialCompletedMutation({ completed });
+        } catch (error) {
+          console.error("Failed to save tutorial completion:", error);
+        }
+      }
+    },
+    [isAuthenticated, setTutorialCompletedMutation],
+  );
+
   // Save active game session (for rejoin after refresh)
   const saveActiveSession = useCallback(
     async (session: { roomId: string; playerId: string; gameMode: "online" | "hotseat" }) => {
@@ -184,7 +200,7 @@ export function useUserPreferences() {
   const saveLocalGameState = useCallback(
     async (gameState: GameState) => {
       // Always save to localStorage
-      localStorage.setItem("sen-local-game", JSON.stringify(gameState));
+      localStorage.setItem("dreamcats-local-game", JSON.stringify(gameState));
       
       if (isAuthenticated) {
         try {
@@ -220,7 +236,7 @@ export function useUserPreferences() {
     }
     
     // Check for local game state
-    const localGame = localStorage.getItem("sen-local-game");
+    const localGame = localStorage.getItem("dreamcats-local-game");
     if (localGame) {
       try {
         return {
@@ -240,6 +256,9 @@ export function useUserPreferences() {
   const theme = (preferences?.theme ?? localStorage.getItem("theme") ?? "light") as "light" | "dark";
   const language = preferences?.language ?? localStorage.getItem("i18nextLng") ?? "en";
   const soundEnabled = localStorage.getItem("soundEnabled") !== "false"; // default true
+  const tutorialCompleted =
+    preferences?.tutorialCompleted ??
+    (localStorage.getItem(TUTORIAL_COMPLETED_KEY) === "true");
   const activeSession = getActiveSession();
 
   return {
@@ -248,11 +267,13 @@ export function useUserPreferences() {
     theme,
     language,
     soundEnabled,
+    tutorialCompleted,
     activeSession,
     setTheme,
     setLanguage,
     setDisplayName,
     setSoundEnabled,
+    setTutorialCompleted,
     saveActiveSession,
     clearActiveSession,
     saveLocalGameState,

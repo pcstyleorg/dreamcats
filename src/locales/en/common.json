@@ -23,7 +23,21 @@
     "signOut": "Sign Out",
     "playingAsGuest": "Playing as Guest",
     "upgradeAccount": "Upgrade to Full Account",
-    "upgradeDescription": "Create an account to save your progress across devices"
+    "upgradeDescription": "Create an account to save your progress across devices",
+    "viewStats": "View Stats",
+    "statsTitle": "Your Stats",
+    "statsRequiresSignIn": "Sign in to see your match history and stats.",
+    "loadingStats": "Loading stats...",
+    "gamesPlayed": "Games Played",
+    "gamesWon": "Games Won",
+    "winRate": "Win Rate",
+    "avgScore": "Avg Total Score",
+    "bestScore": "Best (Lowest) Score",
+    "recentMatches": "Recent Matches",
+    "noMatchesYet": "No matches recorded yet.",
+    "matchRow": "Place {{place}}/{{total}} · Score {{score}}",
+    "matchMeta": "Room {{roomId}} · {{mode}} · Winner: {{winner}}",
+    "close": "Close"
   },
   "preferences": {
     "title": "Preferences",
@@ -55,7 +69,13 @@
     "resumeFailed": "Could not resume the game.",
     "guestFailed": "Failed to sign in anonymously.",
     "enterEmailPassword": "Please enter email and password.",
-    "signOutFailed": "Failed to sign out."
+    "signOutFailed": "Failed to sign out.",
+    "authEmailInUse": "Email already in use — try Sign In",
+    "authWrongPassword": "Wrong password",
+    "authNoAccount": "No account found — try Sign Up",
+    "authRateLimited": "Too many attempts — wait a bit",
+    "authInvalidEmail": "Invalid email address",
+    "authFailed": "Authentication failed. Please try again."
   },
   "success": {
     "roomIdCopied": "Room ID copied to clipboard!",
@@ -65,6 +85,7 @@
     "joinedRoom": "Joined room {{room}}. Waiting for sync.",
     "rejoinedRoom": "Rejoined room {{room}}.",
     "hotseatStarted": "Hotseat game started!",
+    "soloStarted": "Solo game started!",
     "rejoinedGame": "Rejoined game!",
     "gameResumed": "Game resumed!",
     "playingAsGuest": "Playing as guest.",

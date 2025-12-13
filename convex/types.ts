@@ -12,7 +12,9 @@ export interface Player {
   score: number;
 }
 
-export type GameMode = "lobby" | "online" | "hotseat";
+export type GameMode = "lobby" | "online" | "hotseat" | "solo";
+
+export type BotDifficulty = "easy" | "normal" | "hard";
 
 export type GamePhase =
   | "lobby"
@@ -38,6 +40,7 @@ export interface GameState {
   gameMode: GameMode;
   roomId: string | null;
   hostId: string | null;
+  botDifficulty?: BotDifficulty;
   drawPile: Card[];
   discardPile: Card[];
   players: Player[];
@@ -82,6 +85,27 @@ export interface GameState {
       card2: { playerId: string; cardIndex: number };
     };
   } | null;
+}
+
+export interface UserStats {
+  gamesPlayed: number;
+  gamesWon: number;
+  totalScore: number;
+  bestScore: number | null;
+  lastPlayedAt: number | null;
+}
+
+export interface MatchHistoryItem {
+  matchId: string;
+  roomId: string;
+  endedAt: number;
+  mode: string;
+  winnerName: string;
+  winningScore: number;
+  yourName: string;
+  yourScore: number;
+  yourPlace: number;
+  playerCount: number;
 }
 
 export type GameAction =

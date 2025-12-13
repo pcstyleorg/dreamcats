@@ -78,10 +78,9 @@ export function useSessionPersistence() {
   const clearSession = useCallback(() => {
     lastSavedRef.current = null;
     clearActiveSession();
-    // Also clear legacy sessionStorage
-    sessionStorage.removeItem("sen-playerId");
-    sessionStorage.removeItem("sen-roomId");
-    sessionStorage.removeItem("sen-playerName");
+    sessionStorage.removeItem("dreamcats-playerId");
+    sessionStorage.removeItem("dreamcats-roomId");
+    sessionStorage.removeItem("dreamcats-playerName");
   }, [clearActiveSession]);
 
   return { clearSession };

@@ -3,6 +3,22 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
 /**
+ * Get the current authenticated user with isAnonymous flag
+ */
+export const currentUser = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return null;
+    }
+
+    const user = await ctx.db.get(userId);
+    return user;
+  },
+});
+
+/**
  * Get the current user's preferences
  */
 export const get = query({
@@ -186,6 +202,35 @@ export const setSoundEnabled = mutation({
       await ctx.db.insert("userPreferences", {
         userId,
         soundEnabled: enabled,
+        updatedAt: Date.now(),
+      });
+    }
+  },
+});
+
+/**
+ * Mark tutorial as completed (hide welcome dialog on future visits)
+ */
+export const setTutorialCompleted = mutation({
+  args: { completed: v.boolean() },
+  handler: async (ctx, { completed }) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return;
+
+    const existing = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .unique();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        tutorialCompleted: completed,
+        updatedAt: Date.now(),
+      });
+    } else {
+      await ctx.db.insert("userPreferences", {
+        userId,
+        tutorialCompleted: completed,
         updatedAt: Date.now(),
       });
     }

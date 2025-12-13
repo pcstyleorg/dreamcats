@@ -7,6 +7,7 @@ import { useGame } from "@/state/useGame";
 import { RefreshCw, Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAppStore } from "@/state/store";
+import { Footer } from "./Footer";
 
 interface LandingPageProps {
   onEnter: () => void;
@@ -215,6 +216,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
 
         </motion.div>
       </motion.div>
+
+      <div className="absolute bottom-0 left-0 right-0 z-20">
+        <Footer />
+      </div>
     </div>
   );
 };

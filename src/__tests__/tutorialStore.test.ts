@@ -102,7 +102,7 @@ describe('tutorialStore', () => {
 
     it('saves completion flag to localStorage', () => {
       useTutorialStore.getState().endTutorial();
-      expect(localStorage.getItem('sen_tutorial_completed')).toBe('true');
+      expect(localStorage.getItem('dreamcats_tutorial_completed')).toBe('true');
     });
   });
 

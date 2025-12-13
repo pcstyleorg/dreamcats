@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Sen-web is a multiplayer card game (based on Polish "Sen" / "Rat-a-Tat Cat") built with React 19, TypeScript, Vite, and Convex for real-time backend. Players compete to build the lowest-scoring 4-card hand. Game supports both online multiplayer and local hotseat modes.
+Dreamcats is a multiplayer card game built with React 19, TypeScript, Vite, and Convex for real-time backend. Players compete to build the lowest-scoring 4-card hand. Game supports both online multiplayer and local hotseat modes.
 
 ## Development Commands
 

@@ -1,4 +1,96 @@
 {
+  "footer": {
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "feedback": "Feedback",
+    "contact": "Contact"
+  },
+  "legal": {
+    "privacyTitle": "Privacy Policy",
+    "privacyLastUpdated": "Last updated: December 2024",
+    "termsTitle": "Terms of Service",
+    "termsLastUpdated": "Last updated: December 2024",
+    "privacy": {
+      "intro": {
+        "title": "Introduction",
+        "text": "Dreamcats (\"we\", \"our\", or \"us\") respects your privacy. This policy explains what information we collect, how we use it, and your rights regarding your data."
+      },
+      "dataCollected": {
+        "title": "Information We Collect",
+        "text": "We collect minimal information to provide and improve the game:",
+        "item1": "Display name you choose when playing",
+        "item2": "Game statistics (wins, losses, scores)",
+        "item3": "Basic usage analytics (pages visited, game sessions)",
+        "item4": "Optional email if you create an account"
+      },
+      "cookies": {
+        "title": "Cookies and Local Storage",
+        "text": "We use browser local storage to save your preferences (theme, language) and session information. This data stays on your device and is not transmitted to our servers."
+      },
+      "analytics": {
+        "title": "Analytics",
+        "text": "We use Vercel Analytics to understand how players use Dreamcats. This collects anonymized usage data and does not track individual users across websites."
+      },
+      "thirdParty": {
+        "title": "Third-Party Services",
+        "text": "We use Convex for real-time game functionality. Your game data (room participation, moves, chat messages) is processed through their servers. See Convex's privacy policy for details."
+      },
+      "security": {
+        "title": "Data Security",
+        "text": "We implement reasonable security measures to protect your information. However, no internet transmission is 100% secure."
+      },
+      "rights": {
+        "title": "Your Rights",
+        "text": "You can request deletion of your account and associated data at any time by contacting us. You can also clear local storage through your browser settings."
+      },
+      "contact": {
+        "title": "Contact Us",
+        "text": "For privacy questions or data requests, email us at"
+      }
+    },
+    "terms": {
+      "acceptance": {
+        "title": "Acceptance of Terms",
+        "text": "By accessing or playing Dreamcats, you agree to these Terms of Service. If you disagree with any part, please do not use the game."
+      },
+      "description": {
+        "title": "Service Description",
+        "text": "Dreamcats is a free multiplayer card game. We provide the game \"as is\" and may modify, suspend, or discontinue features at any time."
+      },
+      "accounts": {
+        "title": "Accounts",
+        "text": "You may play as a guest or create an account. You are responsible for maintaining the security of your account and any activity under it."
+      },
+      "conduct": {
+        "title": "User Conduct",
+        "text": "When using Dreamcats, you agree not to:",
+        "item1": "Harass, abuse, or harm other players",
+        "item2": "Use offensive or inappropriate display names",
+        "item3": "Attempt to cheat or exploit bugs",
+        "item4": "Disrupt the game service or servers"
+      },
+      "ip": {
+        "title": "Intellectual Property",
+        "text": "Dreamcats and its content (artwork, code, design) are owned by us. You may not copy, modify, or distribute our content without permission."
+      },
+      "disclaimer": {
+        "title": "Disclaimer",
+        "text": "Dreamcats is provided \"as is\" without warranties of any kind. We do not guarantee the game will be available, error-free, or meet your expectations."
+      },
+      "liability": {
+        "title": "Limitation of Liability",
+        "text": "We are not liable for any damages arising from your use of Dreamcats, including lost data, interrupted gameplay, or interactions with other players."
+      },
+      "changes": {
+        "title": "Changes to Terms",
+        "text": "We may update these terms at any time. Continued use after changes constitutes acceptance of the new terms."
+      },
+      "contact": {
+        "title": "Contact",
+        "text": "For questions about these terms, contact us at"
+      }
+    }
+  },
   "landing": {
     "title": "Dreamcats",
     "subtitle": "A dreamy card game about collecting dreams and avoiding nightmares.",
@@ -10,8 +102,21 @@
   "lobby": {
     "title": "Dreamcats",
     "subtitle": "A dreamy card game about collecting dreams and avoiding nightmares.",
+    "soloVsBot": "Solo vs AI",
     "onlineMultiplayer": "Online Multiplayer",
     "localHotseat": "Local Hot-Seat",
+    "solo": {
+      "title": "Solo vs AI",
+      "subtitle": "Play against the bots",
+      "yourName": "Your Name",
+      "namePlaceholder": "Enter your name",
+      "description": "Practice and learn the game at your own pace. Bots take their turns automatically.",
+      "difficulty": "Difficulty",
+      "difficultyEasy": "Easy",
+      "difficultyNormal": "Normal",
+      "difficultyHard": "Hard",
+      "startGame": "Start Game"
+    },
     "online": {
       "title": "Online Multiplayer",
       "subtitle": "Join or Create a 2-Player Game",
@@ -98,13 +203,19 @@
     "usedSwap2SelectFirst": "{{player}} used 'Swap 2'. Select the first card.",
     "peekedAtCard": "{{player}} peeked at a card.",
     "selectSecondCard": "Select the second card to swap.",
+    "peek1Instruction": "Tap any card to peek",
+    "peek1Hint": "You can peek at any player's card, including your own",
+    "swap2SelectFirst": "Tap the first card to swap",
+    "swap2SelectSecond": "Now tap the second card",
+    "swap2Hint": "Select any two cards to swap their positions",
     "swappedTwoCards": "{{player}} swapped two cards.",
     "choseCardFromTake2": "{{player}} chose a card from 'Take 2'.",
     "deckRanOut": "The deck ran out. {{player}} won the round.",
     "calledPobudka": "{{player}} called 'POBUDKA!'. {{winner}} won the round.",
     "gameOver": "Game Over! {{player}} wins with the lowest score!",
     "roomCreated": "Room created! ID: {{roomId}}. Waiting for opponent...",
-    "joinedRoom": "Joined room {{roomId}}. Waiting for host..."
+    "joinedRoom": "Joined room {{roomId}}. Waiting for host...",
+    "waitYourTurn": "Wait for your turn"
   },
   "actions": {
     "drewFromDeck": "{{player}} drew from deck",
@@ -138,42 +249,42 @@
   },
   "tutorial": {
     "welcomeTitle": "Welcome to Dreamcats!",
-    "welcomeDescription": "It looks like this is your first time here. Would you like a quick tutorial to learn the basics of the game?",
+    "welcomeDescription": "First time? Let me show you how to play in under a minute.",
     "noThanks": "No, thanks",
-    "yesPlease": "Yes, please!",
+    "yesPlease": "Show me!",
     "next": "Next",
     "back": "Back",
     "finish": "Got it!",
     "stepProgress": "Step {{current}} of {{total}}",
-    "goalTitle": "The Goal",
-    "goalDescription": "Your objective is simple: have the lowest score (the fewest cats) at the end of each round. The game ends when someone reaches 100 points - the player with the lowest total wins!",
-    "goalTip": "Cards range from 0 (best!) to 9 (worst). 9s are especially common, so watch out!",
-    "handTitle": "Your Dream",
-    "handDescription": "These 4 face-down cards are your Dream (Sen). You cannot freely look at them during the game, so memory is key! Each card has a value - you want low numbers.",
-    "handTip": "Try to remember which cards are where. A good memory gives you a huge advantage!",
-    "firstPeekTitle": "First Peek",
-    "firstPeekDescription": "At the start of each round, you get to peek at exactly 2 of your 4 cards. Choose wisely and remember their positions! Click any two cards to reveal them.",
-    "firstPeekTip": "After peeking, click Finish Peeking to start the round.",
-    "deckTitle": "The Draw Pile",
-    "deckDescription": "This is the Draw Pile. Draw a face-down card from here to see what fate brings you. You can then swap it with one of your cards, discard it, or use its special power!",
-    "deckTip": "Drawing from the deck gives you more options - you can discard if you do not like it.",
-    "discardTitle": "The Discard Pile",
-    "discardDescription": "This is the Discard Pile. You can see the top card! If you take it, you MUST swap it with one of your cards - no peeking, no discarding.",
-    "discardTip": "Taking from discard is safe when you see a low number, but risky for high ones!",
-    "drawingTitle": "Taking Your Turn",
-    "drawingDescription": "On your turn, choose one pile to draw from. From the Draw Pile: you can swap, discard, or use specials. From the Discard Pile: you must swap with a card in your Dream.",
-    "drawingTip": "Think strategically - sometimes a known card is better than a mystery!",
+    "goalTitle": "How to Win",
+    "goalDescription": "Get the lowest total when the round ends. Cards are worth 0-9 points each. First player to 100 loses, so keep your score low!",
+    "goalTip": "0 is best, 9 is worst. There are lots of 9s in the deck.",
+    "handTitle": "Your 4 Cards",
+    "handDescription": "You have 4 face-down cards. You can't look at them freely, so you'll need to remember what you've seen!",
+    "handTip": "Memory is your biggest advantage in this game.",
+    "firstPeekTitle": "Peek Phase",
+    "firstPeekDescription": "Before the round starts, tap any 2 cards to peek at them. Remember their values and positions!",
+    "firstPeekTip": "Tap 'Finish Peeking' when you're ready to start.",
+    "deckTitle": "Draw Pile",
+    "deckDescription": "Tap here to draw a mystery card. You can then swap it into your hand, discard it, or use its special power.",
+    "deckTip": "This is the flexible option - you're not forced to keep what you draw.",
+    "discardTitle": "Discard Pile",
+    "discardDescription": "You can see this card! Taking it is safe, but you MUST swap it with one of your cards - no backing out.",
+    "discardTip": "Great for grabbing low cards. Avoid taking high ones!",
+    "drawingTitle": "Your Turn",
+    "drawingDescription": "Each turn: pick a pile, then decide what to do with the card. Draw Pile = more options. Discard Pile = guaranteed swap.",
+    "drawingTip": "A known low card is often better than an unknown one.",
     "specialCardsTitle": "Special Cards",
-    "specialCardsDescription": "Three magical cards have special powers when drawn from the deck: Take 2 (draw 2, keep 1), Peek 1 (look at any card), and Swap 2 (exchange any two cards blindly).",
-    "specialCardsTip": "Special cards have values 5-7, so be careful - using the power means discarding the card!",
-    "pobudkaTitle": "Call POBUDKA!",
-    "pobudkaDescription": "When you believe you have the lowest score, press POBUDKA! (Wake Up!) at the start of your turn instead of drawing. This ends the round immediately!",
-    "pobudkaTip": "Warning: If you are wrong and do not have the lowest score, you get +5 penalty points!",
+    "specialCardsDescription": "Three cards have powers when drawn from the deck: Take 2 (pick the better of 2 cards), Peek 1 (look at any card), Swap 2 (trade any 2 cards blindly).",
+    "specialCardsTip": "Using a power discards the card. They're worth 5-7 points if kept.",
+    "pobudkaTitle": "Ending the Round",
+    "pobudkaDescription": "Think you have the lowest score? Call POBUDKA! at the start of your turn to end the round immediately.",
+    "pobudkaTip": "If you're wrong, you get +5 penalty points. Be confident!",
     "scoringTitle": "Scoring",
-    "scoringDescription": "At round end, all cards are revealed. Everyone scores the sum of their 4 cards. If the POBUDKA caller does not have the strictly lowest score, they get +5 penalty points!",
-    "scoringTip": "The game ends when someone hits 100 points. Lowest total score wins!",
-    "readyTitle": "You are Ready!",
-    "readyDescription": "That is everything you need to know! Remember: low cards are good, memory is power, and call POBUDKA when you are confident. May your dreams be free of cats!",
+    "scoringDescription": "When the round ends, all cards flip over. Add up your 4 cards. Lowest score wins the round!",
+    "scoringTip": "Game ends when someone hits 100. Stay low to win!",
+    "readyTitle": "You're Ready!",
+    "readyDescription": "That's it! Low cards good, remember what you peek, call POBUDKA when confident. Good luck!",
     "letsPlay": "Let's Play!"
   },
   "cardInfo": {

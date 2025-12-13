@@ -1,7 +1,6 @@
-# **Game Specification: "Sen" (Dream)**
+# **Game Specification: Dreamcats**
 
-Based on the Polish card game published by Nasza Księgarnia.  
-Re-implementation of: "Rat-a-Tat Cat" (Gamewright).
+Inspired by classic memory card games.
 
 ## **1\. Game Overview & Objective**
 
@@ -103,7 +102,7 @@ A round ends when a player believes they have the lowest score.
 
 ## **9\. Terminology (Polish \-\> English mapping)**
 
-- _Sen_ \-\> Dream (The player's hand)
+- _Marzenie_ \-\> Dream (The player's hand)
 - _Kruki_ \-\> Cats (Points/Bad values)
 - _Stos Zakryty_ \-\> Draw Pile (Hidden)
 - _Stos Odkryty_ \-\> Discard Pile (Visible)

@@ -1,14 +1,22 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useSounds } from "@/hooks/use-sounds";
-import { GameAction, GameState, Player } from "@/types";
+import { BotDifficulty, GameAction, GameState, Player } from "@/types";
 import { useAppStore } from "./store";
 import { initialGameState } from "./initialGame";
 import i18n from "@/i18n/config";
 import { gameReducer } from "./gameReducer";
 import { createDeck, shuffleDeck } from "@/lib/game-logic";
+import {
+  getBotAction,
+  isBotTurn,
+  getCurrentBotId,
+  rememberPeekedCard,
+  forgetRememberedCard,
+  clearAllBotMemory,
+} from "@/lib/bot-logic";
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -70,6 +78,16 @@ export const useGame = () => {
   const playerName = useAppStore((s) => s.playerName);
   const roomId = useAppStore((s) => s.roomId);
 
+  const botLoopTokenRef = useRef(0);
+  const botLoopRunningRef = useRef(false);
+  const botScheduledRef = useRef(false); // prevent double-scheduling
+
+  const cancelBotLoop = useCallback(() => {
+    botLoopTokenRef.current += 1;
+    botLoopRunningRef.current = false;
+    botScheduledRef.current = false;
+  }, []);
+
   const createRoomMutation = useMutation(api.rooms.createRoom);
   const joinRoomMutation = useMutation(api.rooms.joinRoom);
   const performActionMutation = useMutation(api.actions.performAction);
@@ -80,16 +98,16 @@ export const useGame = () => {
 
   const persistSession = useCallback(
     (id: string, name: string, room: string) => {
-      sessionStorage.setItem("sen-playerId", id);
-      sessionStorage.setItem("sen-roomId", room);
-      sessionStorage.setItem("sen-playerName", name);
+      sessionStorage.setItem("dreamcats-playerId", id);
+      sessionStorage.setItem("dreamcats-roomId", room);
+      sessionStorage.setItem("dreamcats-playerName", name);
     },
     [],
   );
 
   const createRoom = useCallback(
     async (name: string) => {
-      const newRoomId = `sen-${Math.random().toString(36).slice(2, 6)}`;
+      const newRoomId = `dreamcats-${Math.random().toString(36).slice(2, 6)}`;
       const newPlayerId = `player-${Math.random().toString(36).slice(2, 9)}`;
 
       const newPlayer: Player = {
@@ -259,6 +277,100 @@ export const useGame = () => {
     [setGame, setPlayer, setRoom],
   );
 
+  const startSoloGame = useCallback(
+    (
+      playerName: string,
+      botCountOrOptions:
+        | number
+        | { botCount?: number; difficulty?: BotDifficulty } = 1,
+    ) => {
+      const name = playerName.trim();
+      if (!name) {
+        toast.error(i18n.t("common:errors.enterName"));
+        return;
+      }
+
+      const botCount =
+        typeof botCountOrOptions === "number"
+          ? botCountOrOptions
+          : (botCountOrOptions.botCount ?? 1);
+      const difficulty: BotDifficulty =
+        typeof botCountOrOptions === "number"
+          ? "normal"
+          : (botCountOrOptions.difficulty ?? "normal");
+
+      cancelBotLoop();
+      // clear any previous bot memories
+      clearAllBotMemory();
+
+      const deck = shuffleDeck(createDeck());
+      const totalPlayers = 1 + botCount;
+      const requiredCards = totalPlayers * 4 + 1;
+      if (deck.length < requiredCards) {
+        toast.error(i18n.t("common:errors.notEnoughCards"));
+        return;
+      }
+
+      // create human player first
+      const humanId = `solo-human-${Math.random().toString(36).slice(2, 8)}`;
+      const humanPlayer: Player = {
+        id: humanId,
+        name,
+        hand: [],
+        score: 0,
+      };
+
+      // create bot players
+      const botNames = ["Bot", "Bot 2", "Bot 3", "Bot 4"];
+      const bots: Player[] = [];
+      for (let i = 0; i < botCount; i++) {
+        bots.push({
+          id: `solo-bot-${i}-${Math.random().toString(36).slice(2, 8)}`,
+          name: botNames[i] || `Bot ${i + 1}`,
+          hand: [],
+          score: 0,
+        });
+      }
+
+      const players = [humanPlayer, ...bots];
+
+      // deal cards
+      for (let i = 0; i < 4; i++) {
+        for (const p of players) {
+          const card = deck.shift();
+          if (card) {
+            p.hand.push({ card, isFaceUp: false, hasBeenPeeked: false });
+          }
+        }
+      }
+
+      const discardPile = [deck.pop()!];
+
+      const next: GameState = {
+        ...clone(initialGameState),
+        gameMode: "solo",
+        hostId: humanId,
+        botDifficulty: difficulty,
+        players,
+        drawPile: deck,
+        discardPile,
+        startingPlayerIndex: 0,
+        currentPlayerIndex: 0,
+        gamePhase: "peeking",
+        peekingState: { playerIndex: 0, peekedCount: 0, startIndex: 0 },
+        actionMessage: i18n.t("game.peekTwoCards", { player: name }),
+        lastMove: null,
+        lastCallerId: null,
+      };
+
+      setPlayer(humanId, name);
+      setRoom(null);
+      setGame(next, { source: "local" });
+      toast.success(i18n.t("common:success.soloStarted"));
+    },
+    [cancelBotLoop, setGame, setPlayer, setRoom],
+  );
+
   const startGame = useCallback(async () => {
     if (game.gameMode !== "online" || !game.roomId || !playerId) {
       toast.error(i18n.t("common:errors.createOrJoinFirst"));
@@ -285,9 +397,155 @@ export const useGame = () => {
   }, [game, performActionMutation, playerId]);
 
   const leaveGame = useCallback(() => {
+    cancelBotLoop();
     setRoom(null);
     setGame(initialGameState, { source: "local" });
-  }, [setGame, setRoom]);
+    clearAllBotMemory();
+  }, [cancelBotLoop, setGame, setRoom]);
+
+  // process bot turns in solo mode
+  // uses a single scheduler pattern to avoid recursive timeout issues
+  const processBotTurns = useCallback(() => {
+    // prevent concurrent loops or re-scheduling while already scheduled
+    if (botLoopRunningRef.current || botScheduledRef.current) return;
+    botScheduledRef.current = true;
+    botLoopRunningRef.current = true;
+    const token = ++botLoopTokenRef.current;
+    let steps = 0;
+    const MAX_STEPS = 15; // cap to prevent runaway loops
+
+    const tick = () => {
+      botScheduledRef.current = false; // clear scheduled flag when tick starts
+
+      if (token !== botLoopTokenRef.current) {
+        botLoopRunningRef.current = false;
+        return;
+      }
+
+      const currentGame = useAppStore.getState().game;
+      const currentPlayerId = useAppStore.getState().playerId;
+
+      // exit if not in solo mode or player left
+      if (currentGame.gameMode !== "solo" || !currentPlayerId) {
+        botLoopRunningRef.current = false;
+        return;
+      }
+
+      // exit if it's not a bot's turn
+      if (!isBotTurn(currentGame, currentPlayerId)) {
+        botLoopRunningRef.current = false;
+        return;
+      }
+
+      const botId = getCurrentBotId(currentGame, currentPlayerId);
+      if (!botId) {
+        botLoopRunningRef.current = false;
+        return;
+      }
+
+      const botAction = getBotAction(currentGame, botId);
+      if (!botAction) {
+        botLoopRunningRef.current = false;
+        return;
+      }
+
+      steps += 1;
+      if (steps > MAX_STEPS) {
+        console.warn("[bot] max steps reached, pausing bot loop");
+        botLoopRunningRef.current = false;
+        return;
+      }
+
+      // play appropriate sound
+      switch (botAction.type) {
+        case "PEEK_CARD":
+        case "SWAP_HELD_CARD":
+        case "ACTION_PEEK_1_SELECT":
+        case "DISCARD_HELD_CARD":
+        case "ACTION_SWAP_2_SELECT":
+          playSound("flip");
+          break;
+        case "DRAW_FROM_DECK":
+        case "DRAW_FROM_DISCARD":
+          playSound("draw");
+          break;
+        case "CALL_POBUDKA":
+          playSound("pobudka");
+          break;
+        default:
+          playSound("click");
+      }
+
+      // process bot action
+      updateGame((prev) => {
+        // update bot memory if it's peeking its own card
+        if (
+          botAction.type === "PEEK_CARD" &&
+          botAction.payload.playerId === botId
+        ) {
+          const bot = prev.players.find((p) => p.id === botId);
+          const card = bot?.hand[botAction.payload.cardIndex]?.card;
+          if (card) {
+            rememberPeekedCard(botId, botAction.payload.cardIndex, card.value);
+          }
+        }
+        if (
+          botAction.type === "ACTION_PEEK_1_SELECT" &&
+          botAction.payload.playerId === botId
+        ) {
+          const bot = prev.players.find((p) => p.id === botId);
+          const card = bot?.hand[botAction.payload.cardIndex]?.card;
+          if (card) {
+            rememberPeekedCard(botId, botAction.payload.cardIndex, card.value);
+          }
+        }
+        if (botAction.type === "SWAP_HELD_CARD") {
+          const held = prev.drawnCard;
+          if (held) {
+            rememberPeekedCard(botId, botAction.payload.cardIndex, held.value);
+          }
+        }
+        if (
+          botAction.type === "ACTION_SWAP_2_SELECT" &&
+          prev.gamePhase === "action_swap_2_select_2" &&
+          prev.swapState?.card1
+        ) {
+          const card1 = prev.swapState.card1;
+          const card2 = botAction.payload;
+          if (card1.playerId === botId) forgetRememberedCard(botId, card1.cardIndex);
+          if (card2.playerId === botId) forgetRememberedCard(botId, card2.cardIndex);
+        }
+        return gameReducer(prev, {
+          type: "PROCESS_ACTION",
+          payload: { action: botAction, isLocal: true },
+        });
+      }, { source: "local" });
+
+      // schedule next tick with safeguard
+      botScheduledRef.current = true;
+      setTimeout(tick, 350);
+    };
+
+    // start the loop
+    setTimeout(tick, 0);
+  }, [playSound, updateGame]);
+
+  // Ensure bots continue acting whenever solo state enters a bot-controlled turn,
+  // including rounds where a bot becomes the next starter/peeker.
+  // Uses specific dependencies to reduce unnecessary re-triggers.
+  const { gameMode, gamePhase, currentPlayerIndex, peekingState } = game;
+  const peekingPlayerIndex = peekingState?.playerIndex;
+
+  useEffect(() => {
+    if (gameMode !== "solo" || !playerId) return;
+    // get fresh game state to check bot turn
+    const currentGame = useAppStore.getState().game;
+    if (!isBotTurn(currentGame, playerId)) return;
+    // small delay before starting bot turns, with cleanup
+    const handle = window.setTimeout(() => processBotTurns(), 250);
+    return () => window.clearTimeout(handle);
+    // only re-run when these specific values change, not on every game state update
+  }, [gameMode, gamePhase, currentPlayerIndex, peekingPlayerIndex, playerId, processBotTurns]);
 
   const broadcastAction = useCallback(
     async (action: GameAction) => {
@@ -335,6 +593,37 @@ export const useGame = () => {
         return result;
       }
 
+      // Solo mode: process human action then run bot turns
+      if (game.gameMode === "solo") {
+        let result: unknown = null;
+
+        if (action.type === "START_NEW_ROUND") {
+          clearAllBotMemory();
+        }
+
+        // process human action first
+        updateGame((prev) => {
+          if (action.type === "ACTION_PEEK_1_SELECT") {
+            const targetPlayer = prev.players.find(
+              (p) => p.id === action.payload.playerId,
+            );
+            result =
+              targetPlayer?.hand[action.payload.cardIndex]?.card ?? null;
+          }
+          return gameReducer(prev, {
+            type: "PROCESS_ACTION",
+            payload: { action, isLocal: true },
+          });
+        }, { source: "local" });
+
+        // schedule bot turns after a delay
+        setTimeout(() => {
+          processBotTurns();
+        }, 600);
+
+        return result;
+      }
+
       if (!game.roomId || !playerId) return;
 
       try {
@@ -356,7 +645,15 @@ export const useGame = () => {
         return null;
       }
     },
-    [game.gameMode, game.roomId, performActionMutation, playerId, playSound, updateGame],
+    [
+      game.gameMode,
+      game.roomId,
+      performActionMutation,
+      playerId,
+      playSound,
+      processBotTurns,
+      updateGame,
+    ],
   );
 
   const sendChatMessage = useCallback(
@@ -402,6 +699,7 @@ export const useGame = () => {
     joinRoom,
     rejoinRoom,
     startHotseatGame,
+    startSoloGame,
     startGame,
     leaveGame,
     broadcastAction,

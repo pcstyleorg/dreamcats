@@ -117,22 +117,32 @@ export const GameActions: React.FC = () => {
     );
   }
 
-  // Contextual instructions for special action phases
+  // Contextual instructions for special action phases with clearer affordances
   if (gamePhase === "action_peek_1" && isMyTurn) {
     return (
-      <p className="text-sm sm:text-base text-center text-primary font-medium px-4 py-2 bg-primary/10 rounded-full border border-primary/30">
-        {t('game.usedPeek1')}
-      </p>
+      <div className="flex flex-col items-center gap-2">
+        <p className="text-sm sm:text-base text-center text-primary font-semibold px-5 py-2.5 bg-primary/15 rounded-full border border-primary/40 shadow-sm animate-pulse">
+          {t('game.peek1Instruction')}
+        </p>
+        <span className="text-xs text-muted-foreground">
+          {t('game.peek1Hint')}
+        </span>
+      </div>
     );
   }
 
   if ((gamePhase === "action_swap_2_select_1" || gamePhase === "action_swap_2_select_2") && isMyTurn) {
     return (
-      <p className="text-sm sm:text-base text-center text-pink-400 font-medium px-4 py-2 bg-pink-500/10 rounded-full border border-pink-400/30">
-        {gamePhase === "action_swap_2_select_1"
-          ? t('game.usedSwap2SelectFirst')
-          : t('game.selectSecondCard')}
-      </p>
+      <div className="flex flex-col items-center gap-2">
+        <p className="text-sm sm:text-base text-center text-pink-400 font-semibold px-5 py-2.5 bg-pink-500/15 rounded-full border border-pink-400/40 shadow-sm animate-pulse">
+          {gamePhase === "action_swap_2_select_1"
+            ? t('game.swap2SelectFirst')
+            : t('game.swap2SelectSecond')}
+        </p>
+        <span className="text-xs text-muted-foreground">
+          {t('game.swap2Hint')}
+        </span>
+      </div>
     );
   }
 

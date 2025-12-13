@@ -18,9 +18,33 @@ import {
 } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { User, LogOut, Mail, Lock, UserCircle, Settings } from "lucide-react";
-import { useConvexAuth } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { useTranslation } from "react-i18next";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
+import { ProfileStatsDialog } from "@/components/ProfileStatsDialog";
+import { api } from "../../convex/_generated/api";
+
+// maps convex auth error messages to friendly translation keys
+function getAuthErrorKey(error: unknown): string {
+  const msg = error instanceof Error ? error.message.toLowerCase() : "";
+
+  if (msg.includes("already") || msg.includes("exists") || msg.includes("duplicate")) {
+    return "errors.authEmailInUse";
+  }
+  if (msg.includes("wrong password") || msg.includes("invalid password") || msg.includes("incorrect")) {
+    return "errors.authWrongPassword";
+  }
+  if (msg.includes("not found") || msg.includes("no user") || msg.includes("does not exist")) {
+    return "errors.authNoAccount";
+  }
+  if (msg.includes("rate") || msg.includes("too many") || msg.includes("limit")) {
+    return "errors.authRateLimited";
+  }
+  if (msg.includes("invalid email") || msg.includes("email format")) {
+    return "errors.authInvalidEmail";
+  }
+  return "errors.authFailed";
+}
 
 interface AuthDialogProps {
   trigger?: React.ReactNode;
@@ -65,8 +89,8 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
       setEmail("");
       setPassword("");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Authentication failed";
-      toast.error(message);
+      const errorKey = getAuthErrorKey(error);
+      toast.error(t(errorKey));
     } finally {
       setIsSubmitting(false);
     }
@@ -196,6 +220,12 @@ export const AuthDialog: React.FC<AuthDialogProps> = ({ trigger }) => {
 export const AuthButton: React.FC = () => {
   const { signOut } = useAuthActions();
   const { isAuthenticated, isLoading } = useConvexAuth();
+  const currentUser = useQuery(api.userPreferences.currentUser);
+  // Convex Auth sets `isAnonymous: true` for anonymous sessions; for password/OAuth
+  // it may be absent (undefined). Treat missing as non-anonymous.
+  // Important: currentUser === undefined means query is loading, don't assume anything yet
+  const isUserLoading = isAuthenticated && currentUser === undefined;
+  const isAnonymous = currentUser?.isAnonymous === true; // strict check
   const { t, i18n } = useTranslation("common");
   const {
     displayName,
@@ -207,6 +237,7 @@ export const AuthButton: React.FC = () => {
     setSoundEnabled,
   } = useUserPreferences();
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(displayName);
   const [soundEnabledValue, setSoundEnabledValue] = useState(soundEnabled);
@@ -268,27 +299,29 @@ export const AuthButton: React.FC = () => {
   );
 
   return (
-    <Popover
-      open={popoverOpen}
-      onOpenChange={(nextOpen) => {
-        setPopoverOpen(nextOpen);
-        if (nextOpen) {
-          setNameValue(displayName);
-          setSoundEnabledValue(localStorage.getItem("soundEnabled") !== "false");
-          setThemeValue(
-            (localStorage.getItem("theme") ?? "light") as "light" | "dark",
-          );
-          setEditingName(false);
-        }
-      }}
-    >
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-9 w-9" disabled={isLoading}>
-          <UserCircle className="h-5 w-5" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-64" align="end">
-        <div className="space-y-4">
+    <>
+      <ProfileStatsDialog open={statsOpen} onOpenChange={setStatsOpen} />
+      <Popover
+        open={popoverOpen}
+        onOpenChange={(nextOpen) => {
+          setPopoverOpen(nextOpen);
+          if (nextOpen) {
+            setNameValue(displayName);
+            setSoundEnabledValue(localStorage.getItem("soundEnabled") !== "false");
+            setThemeValue(
+              (localStorage.getItem("theme") ?? "light") as "light" | "dark",
+            );
+            setEditingName(false);
+          }
+        }}
+      >
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-9 w-9" disabled={isLoading}>
+            <UserCircle className="h-5 w-5" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64" align="end">
+          <div className="space-y-4">
           <div className="flex items-center gap-2">
             <Settings className="h-4 w-4 text-muted-foreground" />
             <span className="font-semibold">{t("auth.settings")}</span>
@@ -325,6 +358,21 @@ export const AuthButton: React.FC = () => {
                 </div>
               )}
             </div>
+          )}
+
+          {isAuthenticated && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={() => {
+                setPopoverOpen(false);
+                setStatsOpen(true);
+              }}
+            >
+              {t("auth.viewStats")}
+            </Button>
           )}
 
           <div className="pt-2 border-t border-border space-y-3">
@@ -411,19 +459,22 @@ export const AuthButton: React.FC = () => {
 
           {isAuthenticated ? (
             <>
-              <div className="pt-2 border-t border-border">
-                <p className="text-xs text-muted-foreground mb-2">
-                  {t("auth.playingAsGuest")}
-                </p>
-                <AuthDialog
-                  trigger={
-                    <Button variant="outline" size="sm" className="w-full gap-2">
-                      <Mail className="h-4 w-4" />
-                      {t("auth.upgradeAccount")}
-                    </Button>
-                  }
-                />
-              </div>
+              {/* Only show upgrade banner if user is confirmed anonymous, not while loading */}
+              {!isUserLoading && isAnonymous && (
+                <div className="pt-2 border-t border-border">
+                  <p className="text-xs text-muted-foreground mb-2">
+                    {t("auth.playingAsGuest")}
+                  </p>
+                  <AuthDialog
+                    trigger={
+                      <Button variant="outline" size="sm" className="w-full gap-2">
+                        <Mail className="h-4 w-4" />
+                        {t("auth.upgradeAccount")}
+                      </Button>
+                    }
+                  />
+                </div>
+              )}
 
               <Button
                 variant="ghost"
@@ -450,7 +501,8 @@ export const AuthButton: React.FC = () => {
             </div>
           )}
         </div>
-      </PopoverContent>
-    </Popover>
+        </PopoverContent>
+      </Popover>
+    </>
   );
 };
