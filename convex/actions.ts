@@ -79,7 +79,7 @@ export const performAction = mutation({
         finalScore: p.score,
       }));
       const winner = playerScores.reduce((best, cur) =>
-        best.finalScore < cur.finalScore ? best : cur,
+        best.finalScore <= cur.finalScore ? best : cur,
       );
 
       const matchId = await ctx.db.insert("matches", {
