@@ -1264,7 +1264,7 @@ describe('scoring calculations', () => {
       { card: createCard(3, 3), isFaceUp: true, hasBeenPeeked: false },
       { card: createCard(4, 0), isFaceUp: true, hasBeenPeeked: false },
     ];
-    
+
     const totalValue = hand.reduce((sum, slot) => sum + slot.card.value, 0);
     expect(totalValue).toBe(10); // 2 + 5 + 3 + 0
   });
@@ -1276,8 +1276,579 @@ describe('scoring calculations', () => {
       { card: createCard(3, 7, true, 'swap_2'), isFaceUp: true, hasBeenPeeked: false },
       { card: createCard(4, 0), isFaceUp: true, hasBeenPeeked: false },
     ];
-    
+
     const totalValue = hand.reduce((sum, slot) => sum + slot.card.value, 0);
     expect(totalValue).toBe(18); // 5 + 6 + 7 + 0
+  });
+});
+
+describe('ACTION_SWAP_2 edge cases', () => {
+  let baseState: GameState;
+
+  beforeEach(() => {
+    baseState = {
+      ...initialGameState,
+      gameMode: 'hotseat',
+      gamePhase: 'action_swap_2_select_1',
+      players: [
+        createTestPlayer('p1', 'Alice', [
+          createCard(1, 2),
+          createCard(2, 5),
+          createCard(3, 3),
+          createCard(4, 7),
+        ]),
+        createTestPlayer('p2', 'Bob', [
+          createCard(5, 1),
+          createCard(6, 4),
+          createCard(7, 6),
+          createCard(8, 8),
+        ]),
+      ],
+      drawPile: [createCard(9, 0), createCard(10, 9)],
+      discardPile: [createCard(11, 5)],
+      currentPlayerIndex: 0,
+      drawnCard: createCard(20, 7, true, 'swap_2'),
+      drawSource: 'deck',
+    };
+  });
+
+  it('allows swapping two cards from same player', () => {
+    // first selection: own card
+    const stateAfter1 = gameReducer(baseState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_SWAP_2_SELECT', payload: { playerId: 'p1', cardIndex: 0 } } },
+    });
+
+    expect(stateAfter1.gamePhase).toBe('action_swap_2_select_2');
+    expect(stateAfter1.swapState?.card1).toEqual({ playerId: 'p1', cardIndex: 0 });
+
+    // second selection: another own card (same player, different index)
+    const stateAfter2 = gameReducer(stateAfter1, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_SWAP_2_SELECT', payload: { playerId: 'p1', cardIndex: 2 } } },
+    });
+
+    // cards at index 0 and 2 should be swapped
+    expect(stateAfter2.players[0].hand[0].card).toEqual(createCard(3, 3));
+    expect(stateAfter2.players[0].hand[2].card).toEqual(createCard(1, 2));
+    expect(stateAfter2.gamePhase).toBe('playing');
+  });
+
+  it('handles selecting same card twice (should fail or no-op)', () => {
+    // first selection
+    const stateAfter1 = gameReducer(baseState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_SWAP_2_SELECT', payload: { playerId: 'p1', cardIndex: 0 } } },
+    });
+
+    // second selection: same card
+    const stateAfter2 = gameReducer(stateAfter1, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_SWAP_2_SELECT', payload: { playerId: 'p1', cardIndex: 0 } } },
+    });
+
+    // swapping same card with itself - cards should remain unchanged
+    expect(stateAfter2.players[0].hand[0].card).toEqual(createCard(1, 2));
+    expect(stateAfter2.gamePhase).toBe('playing');
+  });
+
+  it('allows swapping between two different opponents in 3-player game', () => {
+    const threePlayerState: GameState = {
+      ...baseState,
+      players: [
+        createTestPlayer('p1', 'Alice', [createCard(1, 2), createCard(2, 5), createCard(3, 3), createCard(4, 7)]),
+        createTestPlayer('p2', 'Bob', [createCard(5, 1), createCard(6, 4), createCard(7, 6), createCard(8, 8)]),
+        createTestPlayer('p3', 'Carol', [createCard(9, 0), createCard(10, 9), createCard(11, 3), createCard(12, 5)]),
+      ],
+    };
+
+    // first selection: p2's card
+    const stateAfter1 = gameReducer(threePlayerState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_SWAP_2_SELECT', payload: { playerId: 'p2', cardIndex: 0 } } },
+    });
+
+    // second selection: p3's card
+    const stateAfter2 = gameReducer(stateAfter1, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_SWAP_2_SELECT', payload: { playerId: 'p3', cardIndex: 1 } } },
+    });
+
+    // p2's first card and p3's second card should be swapped
+    expect(stateAfter2.players[1].hand[0].card).toEqual(createCard(10, 9));
+    expect(stateAfter2.players[2].hand[1].card).toEqual(createCard(5, 1));
+  });
+
+  it('handles invalid card index gracefully', () => {
+    const result = gameReducer(baseState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_SWAP_2_SELECT', payload: { playerId: 'p1', cardIndex: 10 } } },
+    });
+
+    // reducer proceeds to next phase even with invalid index (does not crash)
+    expect(result.gamePhase).toBe('action_swap_2_select_2');
+  });
+});
+
+describe('ACTION_PEEK_1 edge cases', () => {
+  let baseState: GameState;
+
+  beforeEach(() => {
+    baseState = {
+      ...initialGameState,
+      gameMode: 'hotseat',
+      gamePhase: 'action_peek_1',
+      players: [
+        createTestPlayer('p1', 'Alice', [
+          createCard(1, 2),
+          createCard(2, 5),
+          createCard(3, 3),
+          createCard(4, 7),
+        ]),
+        createTestPlayer('p2', 'Bob', [
+          createCard(5, 1),
+          createCard(6, 4),
+          createCard(7, 6),
+          createCard(8, 8),
+        ]),
+      ],
+      currentPlayerIndex: 0,
+      drawnCard: createCard(20, 6, true, 'peek_1'),
+      drawSource: 'deck',
+    };
+  });
+
+  it('allows peeking own card during action_peek_1', () => {
+    const result = gameReducer(baseState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_PEEK_1_SELECT', payload: { playerId: 'p1', cardIndex: 2 } } },
+    });
+
+    expect(result.players[0].hand[2].hasBeenPeeked).toBe(true);
+    expect(result.gamePhase).toBe('playing');
+  });
+
+  it('allows peeking face-up card during action_peek_1', () => {
+    baseState.players[1].hand[0].isFaceUp = true;
+
+    const result = gameReducer(baseState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_PEEK_1_SELECT', payload: { playerId: 'p2', cardIndex: 0 } } },
+    });
+
+    // should still work, marking it as peeked
+    expect(result.players[1].hand[0].hasBeenPeeked).toBe(true);
+  });
+
+  it('handles invalid card index gracefully', () => {
+    const result = gameReducer(baseState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_PEEK_1_SELECT', payload: { playerId: 'p1', cardIndex: 99 } } },
+    });
+
+    // reducer completes peek action and advances even with invalid card index (does not crash)
+    expect(result.gamePhase).toBe('playing');
+  });
+
+  it('handles invalid player id gracefully', () => {
+    const result = gameReducer(baseState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_PEEK_1_SELECT', payload: { playerId: 'unknown', cardIndex: 0 } } },
+    });
+
+    // reducer completes peek action even with unknown player (does not crash)
+    expect(result.gamePhase).toBe('playing');
+  });
+});
+
+describe('ACTION_TAKE_2 edge cases', () => {
+  let baseState: GameState;
+
+  beforeEach(() => {
+    baseState = {
+      ...initialGameState,
+      gameMode: 'hotseat',
+      gamePhase: 'action_take_2',
+      players: [
+        createTestPlayer('p1', 'Alice', [createCard(1, 2), createCard(2, 5), createCard(3, 3), createCard(4, 7)]),
+        createTestPlayer('p2', 'Bob', [createCard(5, 1), createCard(6, 4), createCard(7, 6), createCard(8, 8)]),
+      ],
+      currentPlayerIndex: 0,
+      tempCards: [createCard(30, 3), createCard(31, 8)],
+      drawnCard: null,
+    };
+  });
+
+  it('puts unchosen card to discard pile', () => {
+    const chosenCard = createCard(30, 3);
+
+    const result = gameReducer(baseState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_TAKE_2_CHOOSE', payload: { card: chosenCard } } },
+    });
+
+    expect(result.discardPile).toContainEqual(createCard(31, 8));
+    expect(result.drawnCard).toEqual(chosenCard);
+    expect(result.gamePhase).toBe('holding_card');
+  });
+
+  it('handles choosing second card', () => {
+    const chosenCard = createCard(31, 8);
+
+    const result = gameReducer(baseState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_TAKE_2_CHOOSE', payload: { card: chosenCard } } },
+    });
+
+    expect(result.discardPile).toContainEqual(createCard(30, 3));
+    expect(result.drawnCard).toEqual(chosenCard);
+  });
+
+  it('handles case with only 1 tempCard', () => {
+    const singleCardState: GameState = {
+      ...baseState,
+      tempCards: [createCard(30, 3)],
+    };
+
+    const result = gameReducer(singleCardState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_TAKE_2_CHOOSE', payload: { card: createCard(30, 3) } } },
+    });
+
+    expect(result.drawnCard).toEqual(createCard(30, 3));
+    expect(result.gamePhase).toBe('holding_card');
+  });
+
+  it('handles choosing card not in tempCards', () => {
+    const wrongCard = createCard(99, 9);
+
+    const result = gameReducer(baseState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_TAKE_2_CHOOSE', payload: { card: wrongCard } } },
+    });
+
+    // reducer still processes the action, clearing tempCards (does not crash)
+    // the wrongCard becomes the drawnCard even if not in original tempCards
+    expect(result.drawnCard).toEqual(wrongCard);
+    expect(result.gamePhase).toBe('holding_card');
+  });
+
+  it('returns state when tempCards is undefined', () => {
+    const noTempCardsState: GameState = {
+      ...baseState,
+      tempCards: undefined,
+    };
+
+    const result = gameReducer(noTempCardsState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'ACTION_TAKE_2_CHOOSE', payload: { card: createCard(30, 3) } } },
+    });
+
+    expect(result).toEqual(noTempCardsState);
+  });
+});
+
+describe('turn advancement edge cases', () => {
+  let baseState: GameState;
+
+  beforeEach(() => {
+    baseState = {
+      ...initialGameState,
+      gameMode: 'hotseat',
+      gamePhase: 'holding_card',
+      players: [
+        createTestPlayer('p1', 'Alice', [createCard(1, 2), createCard(2, 5), createCard(3, 3), createCard(4, 7)]),
+        createTestPlayer('p2', 'Bob', [createCard(5, 1), createCard(6, 4), createCard(7, 6), createCard(8, 8)]),
+        createTestPlayer('p3', 'Carol', [createCard(9, 0), createCard(10, 9), createCard(11, 3), createCard(12, 5)]),
+      ],
+      currentPlayerIndex: 2, // last player
+      drawnCard: createCard(20, 4),
+      drawSource: 'deck',
+    };
+  });
+
+  it('wraps around to first player after last player', () => {
+    const result = gameReducer(baseState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'DISCARD_HELD_CARD' } },
+    });
+
+    expect(result.currentPlayerIndex).toBe(0);
+    expect(result.turnCount).toBe(1);
+  });
+
+  it('increments turn count on player wrap', () => {
+    const midGameState = { ...baseState, turnCount: 5 };
+
+    const result = gameReducer(midGameState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'DISCARD_HELD_CARD' } },
+    });
+
+    expect(result.turnCount).toBe(6);
+  });
+
+  it('increments turn count for all players including middle players', () => {
+    const midPlayerState: GameState = {
+      ...baseState,
+      currentPlayerIndex: 1,
+      turnCount: 5,
+    };
+
+    const result = gameReducer(midPlayerState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'DISCARD_HELD_CARD' } },
+    });
+
+    expect(result.currentPlayerIndex).toBe(2);
+    // turn count increments on every player's turn
+    expect(result.turnCount).toBe(6);
+  });
+});
+
+describe('round rotation', () => {
+  let roundEndState: GameState;
+
+  beforeEach(() => {
+    roundEndState = {
+      ...initialGameState,
+      gameMode: 'hotseat',
+      gamePhase: 'round_end',
+      players: [
+        createTestPlayer('p1', 'Alice', [createCard(1, 2), createCard(2, 5), createCard(3, 3), createCard(4, 7)]),
+        createTestPlayer('p2', 'Bob', [createCard(5, 1), createCard(6, 4), createCard(7, 6), createCard(8, 8)]),
+        createTestPlayer('p3', 'Carol', [createCard(9, 0), createCard(10, 9), createCard(11, 3), createCard(12, 5)]),
+      ],
+      drawPile: Array.from({ length: 30 }, (_, i) => createCard(100 + i, i % 10)),
+      discardPile: [createCard(200, 0)],
+      startingPlayerIndex: 0,
+    };
+  });
+
+  it('rotates starting player for new round', () => {
+    const result = gameReducer(roundEndState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'START_NEW_ROUND' } },
+    });
+
+    expect(result.startingPlayerIndex).toBe(1);
+    expect(result.currentPlayerIndex).toBe(1);
+    expect(result.peekingState?.playerIndex).toBe(1);
+  });
+
+  it('wraps starting player rotation after last player', () => {
+    const lastPlayerStart: GameState = {
+      ...roundEndState,
+      startingPlayerIndex: 2,
+    };
+
+    const result = gameReducer(lastPlayerStart, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'START_NEW_ROUND' } },
+    });
+
+    expect(result.startingPlayerIndex).toBe(0);
+    expect(result.currentPlayerIndex).toBe(0);
+  });
+
+  it('preserves turn count on new round', () => {
+    const highTurnState: GameState = {
+      ...roundEndState,
+      turnCount: 15,
+    };
+
+    const result = gameReducer(highTurnState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'START_NEW_ROUND' } },
+    });
+
+    // turn count is preserved across rounds (not reset)
+    expect(result.turnCount).toBe(15);
+  });
+});
+
+describe('game over transitions', () => {
+  let baseState: GameState;
+
+  beforeEach(() => {
+    baseState = {
+      ...initialGameState,
+      gameMode: 'hotseat',
+      gamePhase: 'playing',
+      players: [
+        createTestPlayer('p1', 'Alice', [createCard(1, 9), createCard(2, 9), createCard(3, 9), createCard(4, 9)]),
+        createTestPlayer('p2', 'Bob', [createCard(5, 0), createCard(6, 0), createCard(7, 0), createCard(8, 0)]),
+      ],
+      currentPlayerIndex: 0,
+    };
+  });
+
+  it('determines winner with lowest score', () => {
+    const nearEndState: GameState = {
+      ...baseState,
+      players: [
+        { ...baseState.players[0], score: 95 }, // Alice at 95, will get 36 more = 131
+        { ...baseState.players[1], score: 50 }, // Bob at 50, will get 0 more = 50
+      ],
+    };
+
+    const result = gameReducer(nearEndState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'CALL_POBUDKA' } },
+    });
+
+    expect(result.gamePhase).toBe('game_over');
+    expect(result.gameWinnerName).toBe('Bob');
+  });
+
+  it('handles tie at game end', () => {
+    const tieState: GameState = {
+      ...baseState,
+      players: [
+        {
+          ...createTestPlayer('p1', 'Alice', [createCard(1, 5), createCard(2, 5), createCard(3, 5), createCard(4, 5)]),
+          score: 80, // 80 + 20 = 100
+        },
+        {
+          ...createTestPlayer('p2', 'Bob', [createCard(5, 5), createCard(6, 5), createCard(7, 5), createCard(8, 5)]),
+          score: 80, // 80 + 20 = 100
+        },
+      ],
+    };
+
+    const result = gameReducer(tieState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'CALL_POBUDKA' } },
+    });
+
+    expect(result.gamePhase).toBe('game_over');
+    // winner could be either or both depending on implementation
+    expect(result.gameWinnerName).toBeDefined();
+  });
+
+  it('correctly handles multiple players exceeding 100 points', () => {
+    const multiExceedState: GameState = {
+      ...initialGameState,
+      gameMode: 'hotseat',
+      gamePhase: 'playing',
+      players: [
+        {
+          ...createTestPlayer('p1', 'Alice', [createCard(1, 9), createCard(2, 9), createCard(3, 9), createCard(4, 9)]),
+          score: 80, // 80 + 36 = 116
+        },
+        {
+          ...createTestPlayer('p2', 'Bob', [createCard(5, 8), createCard(6, 8), createCard(7, 8), createCard(8, 8)]),
+          score: 75, // 75 + 32 = 107
+        },
+        {
+          ...createTestPlayer('p3', 'Carol', [createCard(9, 1), createCard(10, 1), createCard(11, 1), createCard(12, 1)]),
+          score: 20, // 20 + 4 = 24 (winner)
+        },
+      ],
+      currentPlayerIndex: 0,
+    };
+
+    const result = gameReducer(multiExceedState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'CALL_POBUDKA' } },
+    });
+
+    expect(result.gamePhase).toBe('game_over');
+    expect(result.gameWinnerName).toBe('Carol');
+  });
+});
+
+describe('peeking phase with multiple players', () => {
+  let peekingState: GameState;
+
+  beforeEach(() => {
+    peekingState = {
+      ...initialGameState,
+      gameMode: 'hotseat',
+      gamePhase: 'peeking',
+      players: [
+        createTestPlayer('p1', 'Alice', [createCard(1, 2), createCard(2, 5), createCard(3, 3), createCard(4, 7)]),
+        createTestPlayer('p2', 'Bob', [createCard(5, 1), createCard(6, 4), createCard(7, 6), createCard(8, 8)]),
+        createTestPlayer('p3', 'Carol', [createCard(9, 0), createCard(10, 9), createCard(11, 3), createCard(12, 5)]),
+      ],
+      peekingState: { playerIndex: 0, peekedCount: 0, startIndex: 0 },
+    };
+  });
+
+  it('advances through all players during peeking', () => {
+    // p1 peeks 2 cards
+    let state = gameReducer(peekingState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'PEEK_CARD', payload: { playerId: 'p1', cardIndex: 0 } } },
+    });
+    state = gameReducer(state, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'PEEK_CARD', payload: { playerId: 'p1', cardIndex: 1 } } },
+    });
+    state = gameReducer(state, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'FINISH_PEEKING' } },
+    });
+
+    expect(state.peekingState?.playerIndex).toBe(1);
+    expect(state.gamePhase).toBe('peeking');
+
+    // p2 peeks 2 cards
+    state = gameReducer(state, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'PEEK_CARD', payload: { playerId: 'p2', cardIndex: 0 } } },
+    });
+    state = gameReducer(state, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'PEEK_CARD', payload: { playerId: 'p2', cardIndex: 1 } } },
+    });
+    state = gameReducer(state, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'FINISH_PEEKING' } },
+    });
+
+    expect(state.peekingState?.playerIndex).toBe(2);
+    expect(state.gamePhase).toBe('peeking');
+
+    // p3 peeks 2 cards
+    state = gameReducer(state, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'PEEK_CARD', payload: { playerId: 'p3', cardIndex: 0 } } },
+    });
+    state = gameReducer(state, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'PEEK_CARD', payload: { playerId: 'p3', cardIndex: 1 } } },
+    });
+    state = gameReducer(state, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'FINISH_PEEKING' } },
+    });
+
+    expect(state.gamePhase).toBe('playing');
+    expect(state.peekingState).toBeUndefined();
+  });
+
+  it('preserves hasBeenPeeked after finish peeking', () => {
+    let state = gameReducer(peekingState, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'PEEK_CARD', payload: { playerId: 'p1', cardIndex: 0 } } },
+    });
+    state = gameReducer(state, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'PEEK_CARD', payload: { playerId: 'p1', cardIndex: 3 } } },
+    });
+    state = gameReducer(state, {
+      type: 'PROCESS_ACTION',
+      payload: { action: { type: 'FINISH_PEEKING' } },
+    });
+
+    // cards should be face down but remember they were peeked
+    expect(state.players[0].hand[0].isFaceUp).toBe(false);
+    expect(state.players[0].hand[0].hasBeenPeeked).toBe(true);
+    expect(state.players[0].hand[3].isFaceUp).toBe(false);
+    expect(state.players[0].hand[3].hasBeenPeeked).toBe(true);
+    // unpeeked cards should still be unpeeked
+    expect(state.players[0].hand[1].hasBeenPeeked).toBe(false);
+    expect(state.players[0].hand[2].hasBeenPeeked).toBe(false);
   });
 });
