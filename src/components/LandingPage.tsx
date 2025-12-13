@@ -174,6 +174,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
           {activeSession ? (
             <div className="flex flex-col gap-3 w-full max-w-sm">
                 <Button
+                  type="button"
                   onClick={handleRejoin}
                   size="lg"
                   className="w-full font-semibold text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 shadow-soft-lg hover:shadow-dreamy transition-all duration-300 hover:scale-105 active:scale-95 bg-linear-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 border-none"
@@ -184,6 +185,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                 
                 <div className="flex gap-3">
                   <Button
+                    type="button"
                     onClick={handleStartFresh}
                     variant="outline"
                     className="flex-1 border-dashed border-border/60 hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive transition-colors"
@@ -192,6 +194,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                      {t('landing.startFresh')}
                   </Button>
                    <Button
+                    type="button"
                     onClick={onEnter} // Just enter lobby without rejoining
                     variant="ghost" 
                     className="flex-1"
@@ -206,6 +209,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
             </div>
           ) : (
             <Button
+              type="button"
               onClick={onEnter}
               size="lg"
               className="font-semibold text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 shadow-soft-lg hover:shadow-dreamy transition-all duration-300 hover:scale-105 active:scale-95"
