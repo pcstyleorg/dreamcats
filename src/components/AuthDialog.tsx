@@ -221,7 +221,9 @@ export const AuthButton: React.FC = () => {
   const { signOut } = useAuthActions();
   const { isAuthenticated, isLoading } = useConvexAuth();
   const currentUser = useQuery(api.userPreferences.currentUser);
-  const isAnonymous = currentUser?.isAnonymous ?? true;
+  // Convex Auth sets `isAnonymous: true` for anonymous sessions; for password/OAuth
+  // it may be absent (undefined). Treat missing as non-anonymous.
+  const isAnonymous = currentUser?.isAnonymous ?? false;
   const { t, i18n } = useTranslation("common");
   const {
     displayName,
