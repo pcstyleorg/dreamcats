@@ -11,6 +11,7 @@ import { useSessionPersistence } from './hooks/useSessionPersistence';
 import './i18n/config';
 import { ConvexSync } from "@/state/ConvexSync";
 import { safeLocalStorage } from "@/lib/storage";
+import { toast } from "sonner";
 
 const LandingPage = lazy(() =>
   import('./components/LandingPage').then((m) => ({ default: m.LandingPage })),
@@ -71,6 +72,24 @@ function App() {
   const showLanding = !hasEntered;
   const showLobby = hasEntered && state.gamePhase === 'lobby';
   const showGameboard = hasEntered && state.gamePhase !== 'lobby';
+
+  // Guard against accidental full-page navigation caused by form submits on the landing screen.
+  // This can happen if some embedded widget or browser feature wraps content in a <form>.
+  useEffect(() => {
+    if (!showLanding) return;
+    const handler = (event: Event) => {
+      const landingRoot = document.getElementById("landing-root");
+      const target = event.target;
+      if (!landingRoot || !(target instanceof Element) || !landingRoot.contains(target)) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      toast.error("Navigation prevented (unexpected form submit).");
+    };
+    document.addEventListener("submit", handler, true);
+    return () => document.removeEventListener("submit", handler, true);
+  }, [showLanding]);
 
   return (
     <Suspense fallback={<div className="h-dvh bg-background flex items-center justify-center"><div className="text-foreground">Loading...</div></div>}>

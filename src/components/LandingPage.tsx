@@ -74,13 +74,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
     },
   };
 
+  const handleEnter = (event?: React.MouseEvent) => {
+    event?.preventDefault();
+    event?.stopPropagation();
+    onEnter();
+  };
+
   const handleRejoin = async () => {
     if (activeSession?.roomId && activeSession?.playerId) {
       try {
         const storedName = safeLocalStorage.getItem("playerName") || "Player";
         await rejoinRoom(activeSession.roomId, activeSession.playerId, storedName);
         toast.success(t("common:success.rejoinedGame"));
-        onEnter();
+        handleEnter();
       } catch (e) {
         toast.error(t("common:errors.rejoinFailed"));
         console.error(e);
@@ -95,7 +101,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
        setGame(activeSession.localGameState, { source: "local" });
        toast.success(t("common:success.rejoinedGame"));
        // brief feedback so the user sees we're resuming
-       setTimeout(() => onEnter(), 50);
+       setTimeout(() => handleEnter(), 50);
     }
   };
 
@@ -105,7 +111,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
     // 2. Reset local game state (Zustand) to prevent auto-save loop
     leaveGame(); 
     // 3. Enter lobby
-    onEnter();
+    handleEnter();
   };
   
   // Filter out very old sessions (older than 12 hours) - simplistic check 
@@ -113,6 +119,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
 
   return (
     <div 
+      id="landing-root"
       className="w-full min-h-dvh flex items-center justify-center relative overflow-hidden p-4 sm:p-6 md:p-8 bg-background"
     >
       {/* Background elements - theme-aware gradients */}
@@ -195,7 +202,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
                   </Button>
                    <Button
                     type="button"
-                    onClick={onEnter} // Just enter lobby without rejoining
+                    onClick={handleEnter} // Just enter lobby without rejoining
                     variant="ghost" 
                     className="flex-1"
                   >
@@ -210,7 +217,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
           ) : (
             <Button
               type="button"
-              onClick={onEnter}
+              onClick={handleEnter}
               size="lg"
               className="font-semibold text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 shadow-soft-lg hover:shadow-dreamy transition-all duration-300 hover:scale-105 active:scale-95"
             >
