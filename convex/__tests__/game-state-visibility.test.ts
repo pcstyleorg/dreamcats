@@ -8,6 +8,46 @@ import { type GameState } from "../types";
 const modules = import.meta.glob(["../*.ts", "../_generated/**/*.{ts,js}"]);
 
 describe("games.getGameState visibility", () => {
+  it("in lobby, returns live players list even without playerId", async () => {
+    const t = convexTest(schema, modules);
+    const roomId = "room-visibility-lobby";
+    const hostId = "host-visibility-lobby";
+    const guestId = "guest-visibility-lobby";
+
+    await t.mutation(api.rooms.createRoom, {
+      roomId,
+      hostId,
+      hostName: "Host",
+    });
+    await t.mutation(api.rooms.joinRoom, {
+      roomId,
+      playerId: guestId,
+      name: "Guest",
+    });
+
+    const state = await t.query(api.games.getGameState, { roomId });
+    expect(state?.gamePhase).toBe("lobby");
+    expect(state?.players).toHaveLength(2);
+    expect(state?.players[0].id).toBe(hostId);
+    expect(state?.players[1].id).toBe(guestId);
+  });
+
+  it("returns state without auth in hotseat mode", async () => {
+    const t = convexTest(schema, modules);
+    const roomId = "room-visibility-hotseat";
+    const hostId = "host-visibility-hotseat";
+
+    await t.mutation(api.rooms.createRoom, {
+      roomId,
+      hostId,
+      hostName: "Host",
+      mode: "hotseat",
+    });
+
+    const state = await t.query(api.games.getGameState, { roomId });
+    expect(state?.gameMode).toBe("hotseat");
+  });
+
   it("returns null without playerId outside the lobby", async () => {
     const t = convexTest(schema, modules);
     const roomId = "room-visibility-auth";
