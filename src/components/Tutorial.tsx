@@ -137,7 +137,7 @@ export const Tutorial: React.FC = () => {
         clearInterval(pollInterval);
       };
     } else {
-      setHighlightRect(null);
+      queueMicrotask(() => setHighlightRect(null));
     }
   }, [stepContent?.highlightSelector, state.gamePhase, step]);
 

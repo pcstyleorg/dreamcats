@@ -86,10 +86,7 @@ export function useScaleToFit(
   }, [containerRef, contentRef, maxScale, minScale, padding, enabled]);
 
   useLayoutEffect(() => {
-    if (!enabled) {
-      setScale(1);
-      return;
-    }
+    if (!enabled) return;
 
     // Use RAF for smooth updates
     let rafId: number;
