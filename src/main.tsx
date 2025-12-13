@@ -11,8 +11,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ConvexClientProvider>
       <App />
-      <Analytics />
-      <SpeedInsights />
+      {/* Temporarily disabled for debugging navigation issues */}
+      {/* <Analytics />
+      <SpeedInsights /> */}
     </ConvexClientProvider>
   </React.StrictMode>,
 );

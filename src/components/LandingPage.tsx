@@ -77,6 +77,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
   const handleEnter = (event?: React.MouseEvent) => {
     event?.preventDefault();
     event?.stopPropagation();
+
+    // DEBUG: Log button click in production
+    if (import.meta.env.PROD) {
+      console.log("[NAV-DEBUG] Enter button clicked", {
+        timestamp: new Date().toISOString(),
+        eventType: event?.type,
+        target: event?.target,
+        currentUrl: window.location.href,
+        sessionStorage: sessionStorage.getItem("dreamcats-has-entered")
+      });
+    }
+
     onEnter();
   };
 

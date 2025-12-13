@@ -12,6 +12,7 @@ import './i18n/config';
 import { ConvexSync } from "@/state/ConvexSync";
 import { safeLocalStorage } from "@/lib/storage";
 import { toast } from "sonner";
+import { safeSessionStorage } from "@/lib/storage";
 
 const LandingPage = lazy(() =>
   import('./components/LandingPage').then((m) => ({ default: m.LandingPage })),
@@ -28,9 +29,60 @@ const Tutorial = lazy(() =>
 
 function App() {
   const { state } = useGame();
-  const [hasEntered, setHasEntered] = useState(false);
+  const [hasEntered, setHasEntered] = useState(() => {
+    // Check session storage first, then fall back to local storage backup
+    const sessionValue = safeSessionStorage.getItem("dreamcats-has-entered") === "true";
+    const localBackup = safeLocalStorage.getItem("dreamcats-has-entered-backup") === "true";
+    return sessionValue || localBackup;
+  });
   const { theme, setTheme: saveTheme } = useUserPreferences();
   const [localTheme, setLocalTheme] = useState<'light' | 'dark'>('light');
+
+  // DEBUG: Capture navigation events on production
+  useEffect(() => {
+    if (import.meta.env.PROD) {
+      const logEvent = (type: string, data?: any) => {
+        console.log(`[NAV-DEBUG ${new Date().toISOString()}] ${type}`, data);
+      };
+
+      logEvent("App mounted", {
+        url: window.location.href,
+        hasEntered,
+        queryParams: window.location.search
+      });
+
+      // Capture beforeunload
+      const beforeUnloadHandler = (e: BeforeUnloadEvent) => {
+        logEvent("beforeunload triggered", {
+          returnValue: e.returnValue,
+          stack: new Error().stack
+        });
+      };
+
+      // Capture location changes
+      const originalPushState = history.pushState;
+      const originalReplaceState = history.replaceState;
+
+      history.pushState = function(...args) {
+        logEvent("history.pushState", { url: args[2], state: args[0] });
+        return originalPushState.apply(this, args);
+      };
+
+      history.replaceState = function(...args) {
+        logEvent("history.replaceState", { url: args[2], state: args[0] });
+        return originalReplaceState.apply(this, args);
+      };
+
+      window.addEventListener("beforeunload", beforeUnloadHandler);
+      window.addEventListener("popstate", () => logEvent("popstate"));
+
+      return () => {
+        window.removeEventListener("beforeunload", beforeUnloadHandler);
+        history.pushState = originalPushState;
+        history.replaceState = originalReplaceState;
+      };
+    }
+  }, [hasEntered]);
 
   // Track active game sessions for rejoin
   useSessionPersistence();
@@ -73,11 +125,41 @@ function App() {
   const showLobby = hasEntered && state.gamePhase === 'lobby';
   const showGameboard = hasEntered && state.gamePhase !== 'lobby';
 
+  const handleEntered = () => {
+    // Persist to both session and local storage for redundancy
+    safeSessionStorage.setItem("dreamcats-has-entered", "true");
+    safeLocalStorage.setItem("dreamcats-has-entered-backup", "true");
+
+    if (import.meta.env.PROD) {
+      console.log("[NAV-DEBUG] handleEntered called", {
+        timestamp: new Date().toISOString(),
+        url: window.location.href
+      });
+    }
+
+    setHasEntered(true);
+  };
+
+  // Clean up backup flag when user successfully enters lobby
+  useEffect(() => {
+    if (hasEntered && !showLanding) {
+      // Successfully entered - can now clear backup flag on next session
+      // (Keep it during this session to prevent reload issues)
+      if (import.meta.env.PROD) {
+        console.log("[NAV-DEBUG] Successfully entered lobby/game", {
+          timestamp: new Date().toISOString(),
+          gamePhase: state.gamePhase
+        });
+      }
+    }
+  }, [hasEntered, showLanding, state.gamePhase]);
+
   // Guard against accidental full-page navigation caused by form submits on the landing screen.
   // This can happen if some embedded widget or browser feature wraps content in a <form>.
   useEffect(() => {
     if (!showLanding) return;
-    const handler = (event: Event) => {
+
+    const submitHandler = (event: Event) => {
       const landingRoot = document.getElementById("landing-root");
       const target = event.target;
       if (!landingRoot || !(target instanceof Element) || !landingRoot.contains(target)) {
@@ -86,9 +168,43 @@ function App() {
       event.preventDefault();
       event.stopPropagation();
       toast.error("Navigation prevented (unexpected form submit).");
+
+      if (import.meta.env.PROD) {
+        console.log("[NAV-DEBUG] Form submit prevented", {
+          target: event.target,
+          timestamp: new Date().toISOString()
+        });
+      }
     };
-    document.addEventListener("submit", handler, true);
-    return () => document.removeEventListener("submit", handler, true);
+
+    // Prevent Analytics scripts from hijacking navigation during landing interactions
+    const clickHandler = (event: MouseEvent) => {
+      const landingRoot = document.getElementById("landing-root");
+      if (!landingRoot || !event.target || !landingRoot.contains(event.target as Node)) {
+        return;
+      }
+
+      // Check if this is a navigation attempt by third-party scripts
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'A' && (target as HTMLAnchorElement).href === window.location.href) {
+        if (import.meta.env.PROD) {
+          console.log("[NAV-DEBUG] Preventing same-page anchor navigation", {
+            href: (target as HTMLAnchorElement).href,
+            timestamp: new Date().toISOString()
+          });
+        }
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+
+    document.addEventListener("submit", submitHandler, true);
+    document.addEventListener("click", clickHandler, true);
+
+    return () => {
+      document.removeEventListener("submit", submitHandler, true);
+      document.removeEventListener("click", clickHandler, true);
+    };
   }, [showLanding]);
 
   return (
@@ -108,7 +224,7 @@ function App() {
             <AnimatePresence mode="wait">
               {showLanding && (
                 <motion.div key="landing" className="flex-1 w-full min-h-dvh" exit={{ opacity: 0, transition: { duration: 0.5 } }}>
-                  <LandingPage onEnter={() => setHasEntered(true)} />
+                  <LandingPage onEnter={handleEntered} />
                 </motion.div>
               )}
               {showLobby && (

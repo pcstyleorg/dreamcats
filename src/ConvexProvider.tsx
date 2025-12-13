@@ -35,8 +35,38 @@ export const ConvexClientProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Custom replaceURL to prevent unwanted navigation/reloads after auth flow
+  // Uses history.replaceState instead of window.location.replace to avoid reload
+  const replaceURL = (relativePath: string) => {
+    if (import.meta.env.PROD) {
+      console.log("[ConvexAuth] replaceURL called", {
+        from: window.location.href,
+        to: relativePath,
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    try {
+      // Use history API to avoid full page reload
+      const url = new URL(relativePath, window.location.origin);
+      window.history.replaceState(
+        { ...window.history.state },
+        "",
+        url.pathname + url.search + url.hash
+      );
+    } catch (error) {
+      console.error("[ConvexAuth] replaceURL failed", error);
+      // Fallback: only if history API fails
+      window.location.replace(relativePath);
+    }
+  };
+
   return (
-    <ConvexAuthProvider client={convex} shouldHandleCode={shouldHandleCode}>
+    <ConvexAuthProvider
+      client={convex}
+      shouldHandleCode={shouldHandleCode}
+      replaceURL={replaceURL}
+    >
       {children}
     </ConvexAuthProvider>
   );
