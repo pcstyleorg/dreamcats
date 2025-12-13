@@ -58,28 +58,66 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     null,
   );
 
-  // Consistent timing for recent move highlights
-  const recentMoveForPlayer =
-    lastMove &&
-      lastMove.playerId === player.id &&
-      Date.now() - lastMove.timestamp < 3000
-      ? lastMove
-      : null;
+  const [recentMoveForPlayer, setRecentMoveForPlayer] = React.useState<
+    typeof lastMove
+  >(null);
+  const [swap2HighlightIndex, setSwap2HighlightIndex] = React.useState<
+    number | null
+  >(null);
 
-  // Check if this player has a card that was involved in a recent swap_2
-  // Using consistent 3000ms duration for better cross-network reliability
-  const swap2HighlightIndex = React.useMemo(() => {
-    if (!lastMove || lastMove.action !== "swap_2" || !lastMove.swap2Details) return null;
+  React.useEffect(() => {
+    if (!lastMove || lastMove.playerId !== player.id) {
+      queueMicrotask(() => setRecentMoveForPlayer(null));
+      return;
+    }
 
-    // Use server timestamp for consistent timing across all clients
+    const HIGHLIGHT_DURATION = 3000;
     const age = Date.now() - lastMove.timestamp;
-    const HIGHLIGHT_DURATION = 3000; // Consistent 3 second highlight
-    if (age > HIGHLIGHT_DURATION) return null;
+    if (age >= HIGHLIGHT_DURATION) {
+      queueMicrotask(() => setRecentMoveForPlayer(null));
+      return;
+    }
+
+    queueMicrotask(() => setRecentMoveForPlayer(lastMove));
+    const clearTimer = setTimeout(
+      () => setRecentMoveForPlayer(null),
+      HIGHLIGHT_DURATION - age,
+    );
+    return () => clearTimeout(clearTimer);
+  }, [lastMove, player.id]);
+
+  React.useEffect(() => {
+    if (!lastMove || lastMove.action !== "swap_2" || !lastMove.swap2Details) {
+      queueMicrotask(() => setSwap2HighlightIndex(null));
+      return;
+    }
 
     const { card1, card2 } = lastMove.swap2Details;
-    if (card1.playerId === player.id) return card1.cardIndex;
-    if (card2.playerId === player.id) return card2.cardIndex;
-    return null;
+    const index =
+      card1.playerId === player.id
+        ? card1.cardIndex
+        : card2.playerId === player.id
+          ? card2.cardIndex
+          : null;
+
+    if (index === null) {
+      queueMicrotask(() => setSwap2HighlightIndex(null));
+      return;
+    }
+
+    const HIGHLIGHT_DURATION = 3000;
+    const age = Date.now() - lastMove.timestamp;
+    if (age >= HIGHLIGHT_DURATION) {
+      queueMicrotask(() => setSwap2HighlightIndex(null));
+      return;
+    }
+
+    queueMicrotask(() => setSwap2HighlightIndex(index));
+    const clearTimer = setTimeout(
+      () => setSwap2HighlightIndex(null),
+      HIGHLIGHT_DURATION - age,
+    );
+    return () => clearTimeout(clearTimer);
   }, [lastMove, player.id]);
 
   React.useEffect(() => {

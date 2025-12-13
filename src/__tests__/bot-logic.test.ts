@@ -14,7 +14,7 @@ import {
   rememberPeekedCard,
   forgetRememberedCard,
 } from "@/lib/bot-logic";
-import { GameState, Card } from "@/types";
+import { type Card, type GameAction, type GameState } from "@/types";
 
 const createCard = (id: number, value: number, isSpecial = false, specialAction?: Card["specialAction"]): Card => ({
   id,
@@ -44,6 +44,15 @@ const baseState = (): GameState =>
     turnCount: 0,
     chatMessages: [],
   }) satisfies GameState;
+
+const expectActionType = <T extends GameAction["type"]>(
+  action: GameAction | null | undefined,
+  type: T,
+): Extract<GameAction, { type: T }> => {
+  expect(action).toBeTruthy();
+  expect(action!.type).toBe(type);
+  return action as Extract<GameAction, { type: T }>;
+};
 
 describe("bot-logic", () => {
   beforeEach(() => {
@@ -154,8 +163,8 @@ describe("bot-logic", () => {
       ];
 
       const action = decidePeekAction(state, "bot");
-      expect(action?.type).toBe("PEEK_CARD");
-      expect(action?.payload?.playerId).toBe("bot");
+      const peek = expectActionType(action, "PEEK_CARD");
+      expect(peek.payload.playerId).toBe("bot");
     });
 
     it("returns null when it is not bot's peeking turn", () => {
@@ -290,8 +299,8 @@ describe("bot-logic", () => {
       rememberPeekedCard("bot", 0, 9);
 
       const action = decideHeldCardAction(state, "bot");
-      expect(action?.type).toBe("SWAP_HELD_CARD");
-      expect(action?.payload?.cardIndex).toBe(0);
+      const swap = expectActionType(action, "SWAP_HELD_CARD");
+      expect(swap.payload.cardIndex).toBe(0);
     });
 
     it("discards high value cards", () => {
@@ -328,8 +337,8 @@ describe("bot-logic", () => {
       state.tempCards = [createCard(1, 7), createCard(2, 3)];
 
       const action = decideTake2Action(state);
-      expect(action?.type).toBe("ACTION_TAKE_2_CHOOSE");
-      expect(action?.payload?.card.value).toBe(3);
+      const choose = expectActionType(action, "ACTION_TAKE_2_CHOOSE");
+      expect(choose.payload.card.value).toBe(3);
     });
 
     it("chooses first card when values are equal", () => {
@@ -338,7 +347,8 @@ describe("bot-logic", () => {
       state.tempCards = [createCard(1, 5), createCard(2, 5)];
 
       const action = decideTake2Action(state);
-      expect(action?.payload?.card.id).toBe(1);
+      const choose = expectActionType(action, "ACTION_TAKE_2_CHOOSE");
+      expect(choose.payload.card.id).toBe(1);
     });
 
     it("returns null when tempCards is undefined", () => {
@@ -372,8 +382,8 @@ describe("bot-logic", () => {
 
       vi.spyOn(Math, "random").mockReturnValue(0.1); // low enough to peek own
       const action = decidePeek1Action(state, "bot");
-      expect(action?.type).toBe("ACTION_PEEK_1_SELECT");
-      expect(action?.payload?.playerId).toBe("bot");
+      const select = expectActionType(action, "ACTION_PEEK_1_SELECT");
+      expect(select.payload.playerId).toBe("bot");
     });
 
     it("can peek opponent cards", () => {
@@ -401,8 +411,8 @@ describe("bot-logic", () => {
 
       vi.spyOn(Math, "random").mockReturnValue(0.99); // high enough to peek opponent
       const action = decidePeek1Action(state, "bot");
-      expect(action?.type).toBe("ACTION_PEEK_1_SELECT");
-      expect(action?.payload?.playerId).toBe("human");
+      const select = expectActionType(action, "ACTION_PEEK_1_SELECT");
+      expect(select.payload.playerId).toBe("human");
     });
   });
 
@@ -421,9 +431,9 @@ describe("bot-logic", () => {
       rememberPeekedCard("bot", 0, 9);
 
       const action = decideSwap2Select1Action(state, "bot");
-      expect(action?.type).toBe("ACTION_SWAP_2_SELECT");
-      expect(action?.payload?.playerId).toBe("bot");
-      expect(action?.payload?.cardIndex).toBe(0);
+      const select = expectActionType(action, "ACTION_SWAP_2_SELECT");
+      expect(select.payload.playerId).toBe("bot");
+      expect(select.payload.cardIndex).toBe(0);
     });
 
     it("selects opponent card when no high cards known", () => {
@@ -444,8 +454,8 @@ describe("bot-logic", () => {
       ];
 
       const action = decideSwap2Select1Action(state, "bot");
-      expect(action?.type).toBe("ACTION_SWAP_2_SELECT");
-      expect(action?.payload?.playerId).toBe("human");
+      const select = expectActionType(action, "ACTION_SWAP_2_SELECT");
+      expect(select.payload.playerId).toBe("human");
     });
   });
 
@@ -463,8 +473,8 @@ describe("bot-logic", () => {
       ];
 
       const action = decideSwap2Select2Action(state, "bot");
-      expect(action?.type).toBe("ACTION_SWAP_2_SELECT");
-      expect(action?.payload?.playerId).toBe("human");
+      const select = expectActionType(action, "ACTION_SWAP_2_SELECT");
+      expect(select.payload.playerId).toBe("human");
     });
 
     it("selects own card when first selection was opponent card", () => {
@@ -480,8 +490,8 @@ describe("bot-logic", () => {
       ];
 
       const action = decideSwap2Select2Action(state, "bot");
-      expect(action?.type).toBe("ACTION_SWAP_2_SELECT");
-      expect(action?.payload?.playerId).toBe("bot");
+      const select = expectActionType(action, "ACTION_SWAP_2_SELECT");
+      expect(select.payload.playerId).toBe("bot");
     });
 
     it("returns null when swapState is missing", () => {
@@ -571,8 +581,8 @@ describe("bot-logic", () => {
 
       // should swap with remembered high card at index 0
       const action = decideHeldCardAction(state, "bot");
-      expect(action?.type).toBe("SWAP_HELD_CARD");
-      expect(action?.payload?.cardIndex).toBe(0);
+      const swap = expectActionType(action, "SWAP_HELD_CARD");
+      expect(swap.payload.cardIndex).toBe(0);
     });
 
     it("forgets cards after swap", () => {
@@ -619,7 +629,8 @@ describe("bot-logic", () => {
       vi.spyOn(Math, "random").mockReturnValue(0.1);
       // should try to peek own card since memory is cleared
       const action = decidePeek1Action(state, "bot");
-      expect(action?.payload?.playerId).toBe("bot");
+      const select = expectActionType(action, "ACTION_PEEK_1_SELECT");
+      expect(select.payload.playerId).toBe("bot");
     });
   });
 

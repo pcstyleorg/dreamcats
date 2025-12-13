@@ -263,8 +263,8 @@ describe('game phase selectors', () => {
       ...initialGameState,
       gamePhase: 'round_end',
       lastRoundScores: [
-        { playerId: 'p1', handValue: 10, penalty: 0, totalRoundScore: 10 },
-        { playerId: 'p2', handValue: 15, penalty: 0, totalRoundScore: 15 },
+        { playerId: 'p1', score: 10, penalty: 0 },
+        { playerId: 'p2', score: 15, penalty: 0 },
       ],
     });
 
@@ -501,8 +501,8 @@ describe('round and game end selectors', () => {
       ...initialGameState,
       gamePhase: 'round_end',
       lastRoundScores: [
-        { playerId: 'p1', handValue: 12, penalty: 5, totalRoundScore: 17 },
-        { playerId: 'p2', handValue: 8, penalty: 0, totalRoundScore: 8 },
+        { playerId: 'p1', score: 17, penalty: 5 },
+        { playerId: 'p2', score: 8, penalty: 0 },
       ],
       lastCallerId: 'p1',
     });

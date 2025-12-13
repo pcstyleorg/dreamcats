@@ -51,6 +51,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   } = state;
   const players = usePlayersView();
   const { netStatus } = useNetStatus();
+  const [recentMove, setRecentMove] = useState<typeof lastMove>(null);
   const [isCompact, setIsCompact] = useState(() => {
     if (typeof window !== 'undefined') {
       // Improved compact mode detection for better mobile and small screen support
@@ -76,6 +77,27 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     minScale: 0.65,
     enabled: true,
   });
+
+  useEffect(() => {
+    if (!lastMove) {
+      queueMicrotask(() => setRecentMove(null));
+      return;
+    }
+
+    const DISPLAY_DURATION = 3000;
+    const age = Date.now() - lastMove.timestamp;
+    if (age >= DISPLAY_DURATION) {
+      queueMicrotask(() => setRecentMove(null));
+      return;
+    }
+
+    queueMicrotask(() => setRecentMove(lastMove));
+    const clearTimer = setTimeout(
+      () => setRecentMove(null),
+      DISPLAY_DURATION - age,
+    );
+    return () => clearTimeout(clearTimer);
+  }, [lastMove]);
 
   // Auto-collapse sidebar when screen width changes
   useEffect(() => {
@@ -224,7 +246,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     ? "w-[clamp(64px,7.5vw,100px)]!"
     : "w-[clamp(68px,7.8vw,104px)]!";
 
-  const RoomInfoPill = ({ variant }: { variant: "desktop" | "mobile" }) => {
+  const renderRoomInfoPill = (variant: "desktop" | "mobile") => {
     if (gameMode !== "online" || !roomId) return null;
     const base =
       variant === "desktop"
@@ -255,45 +277,8 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     );
   };
 
-  const SidePanelContent = () => (
-    <>
-      <div className="my-4 p-4 bg-accent/40 backdrop-blur-sm rounded-lg min-h-[60px] border border-border/30">
-        <h4 className="font-semibold mb-2 font-heading flex items-center gap-2 text-foreground">
-          <ScrollText className="w-4 h-4 text-primary" />
-          {t('game.actionLog')}
-        </h4>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          {actionMessage}
-        </p>
-      </div>
-
-      <Separator className="my-4 bg-border/50" />
-      <div data-tutorial-id="scoreboard">
-        <Scoreboard
-          entries={orderedEntries.map(({ player, seat }) => ({
-            player,
-            seat,
-            isLocal: player.id === bottomPlayer?.id || player.id === myPlayerId,
-            isActive: player.id === turnOwnerId,
-          }))}
-        />
-      </div>
-      {gameMode === "online" && (
-        <>
-          <Separator className="my-4 bg-border/50" />
-          <div className="h-64">
-            <ChatBox />
-          </div>
-        </>
-      )}
-    </>
-  );
-
   const backgroundImage = getGameBackgroundAsset();
 
-  // Consistent 3 second timing for recent move display across all clients
-  const recentMove =
-    lastMove && Date.now() - lastMove.timestamp < 3000 ? lastMove : null;
   const recentPlayer =
     recentMove && players.find((p) => p.id === recentMove.playerId);
   const recentMoveLabel = React.useMemo(() => {
@@ -444,6 +429,40 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
   }, { bottom: undefined, top: undefined, left: undefined, right: undefined, bench: undefined });
   const benchPlayers = seatingEntries.filter((s) => s.seat === "bench").map((s) => s.player);
 
+  const sidePanelContent = (
+    <>
+      <div className="my-4 p-4 bg-accent/40 backdrop-blur-sm rounded-lg min-h-[60px] border border-border/30">
+        <h4 className="font-semibold mb-2 font-heading flex items-center gap-2 text-foreground">
+          <ScrollText className="w-4 h-4 text-primary" />
+          {t('game.actionLog')}
+        </h4>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          {actionMessage}
+        </p>
+      </div>
+
+      <Separator className="my-4 bg-border/50" />
+      <div data-tutorial-id="scoreboard">
+        <Scoreboard
+          entries={orderedEntries.map(({ player, seat }) => ({
+            player,
+            seat,
+            isLocal: player.id === bottomPlayer?.id || player.id === myPlayerId,
+            isActive: player.id === turnOwnerId,
+          }))}
+        />
+      </div>
+      {gameMode === "online" && (
+        <>
+          <Separator className="my-4 bg-border/50" />
+          <div className="h-64">
+            <ChatBox />
+          </div>
+        </>
+      )}
+    </>
+  );
+
   const handleExitGame = () => {
     leaveGame();
     toast.message(t('game.returnedToLobby'));
@@ -528,7 +547,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
             </div>
 
             <div className="hidden sm:block">
-               <RoomInfoPill variant="desktop" />
+              {renderRoomInfoPill("desktop")}
             </div>
           </div>
 
@@ -570,7 +589,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                     </SheetTitle>
                   </SheetHeader>
                   <ScrollArea className="h-[calc(100%-4rem)] pr-4">
-                    <SidePanelContent />
+                    {sidePanelContent}
                   </ScrollArea>
                 </SheetContent>
               </Sheet>
@@ -843,7 +862,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
             </div>
           )}
           <Separator />
-          <SidePanelContent />
+          {sidePanelContent}
         </div>
       </aside>
       </div>
