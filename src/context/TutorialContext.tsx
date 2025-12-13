@@ -3,6 +3,7 @@ import { createContext, useContext, ReactNode, useEffect } from "react";
 import { useTutorialStore, TutorialStore, TutorialStep } from "@/stores/tutorialStore";
 import { useConvexAuth } from "convex/react";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
+import { shouldShowTutorialWelcome } from "@/lib/tutorial-visibility";
 
 // Small local interface to avoid importing store types all over the app
 interface LocalTutorialContextType {
@@ -32,11 +33,17 @@ export const TutorialProvider = ({ children }: { children: ReactNode }) => {
   const skipToGameplay = useTutorialStore((s: TutorialStore) => s.skipToGameplay);
 
   useEffect(() => {
-    if (isAuthenticated && prefsLoading) return;
-    if (!tutorialCompleted) {
+    if (
+      shouldShowTutorialWelcome({
+        isAuthenticated,
+        prefsLoading,
+        tutorialCompleted,
+        step,
+      })
+    ) {
       setStep("welcome");
     }
-  }, [isAuthenticated, prefsLoading, setStep, tutorialCompleted]);
+  }, [isAuthenticated, prefsLoading, setStep, step, tutorialCompleted]);
 
   const endTutorial = () => {
     endTutorialStore();

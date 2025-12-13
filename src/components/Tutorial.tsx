@@ -19,7 +19,7 @@ interface TutorialStepContent {
 export const Tutorial: React.FC = () => {
   const { t } = useTranslation();
   const { step, startTutorial, nextStep, prevStep, endTutorial, setStep } = useTutorial();
-  const { state } = useGame();
+  const { state, startSoloGame } = useGame();
   const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null);
 
   // Get step content configuration
@@ -167,6 +167,20 @@ export const Tutorial: React.FC = () => {
   };
 
   const isShowingSteps = stepContent !== null && state.gamePhase !== 'lobby';
+  const isWaitingForGame =
+    stepContent !== null && state.gamePhase === "lobby";
+
+  const handleWelcomeYes = () => {
+    startTutorial();
+
+    // The tutorial highlights in-game UI, so if we're still in the lobby,
+    // start a quick solo game so the tutorial can continue immediately.
+    // Avoid auto-exiting an online room (users may be coordinating multiplayer).
+    if (state.gamePhase === "lobby" && state.gameMode !== "online") {
+      const fallbackName = localStorage.getItem("playerName") || "Player";
+      startSoloGame(fallbackName, { botCount: 1, difficulty: "normal" });
+    }
+  };
 
   return (
     <>
@@ -193,7 +207,7 @@ export const Tutorial: React.FC = () => {
               {t('tutorial.noThanks')}
             </Button>
             <Button 
-              onClick={startTutorial}
+              onClick={handleWelcomeYes}
               className="w-full sm:w-auto bg-linear-to-r from-primary to-accent hover:opacity-90"
             >
               {t('tutorial.yesPlease')}
@@ -201,6 +215,65 @@ export const Tutorial: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* If tutorial started in the lobby, show a non-blocking prompt to start a game */}
+      <AnimatePresence>
+        {isWaitingForGame && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed z-102 w-[95vw] max-w-md bottom-4 left-1/2 -translate-x-1/2"
+          >
+            <div className="bg-card/95 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl overflow-hidden">
+              <div className="p-5 sm:p-6 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="shrink-0 w-10 h-10 rounded-xl bg-linear-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-heading text-base font-bold text-foreground">
+                      {t("tutorial.needsGameTitle")}
+                    </h3>
+                    <p className="text-sm text-foreground/80 leading-relaxed mt-1">
+                      {t("tutorial.needsGameDescription")}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={endTutorial}
+                    className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive"
+                    title={t("tutorial.noThanks")}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={() => {
+                      const fallbackName = localStorage.getItem("playerName") || "Player";
+                      startSoloGame(fallbackName, { botCount: 1, difficulty: "normal" });
+                    }}
+                    className="flex-1 bg-linear-to-r from-emerald-500 to-cyan-500 hover:opacity-90"
+                  >
+                    {t("tutorial.startSolo")}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={endTutorial}
+                    className="flex-1 border-border/60 hover:bg-muted/50"
+                  >
+                    {t("tutorial.noThanks")}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Highlight Overlay */}
       <AnimatePresence>
