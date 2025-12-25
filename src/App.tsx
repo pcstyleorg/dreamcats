@@ -1,5 +1,4 @@
 import { useEffect, useState, Suspense, lazy } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from '@/state/useGame';
 import { Toaster } from "@/components/ui/sonner"
 import { TutorialProvider } from './context/TutorialContext';
@@ -229,23 +228,21 @@ function App() {
                 <ThemeToggle theme={localTheme} onToggle={toggleTheme} />
               </div>
             )}
-            <AnimatePresence mode="wait">
-              {showLanding && (
-                <motion.div key="landing" className="flex-1 w-full min-h-dvh" exit={{ opacity: 0, transition: { duration: 0.5 } }}>
-                  <LandingPage onEnter={handleEntered} />
-                </motion.div>
-              )}
-              {showLobby && (
-                <motion.div key="lobby" className="flex-1 w-full min-h-dvh" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-                  <LobbyScreen />
-                </motion.div>
-              )}
-              {showGameboard && (
-                <motion.div key="gameboard" className="flex-1 w-full min-h-dvh" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-                  <Gameboard theme={localTheme} toggleTheme={toggleTheme} />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {showLanding && (
+              <div key="landing" className="flex-1 w-full min-h-dvh">
+                <LandingPage onEnter={handleEntered} />
+              </div>
+            )}
+            {showLobby && (
+              <div key="lobby" className="flex-1 w-full min-h-dvh">
+                <LobbyScreen />
+              </div>
+            )}
+            {showGameboard && (
+              <div key="gameboard" className="flex-1 w-full min-h-dvh">
+                <Gameboard theme={localTheme} toggleTheme={toggleTheme} />
+              </div>
+            )}
 
             <Toaster richColors theme={localTheme} />
             {hasEntered && <Tutorial />}
