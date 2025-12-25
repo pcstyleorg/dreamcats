@@ -10,7 +10,7 @@ const createTestState = (overrides: Partial<GameState>): GameState => ({
 });
 
 const createCard = (value: number, isSpecial = false, specialAction?: string): Card => ({
-  id: `card-${value}-${Math.random()}`,
+  id: Math.floor(Math.random() * 10000),
   value,
   isSpecial,
   specialAction: specialAction as any,
@@ -34,36 +34,19 @@ describe("Bot Difficulty Rebalance", () => {
         discardPile: [createCard(4)], // High value but below easy threshold
       });
 
-      const action = getBotAction(state, botId);
       // Easy bots have takeDiscardThreshold: 4, so they might take it.
       // However, it's still probabilistic (takeDiscardChance: 0.35).
       // We'll mock Math.random to force a positive result.
-      vi.spyOn(Math, 'random').mockReturnValue(0.1); 
-      
+      vi.spyOn(Math, 'random').mockReturnValue(0.1);
+
       expect(getBotAction(state, botId)?.type).toBe("DRAW_FROM_DISCARD");
       
       vi.restoreAllMocks();
     });
 
-    it("has low chance of calling Pobudka (0.08)", () => {
-        // Even with low score, easy bot rarely calls it
-        vi.spyOn(Math, 'random').mockReturnValue(0.05); // Should trigger
-        const state = createTestState({
-            gameMode: "solo",
-            botDifficulty: "easy",
-            gamePhase: "playing",
-            players: [
-              { id: humanId, name: "Human", hand: [], score: 0 },
-              { id: botId, name: "Bot", hand: [{ card: createCard(0), isFaceUp: false, hasBeenPeeked: true }, { card: createCard(0), isFaceUp: false, hasBeenPeeked: true }, { card: createCard(0), isFaceUp: false, hasBeenPeeked: true }, { card: createCard(0), isFaceUp: false, hasBeenPeeked: true }], score: 0 },
-            ],
-            currentPlayerIndex: 1,
-        });
-        // We also need to mock the internal BotMemory for this to work
-        // But getBotAction handles memory internally via a global map.
-        // For testing we might need to export a way to set memory or just rely on the fact that if we peeked it, it's in memory.
-        
-        // Let's assume the memory is updated by PEEK_CARD. 
-        // In a real test we'd need to mock the entire sequence or the memory module.
+    it.skip("has low chance of calling Pobudka (0.08)", () => {
+        // TODO: Need to mock BotMemory module to properly test Pobudka calling behavior
+        // getBotAction relies on internal memory state that needs proper setup
     });
   });
 
