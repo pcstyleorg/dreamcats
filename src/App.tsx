@@ -11,7 +11,6 @@ import './i18n/config';
 import { ConvexSync } from "@/state/ConvexSync";
 import { safeLocalStorage } from "@/lib/storage";
 import { toast } from "sonner";
-import { safeSessionStorage } from "@/lib/storage";
 
 const LandingPage = lazy(() =>
   import('./components/LandingPage').then((m) => ({ default: m.LandingPage })),
@@ -28,22 +27,7 @@ const Tutorial = lazy(() =>
 
 function App() {
   const { state } = useGame();
-  const [hasEntered, setHasEntered] = useState(() => {
-    // Primary source: session storage (resets on new tab/browser session)
-    const sessionValue = safeSessionStorage.getItem("dreamcats-has-entered") === "true";
-
-    // Backup: only use localStorage if session storage exists but is false
-    // This handles mid-session reloads, not cross-session persistence
-    const localBackup = safeLocalStorage.getItem("dreamcats-has-entered-backup") === "true";
-
-    // If sessionStorage is empty (fresh session), clear stale localStorage backup
-    if (safeSessionStorage.getItem("dreamcats-has-entered") === null) {
-      safeLocalStorage.removeItem("dreamcats-has-entered-backup");
-      return false;
-    }
-
-    return sessionValue || localBackup;
-  });
+  const [hasEntered, setHasEntered] = useState(false);
   const { theme, setTheme: saveTheme } = useUserPreferences();
   const [localTheme, setLocalTheme] = useState<'light' | 'dark'>('light');
 
@@ -135,10 +119,6 @@ function App() {
   const showGameboard = hasEntered && state.gamePhase !== 'lobby';
 
   const handleEntered = () => {
-    // Persist to both session and local storage for redundancy
-    safeSessionStorage.setItem("dreamcats-has-entered", "true");
-    safeLocalStorage.setItem("dreamcats-has-entered-backup", "true");
-
     if (import.meta.env.PROD) {
       console.log("[NAV-DEBUG] handleEntered called", {
         timestamp: new Date().toISOString(),
@@ -168,19 +148,6 @@ function App() {
     }
   }, [hasEntered, showLanding, showLobby, showGameboard, state.gamePhase]);
 
-  // Clean up backup flag when user successfully enters lobby
-  useEffect(() => {
-    if (hasEntered && !showLanding) {
-      // Successfully entered - can now clear backup flag on next session
-      // (Keep it during this session to prevent reload issues)
-      if (import.meta.env.PROD) {
-        console.log("[NAV-DEBUG] Successfully entered lobby/game", {
-          timestamp: new Date().toISOString(),
-          gamePhase: state.gamePhase
-        });
-      }
-    }
-  }, [hasEntered, showLanding, state.gamePhase]);
 
   // Guard against accidental full-page navigation caused by form submits on the landing screen.
   // This can happen if some embedded widget or browser feature wraps content in a <form>.

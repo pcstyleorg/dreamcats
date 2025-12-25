@@ -84,8 +84,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onEnter }) => {
         timestamp: new Date().toISOString(),
         eventType: event?.type,
         target: event?.target,
-        currentUrl: window.location.href,
-        sessionStorage: sessionStorage.getItem("dreamcats-has-entered")
+        currentUrl: window.location.href
       });
     }
 
