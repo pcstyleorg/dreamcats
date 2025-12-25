@@ -120,24 +120,38 @@ function App() {
 
   const handleEntered = () => {
     if (import.meta.env.PROD) {
-      console.log("[NAV-DEBUG] handleEntered called", {
+      console.log("[NAV-DEBUG] handleEntered called BEFORE setState", {
         timestamp: new Date().toISOString(),
         url: window.location.href,
         currentHasEnteredState: hasEntered,
-        gamePhase: state.gamePhase,
-        willShowLanding: hasEntered === false,
-        willShowLobby: hasEntered === true && state.gamePhase === 'lobby',
-        willShowGameboard: hasEntered === true && state.gamePhase !== 'lobby'
+        gamePhase: state.gamePhase
       });
     }
 
     setHasEntered(true);
+
+    if (import.meta.env.PROD) {
+      console.log("[NAV-DEBUG] setHasEntered(true) called");
+    }
   };
 
   // Track hasEntered state changes
   useEffect(() => {
     if (import.meta.env.PROD) {
-      console.log("[NAV-DEBUG] State updated", {
+      console.log("[NAV-DEBUG] hasEntered changed to:", hasEntered, {
+        timestamp: new Date().toISOString(),
+        showLanding,
+        showLobby,
+        showGameboard,
+        gamePhase: state.gamePhase
+      });
+    }
+  }, [hasEntered]);
+
+  // Track render state
+  useEffect(() => {
+    if (import.meta.env.PROD) {
+      console.log("[NAV-DEBUG] Render state:", {
         timestamp: new Date().toISOString(),
         hasEntered,
         showLanding,
