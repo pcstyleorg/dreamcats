@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { useConvexAuth, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../convex/_generated/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,11 +16,11 @@ export const ProfileStatsDialog: React.FC<ProfileStatsDialogProps> = ({
   onOpenChange,
 }) => {
   const { t } = useTranslation("common");
-  const { isAuthenticated } = useConvexAuth();
+  const isAuthenticated = false;
 
   const overview = useQuery(
     api.stats.getMyOverview,
-    isAuthenticated && open ? {} : "skip",
+    "skip",
   );
 
   const derived = useMemo(() => {
