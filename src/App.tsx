@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/sonner"
 import { TutorialProvider } from './context/TutorialContext';
 import { ThemeToggle } from './components/ThemeToggle';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
-import { AuthButton } from './components/AuthDialog';
 import { useUserPreferences } from './hooks/useUserPreferences';
 import { useSessionPersistence } from './hooks/useSessionPersistence';
 import './i18n/config';
@@ -245,7 +244,6 @@ function App() {
             <ConvexSync />
             {!showGameboard && (
               <div className="fixed top-3 sm:top-4 right-3 sm:right-4 z-50 flex gap-2">
-                <AuthButton />
                 <LanguageSwitcher />
                 <ThemeToggle theme={localTheme} onToggle={toggleTheme} />
               </div>
