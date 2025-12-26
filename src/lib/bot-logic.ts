@@ -403,8 +403,32 @@ export function decideSwap2Select2Action(state: GameState, botId: string): GameA
   const firstSelection = state.swapState?.card1;
   if (!firstSelection) return null;
 
-  // if first selection was our card, pick opponent's card
+  const memory = getMemory(botId);
+  const difficulty = state.botDifficulty ?? "hard";
+
+  // if first selection was our card, bot can either swap with own card or opponent card
   if (firstSelection.playerId === botId) {
+    // allow bot to swap two of its own cards if it makes strategic sense
+    const otherHighKnown = findHighestKnownCard(memory);
+
+    // if both first selection and another card are known high values (6+), swap them together
+    // to potentially put high cards in same position (though this doesn't help much in rules)
+    // actually, swapping own cards is mainly useful to reposition cards, but rules don't give advantage
+    // so prefer swapping with opponent unless bot is on easy mode and makes mistakes
+    const shouldSwapOwnCards =
+      difficulty === "easy" && Math.random() < 0.15 || // easy bots sometimes swap own cards randomly
+      (otherHighKnown !== null &&
+       otherHighKnown !== firstSelection.cardIndex &&
+       Math.random() < 0.25); // 25% chance to swap two own cards if bot has multiple known cards
+
+    if (shouldSwapOwnCards && otherHighKnown !== null && otherHighKnown !== firstSelection.cardIndex) {
+      return {
+        type: "ACTION_SWAP_2_SELECT",
+        payload: { playerId: botId, cardIndex: otherHighKnown },
+      };
+    }
+
+    // otherwise pick opponent's card
     const opponents = state.players.filter((p) => p.id !== botId);
     if (opponents.length > 0) {
       const opponent = randomFrom(opponents);
@@ -414,9 +438,15 @@ export function decideSwap2Select2Action(state: GameState, botId: string): GameA
         payload: { playerId: opponent.id, cardIndex },
       };
     }
+
+    // fallback to own card if no opponents (shouldn't happen in normal game)
+    const fallbackIndex = otherHighKnown ?? Math.floor(Math.random() * 4);
+    return {
+      type: "ACTION_SWAP_2_SELECT",
+      payload: { playerId: botId, cardIndex: fallbackIndex !== firstSelection.cardIndex ? fallbackIndex : (firstSelection.cardIndex + 1) % 4 },
+    };
   } else {
     // first selection was opponent's, pick our own card
-    const memory = getMemory(botId);
     const highestKnown = findHighestKnownCard(memory);
     const cardIndex = highestKnown ?? Math.floor(Math.random() * 4);
     return {
@@ -424,12 +454,6 @@ export function decideSwap2Select2Action(state: GameState, botId: string): GameA
       payload: { playerId: botId, cardIndex },
     };
   }
-
-  // fallback
-  return {
-    type: "ACTION_SWAP_2_SELECT",
-    payload: { playerId: botId, cardIndex: 0 },
-  };
 }
 
 // main entry point: get the next action for a bot given current game state

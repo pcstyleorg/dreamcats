@@ -617,7 +617,11 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                     ? activeHotseatPlayerId === seatMap.top.id
                     : currentPlayer.id === seatMap.top.id
                 }
-                isOpponent
+                isOpponent={
+                  gameMode === "hotseat"
+                    ? activeHotseatPlayerId !== seatMap.top.id
+                    : true
+                }
                 isLocalPlayer={false}
               />
             )}
@@ -634,7 +638,11 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                     ? activeHotseatPlayerId === seatMap.left.id
                     : currentPlayer.id === seatMap.left.id
                 }
-                isOpponent
+                isOpponent={
+                  gameMode === "hotseat"
+                    ? activeHotseatPlayerId !== seatMap.left.id
+                    : true
+                }
                 isLocalPlayer={false}
               />
             )}
@@ -780,7 +788,11 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                     ? activeHotseatPlayerId === seatMap.right.id
                     : currentPlayer.id === seatMap.right.id
                 }
-                isOpponent
+                isOpponent={
+                  gameMode === "hotseat"
+                    ? activeHotseatPlayerId !== seatMap.right.id
+                    : true
+                }
                 isLocalPlayer={false}
               />
             )}
@@ -834,7 +846,11 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
                       ? activeHotseatPlayerId === player.id
                       : currentPlayer.id === player.id
                   }
-                  isOpponent
+                  isOpponent={
+                    gameMode === "hotseat"
+                      ? activeHotseatPlayerId !== player.id
+                      : true
+                  }
                   isLocalPlayer={false}
                 />
               ))}
