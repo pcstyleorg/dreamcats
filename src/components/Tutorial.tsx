@@ -186,7 +186,7 @@ export const Tutorial: React.FC = () => {
   return (
     <>
       {/* Welcome Dialog */}
-      <Dialog open={step === 'welcome'}>
+      <Dialog open={step === 'welcome'} onOpenChange={(open) => !open && endTutorial()}>
         <DialogContent className="bg-card/95 backdrop-blur-xl border-primary/20 shadow-2xl max-w-md">
           <DialogHeader className="text-center space-y-4">
             <div className="mx-auto w-16 h-16 rounded-full bg-linear-to-br from-primary to-accent flex items-center justify-center">
@@ -200,14 +200,14 @@ export const Tutorial: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-row gap-3 mt-6">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={endTutorial}
               className="w-full sm:w-auto border-border/60 hover:bg-muted/50"
             >
               {t('tutorial.noThanks')}
             </Button>
-            <Button 
+            <Button
               onClick={handleWelcomeYes}
               className="w-full sm:w-auto bg-linear-to-r from-primary to-accent hover:opacity-90"
             >
@@ -421,7 +421,7 @@ export const Tutorial: React.FC = () => {
       </AnimatePresence>
 
       {/* End Dialog */}
-      <Dialog open={step === 'end'}>
+      <Dialog open={step === 'end'} onOpenChange={(open) => !open && endTutorial()}>
         <DialogContent className="bg-card/95 backdrop-blur-xl border-primary/20 shadow-2xl max-w-md">
           <DialogHeader className="text-center space-y-4">
             <div className="mx-auto w-16 h-16 rounded-full bg-linear-to-br from-emerald-400 to-cyan-400 flex items-center justify-center">
@@ -435,7 +435,7 @@ export const Tutorial: React.FC = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-6">
-            <Button 
+            <Button
               onClick={endTutorial}
               className="w-full bg-linear-to-r from-emerald-500 to-cyan-500 hover:opacity-90"
             >

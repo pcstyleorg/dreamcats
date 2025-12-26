@@ -1,7 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, ReactNode, useEffect } from "react";
 import { useTutorialStore, TutorialStore, TutorialStep } from "@/stores/tutorialStore";
-import { useConvexAuth } from "convex/react";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { shouldShowTutorialWelcome } from "@/lib/tutorial-visibility";
 
@@ -21,7 +20,7 @@ const TutorialContext = createContext<LocalTutorialContextType | undefined>(unde
 // Re-export moved to tutorialExports to keep this file component-only for fast refresh
 
 export const TutorialProvider = ({ children }: { children: ReactNode }) => {
-  const { isAuthenticated } = useConvexAuth();
+  const isAuthenticated = false;
   const { isLoading: prefsLoading, tutorialCompleted, setTutorialCompleted } =
     useUserPreferences();
   const step = useTutorialStore((s: TutorialStore) => s.step);

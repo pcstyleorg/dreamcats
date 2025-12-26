@@ -1,18 +1,15 @@
 import { useEffect, useState, Suspense, lazy } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { useGame } from '@/state/useGame';
 import { Toaster } from "@/components/ui/sonner"
 import { TutorialProvider } from './context/TutorialContext';
 import { ThemeToggle } from './components/ThemeToggle';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
-import { AuthButton } from './components/AuthDialog';
 import { useUserPreferences } from './hooks/useUserPreferences';
 import { useSessionPersistence } from './hooks/useSessionPersistence';
 import './i18n/config';
 import { ConvexSync } from "@/state/ConvexSync";
 import { safeLocalStorage } from "@/lib/storage";
 import { toast } from "sonner";
-import { safeSessionStorage } from "@/lib/storage";
 
 const LandingPage = lazy(() =>
   import('./components/LandingPage').then((m) => ({ default: m.LandingPage })),
@@ -29,22 +26,7 @@ const Tutorial = lazy(() =>
 
 function App() {
   const { state } = useGame();
-  const [hasEntered, setHasEntered] = useState(() => {
-    // Primary source: session storage (resets on new tab/browser session)
-    const sessionValue = safeSessionStorage.getItem("dreamcats-has-entered") === "true";
-
-    // Backup: only use localStorage if session storage exists but is false
-    // This handles mid-session reloads, not cross-session persistence
-    const localBackup = safeLocalStorage.getItem("dreamcats-has-entered-backup") === "true";
-
-    // If sessionStorage is empty (fresh session), clear stale localStorage backup
-    if (safeSessionStorage.getItem("dreamcats-has-entered") === null) {
-      safeLocalStorage.removeItem("dreamcats-has-entered-backup");
-      return false;
-    }
-
-    return sessionValue || localBackup;
-  });
+  const [hasEntered, setHasEntered] = useState(false);
   const { theme, setTheme: saveTheme } = useUserPreferences();
   const [localTheme, setLocalTheme] = useState<'light' | 'dark'>('light');
 
@@ -136,29 +118,39 @@ function App() {
   const showGameboard = hasEntered && state.gamePhase !== 'lobby';
 
   const handleEntered = () => {
-    // Persist to both session and local storage for redundancy
-    safeSessionStorage.setItem("dreamcats-has-entered", "true");
-    safeLocalStorage.setItem("dreamcats-has-entered-backup", "true");
-
     if (import.meta.env.PROD) {
-      console.log("[NAV-DEBUG] handleEntered called", {
+      console.log("[NAV-DEBUG] handleEntered called BEFORE setState", {
         timestamp: new Date().toISOString(),
         url: window.location.href,
         currentHasEnteredState: hasEntered,
-        gamePhase: state.gamePhase,
-        willShowLanding: hasEntered === false,
-        willShowLobby: hasEntered === true && state.gamePhase === 'lobby',
-        willShowGameboard: hasEntered === true && state.gamePhase !== 'lobby'
+        gamePhase: state.gamePhase
       });
     }
 
     setHasEntered(true);
+
+    if (import.meta.env.PROD) {
+      console.log("[NAV-DEBUG] setHasEntered(true) called");
+    }
   };
 
   // Track hasEntered state changes
   useEffect(() => {
     if (import.meta.env.PROD) {
-      console.log("[NAV-DEBUG] State updated", {
+      console.log("[NAV-DEBUG] hasEntered changed to:", hasEntered, {
+        timestamp: new Date().toISOString(),
+        showLanding,
+        showLobby,
+        showGameboard,
+        gamePhase: state.gamePhase
+      });
+    }
+  }, [hasEntered]);
+
+  // Track render state
+  useEffect(() => {
+    if (import.meta.env.PROD) {
+      console.log("[NAV-DEBUG] Render state:", {
         timestamp: new Date().toISOString(),
         hasEntered,
         showLanding,
@@ -169,19 +161,6 @@ function App() {
     }
   }, [hasEntered, showLanding, showLobby, showGameboard, state.gamePhase]);
 
-  // Clean up backup flag when user successfully enters lobby
-  useEffect(() => {
-    if (hasEntered && !showLanding) {
-      // Successfully entered - can now clear backup flag on next session
-      // (Keep it during this session to prevent reload issues)
-      if (import.meta.env.PROD) {
-        console.log("[NAV-DEBUG] Successfully entered lobby/game", {
-          timestamp: new Date().toISOString(),
-          gamePhase: state.gamePhase
-        });
-      }
-    }
-  }, [hasEntered, showLanding, state.gamePhase]);
 
   // Guard against accidental full-page navigation caused by form submits on the landing screen.
   // This can happen if some embedded widget or browser feature wraps content in a <form>.
@@ -245,28 +224,25 @@ function App() {
             <ConvexSync />
             {!showGameboard && (
               <div className="fixed top-3 sm:top-4 right-3 sm:right-4 z-50 flex gap-2">
-                <AuthButton />
                 <LanguageSwitcher />
                 <ThemeToggle theme={localTheme} onToggle={toggleTheme} />
               </div>
             )}
-            <AnimatePresence mode="wait">
-              {showLanding && (
-                <motion.div key="landing" className="flex-1 w-full min-h-dvh" exit={{ opacity: 0, transition: { duration: 0.5 } }}>
-                  <LandingPage onEnter={handleEntered} />
-                </motion.div>
-              )}
-              {showLobby && (
-                <motion.div key="lobby" className="flex-1 w-full min-h-dvh" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-                  <LobbyScreen />
-                </motion.div>
-              )}
-              {showGameboard && (
-                <motion.div key="gameboard" className="flex-1 w-full min-h-dvh" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
-                  <Gameboard theme={localTheme} toggleTheme={toggleTheme} />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {showLanding && (
+              <div key="landing" className="flex-1 w-full min-h-dvh">
+                <LandingPage onEnter={handleEntered} />
+              </div>
+            )}
+            {showLobby && (
+              <div key="lobby" className="flex-1 w-full min-h-dvh">
+                <LobbyScreen />
+              </div>
+            )}
+            {showGameboard && (
+              <div key="gameboard" className="flex-1 w-full min-h-dvh">
+                <Gameboard theme={localTheme} toggleTheme={toggleTheme} />
+              </div>
+            )}
 
             <Toaster richColors theme={localTheme} />
             {hasEntered && <Tutorial />}

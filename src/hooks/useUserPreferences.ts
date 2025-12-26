@@ -1,7 +1,4 @@
-import { useQuery, useMutation } from "convex/react";
-import { useConvexAuth } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback } from "react";
 import { GameState } from "@/types";
 import { safeLocalStorage } from "@/lib/storage";
 
@@ -23,76 +20,9 @@ const SESSION_STORAGE_KEY = "dreamcats-active-session";
 const TUTORIAL_COMPLETED_KEY = "dreamcats_tutorial_completed";
 
 /**
- * Hook to manage user preferences synced with Convex
- * Falls back to localStorage when not authenticated
+ * Hook to manage user preferences using localStorage
  */
 export function useUserPreferences() {
-  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
-  
-  // Convex queries/mutations
-  const preferences = useQuery(
-    api.userPreferences.get,
-    isAuthenticated ? {} : "skip"
-  );
-  const updatePreferences = useMutation(api.userPreferences.update);
-  const setThemeMutation = useMutation(api.userPreferences.setTheme);
-  const setLanguageMutation = useMutation(api.userPreferences.setLanguage);
-  const setDisplayNameMutation = useMutation(api.userPreferences.setDisplayName);
-  const setSoundEnabledMutation = useMutation(api.userPreferences.setSoundEnabled);
-  const setTutorialCompletedMutation = useMutation(api.userPreferences.setTutorialCompleted);
-  const setActiveSessionMutation = useMutation(api.userPreferences.setActiveSession);
-  const clearActiveSessionMutation = useMutation(api.userPreferences.clearActiveSession);
-  const saveLocalGameStateMutation = useMutation(api.userPreferences.saveLocalGameState);
-
-  // Track if we've synced local to remote
-  const hasSyncedRef = useRef(false);
-
-  // Sync localStorage preferences to Convex when user first authenticates
-  useEffect(() => {
-    if (isAuthenticated && preferences !== undefined && !hasSyncedRef.current) {
-      hasSyncedRef.current = true;
-      
-      // If no remote preferences exist, sync from localStorage
-      if (preferences === null) {
-        const localTheme = safeLocalStorage.getItem("theme");
-        const localLanguage = safeLocalStorage.getItem("i18nextLng");
-        const localName = safeLocalStorage.getItem("playerName");
-        const localSoundRaw = safeLocalStorage.getItem("soundEnabled");
-        const localSound = localSoundRaw === null ? undefined : localSoundRaw !== "false";
-        
-        if (localTheme || localLanguage || localName) {
-          updatePreferences({
-            theme: localTheme || undefined,
-            language: localLanguage || undefined,
-            displayName: localName || undefined,
-            soundEnabled: localSound,
-          }).catch(console.error);
-        }
-      }
-    }
-  }, [isAuthenticated, preferences, updatePreferences]);
-
-  // Apply remote preferences to local state when loaded
-  useEffect(() => {
-    if (preferences) {
-      // Sync theme
-      if (preferences.theme) {
-        safeLocalStorage.setItem("theme", preferences.theme);
-      }
-      // Sync language
-      if (preferences.language) {
-        safeLocalStorage.setItem("i18nextLng", preferences.language);
-      }
-      // Sync display name
-      if (preferences.displayName) {
-        safeLocalStorage.setItem("playerName", preferences.displayName);
-      }
-      if (preferences.soundEnabled !== undefined) {
-        safeLocalStorage.setItem("soundEnabled", String(preferences.soundEnabled));
-      }
-    }
-  }, [preferences]);
-
   const setTheme = useCallback(
     async (theme: "light" | "dark") => {
       safeLocalStorage.setItem("theme", theme);
@@ -101,132 +31,59 @@ export function useUserPreferences() {
           new CustomEvent("dreamcats-theme-changed", { detail: theme }),
         );
       }
-      if (isAuthenticated) {
-        try {
-          await setThemeMutation({ theme });
-        } catch (error) {
-          console.error("Failed to save theme preference:", error);
-        }
-      }
     },
-    [isAuthenticated, setThemeMutation]
+    []
   );
 
   const setLanguage = useCallback(
     async (language: string) => {
       safeLocalStorage.setItem("i18nextLng", language);
-      if (isAuthenticated) {
-        try {
-          await setLanguageMutation({ language });
-        } catch (error) {
-          console.error("Failed to save language preference:", error);
-        }
-      }
     },
-    [isAuthenticated, setLanguageMutation]
+    []
   );
 
   const setDisplayName = useCallback(
     async (name: string) => {
       safeLocalStorage.setItem("playerName", name);
-      if (isAuthenticated) {
-        try {
-          await setDisplayNameMutation({ name });
-        } catch (error) {
-          console.error("Failed to save display name:", error);
-        }
-      }
     },
-    [isAuthenticated, setDisplayNameMutation]
+    []
   );
 
   const setSoundEnabled = useCallback((enabled: boolean) => {
     safeLocalStorage.setItem("soundEnabled", String(enabled));
-    if (isAuthenticated) {
-      setSoundEnabledMutation({ enabled }).catch((error) =>
-        console.error("Failed to save sound preference:", error),
-      );
-    }
-  }, [isAuthenticated, setSoundEnabledMutation]);
+  }, []);
 
   const setTutorialCompleted = useCallback(
     async (completed: boolean) => {
       safeLocalStorage.setItem(TUTORIAL_COMPLETED_KEY, completed ? "true" : "false");
-      if (isAuthenticated) {
-        try {
-          await setTutorialCompletedMutation({ completed });
-        } catch (error) {
-          console.error("Failed to save tutorial completion:", error);
-        }
-      }
     },
-    [isAuthenticated, setTutorialCompletedMutation],
+    [],
   );
 
   // Save active game session (for rejoin after refresh)
   const saveActiveSession = useCallback(
     async (session: { roomId: string; playerId: string; gameMode: "online" | "hotseat" }) => {
-      // Always save to localStorage for immediate access
       safeLocalStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
-      
-      if (isAuthenticated) {
-        try {
-          await setActiveSessionMutation({
-            roomId: session.roomId,
-            playerId: session.playerId,
-            gameMode: session.gameMode,
-          });
-        } catch (error) {
-          console.error("Failed to save active session:", error);
-        }
-      }
     },
-    [isAuthenticated, setActiveSessionMutation]
+    []
   );
 
   // Clear active game session
   const clearActiveSession = useCallback(async () => {
     safeLocalStorage.removeItem(SESSION_STORAGE_KEY);
-    
-    if (isAuthenticated) {
-      try {
-        await clearActiveSessionMutation();
-      } catch (error) {
-        console.error("Failed to clear active session:", error);
-      }
-    }
-  }, [isAuthenticated, clearActiveSessionMutation]);
+  }, []);
 
   // Save local game state (for hotseat resume)
   const saveLocalGameState = useCallback(
     async (gameState: GameState) => {
-      // Always save to localStorage
       safeLocalStorage.setItem("dreamcats-local-game", JSON.stringify(gameState));
-      
-      if (isAuthenticated) {
-        try {
-          await saveLocalGameStateMutation({ gameState });
-        } catch (error) {
-          console.error("Failed to save local game state:", error);
-        }
-      }
     },
-    [isAuthenticated, saveLocalGameStateMutation]
+    []
   );
 
-  // Get active session (prefer remote if available)
+  // Get active session
   const getActiveSession = useCallback((): ActiveGameSession | null => {
-    // First check remote preferences
-    if (preferences?.activeRoomId || preferences?.activeGameMode) {
-      return {
-        roomId: preferences.activeRoomId,
-        playerId: preferences.activePlayerId,
-        gameMode: preferences.activeGameMode as "online" | "hotseat" | undefined,
-        localGameState: preferences.localGameState as GameState | undefined,
-      };
-    }
-    
-    // Fall back to localStorage
+    // Check localStorage
     const localSession = safeLocalStorage.getItem(SESSION_STORAGE_KEY);
     if (localSession) {
       try {
@@ -235,7 +92,7 @@ export function useUserPreferences() {
         return null;
       }
     }
-    
+
     // Check for local game state
     const localGame = safeLocalStorage.getItem("dreamcats-local-game");
     if (localGame) {
@@ -248,22 +105,20 @@ export function useUserPreferences() {
         return null;
       }
     }
-    
-    return null;
-  }, [preferences]);
 
-  // Get current values (prefer remote if available, fallback to local)
-  const displayName = preferences?.displayName ?? safeLocalStorage.getItem("playerName") ?? "";
-  const theme = (preferences?.theme ?? safeLocalStorage.getItem("theme") ?? "light") as "light" | "dark";
-  const language = preferences?.language ?? safeLocalStorage.getItem("i18nextLng") ?? "en";
+    return null;
+  }, []);
+
+  // Get current values from localStorage
+  const displayName = safeLocalStorage.getItem("playerName") ?? "";
+  const theme = (safeLocalStorage.getItem("theme") ?? "light") as "light" | "dark";
+  const language = safeLocalStorage.getItem("i18nextLng") ?? "en";
   const soundEnabled = safeLocalStorage.getItem("soundEnabled") !== "false"; // default true
-  const tutorialCompleted =
-    preferences?.tutorialCompleted ??
-    (safeLocalStorage.getItem(TUTORIAL_COMPLETED_KEY) === "true");
+  const tutorialCompleted = safeLocalStorage.getItem(TUTORIAL_COMPLETED_KEY) === "true";
   const activeSession = getActiveSession();
 
   return {
-    isLoading: authLoading || (isAuthenticated && preferences === undefined),
+    isLoading: false,
     displayName,
     theme,
     language,
