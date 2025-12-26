@@ -3,6 +3,7 @@ import { useGame } from "@/state/useGame";
 import { Button } from "./ui/button";
 import { Wand2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useHaptic } from "@/hooks/useHaptic";
 
 export const GameActions: React.FC = () => {
   const { t } = useTranslation("translation");
@@ -17,6 +18,7 @@ export const GameActions: React.FC = () => {
   } = state;
 
   const currentPlayer = state.players[currentPlayerIndex];
+  const { vibrate } = useHaptic();
 
   // In hotseat mode, we always allow the active player to take actions
   // since everyone is playing from the same device
@@ -34,14 +36,26 @@ export const GameActions: React.FC = () => {
 
   const handleFinishPeeking = () => {
     if (peekingState?.peekedCount === 2) {
+      vibrate(10);
       broadcastAction({ type: "FINISH_PEEKING" });
     }
   };
 
   const handlePobudka = () => {
     if (isMyTurn && gamePhase === "playing") {
+      vibrate(10);
       broadcastAction({ type: "CALL_POBUDKA" });
     }
+  };
+
+  const handleDiscard = () => {
+    vibrate(10);
+    broadcastAction({ type: "DISCARD_HELD_CARD" });
+  };
+
+  const handleUseSpecial = () => {
+    vibrate(10);
+    broadcastAction({ type: "USE_SPECIAL_ACTION" });
   };
 
   const canUseSpecial =
@@ -66,7 +80,7 @@ export const GameActions: React.FC = () => {
         onClick={handleFinishPeeking}
         disabled={finishPeekingDisabled}
         variant="secondary"
-        className="w-auto min-w-[160px] sm:min-w-[180px] min-h-[52px] sm:min-h-[56px] text-base sm:text-lg font-semibold shadow-xs hover:bg-secondary/80"
+        className="touch-target w-auto min-w-[160px] sm:min-w-[180px] min-h-[52px] sm:min-h-[56px] text-base sm:text-lg font-semibold shadow-xs hover:bg-secondary/80"
         size="lg"
         title={finishPeekingTitle}
       >
@@ -81,7 +95,7 @@ export const GameActions: React.FC = () => {
         <Button
           onClick={handlePobudka}
           variant="destructive"
-          className="w-auto min-w-[170px] sm:min-w-[190px] min-h-[56px] sm:min-h-[60px] text-lg sm:text-xl font-bold shadow-[0_12px_30px_rgba(0,0,0,0.28)] hover:shadow-[0_16px_38px_rgba(0,0,0,0.35)] rounded-full"
+          className="touch-target w-auto min-w-[170px] sm:min-w-[190px] min-h-[56px] sm:min-h-[60px] text-lg sm:text-xl font-bold shadow-[0_12px_30px_rgba(0,0,0,0.28)] hover:shadow-[0_16px_38px_rgba(0,0,0,0.35)] rounded-full"
           size="lg"
         >
           {t('game.pobudka')}
@@ -95,18 +109,18 @@ export const GameActions: React.FC = () => {
       <div className="flex items-center justify-center gap-3 sm:gap-4 w-full flex-wrap sm:flex-nowrap">
         <Button
           variant="outline"
-          onClick={() => broadcastAction({ type: "DISCARD_HELD_CARD" })}
+          onClick={handleDiscard}
           disabled={mustSwap}
-          className="flex-1 sm:flex-none min-w-[100px] sm:min-w-[140px] h-12 sm:h-[54px] text-sm sm:text-lg rounded-full border-border/70 bg-card/70 shadow-xs"
+          className="touch-target flex-1 sm:flex-none min-w-[100px] sm:min-w-[140px] h-12 sm:h-[54px] text-sm sm:text-lg rounded-full border-border/70 bg-card/70 shadow-xs"
           size="lg"
           title={mustSwap ? t("game.mustSwapHint") : undefined}
         >
           {t('game.discard')}
         </Button>
         <Button
-          onClick={() => broadcastAction({ type: "USE_SPECIAL_ACTION" })}
+          onClick={handleUseSpecial}
           disabled={!canUseSpecial}
-          className="flex-1 sm:flex-none min-w-[110px] sm:min-w-[150px] h-12 sm:h-[54px] text-sm sm:text-lg rounded-full bg-linear-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-[hsl(var(--primary-foreground))] shadow-soft-lg disabled:opacity-60"
+          className="touch-target flex-1 sm:flex-none min-w-[110px] sm:min-w-[150px] h-12 sm:h-[54px] text-sm sm:text-lg rounded-full bg-linear-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-[hsl(var(--primary-foreground))] shadow-soft-lg disabled:opacity-60"
           size="lg"
           title={!canUseSpecial ? t("game.specialActionHint") : undefined}
         >

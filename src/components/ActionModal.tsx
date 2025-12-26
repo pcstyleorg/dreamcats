@@ -38,6 +38,14 @@ export const ActionModal: React.FC = () => {
     broadcastAction({ type: "START_NEW_ROUND" });
   };
 
+  const handlePlayAgain = () => {
+    broadcastAction({ type: "RESTART_GAME" });
+  };
+
+  const handleReturnToLobby = () => {
+    broadcastAction({ type: "RETURN_TO_LOBBY" });
+  };
+
   const renderTake2Content = () => (
     <>
       <DialogHeader className="space-y-2 sm:space-y-3">
@@ -143,6 +151,23 @@ export const ActionModal: React.FC = () => {
               </li>
             ))}
         </ul>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Button
+          onClick={handlePlayAgain}
+          className="w-full min-h-[52px] text-base sm:text-lg font-semibold"
+          size="lg"
+        >
+          {t('modal.playAgain')}
+        </Button>
+        <Button
+          onClick={handleReturnToLobby}
+          variant="outline"
+          className="w-full min-h-[52px] text-base sm:text-lg font-semibold"
+          size="lg"
+        >
+          {t('modal.newGame')}
+        </Button>
       </div>
     </>
   );

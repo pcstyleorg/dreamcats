@@ -17,11 +17,13 @@ export interface SessionSlice {
   roomId: string | null;
   locale: string;
   theme: "light" | "dark";
+  soundEnabled: boolean;
   authToken?: string | null;
   setPlayer(id: string, name: string): void;
   setRoom(roomId: string | null): void;
   setLocale(locale: string): void;
   setTheme(theme: "light" | "dark"): void;
+  toggleSound(): void;
   setAuthToken(token: string | null): void;
 }
 

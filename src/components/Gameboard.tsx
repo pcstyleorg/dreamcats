@@ -25,6 +25,7 @@ import { getGameBackgroundAsset } from "@/lib/cardAssets";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
+import { SoundToggle } from "./SoundToggle";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { usePlayersView } from "@/state/hooks";
 import { useNetStatus } from "@/state/selectors";
@@ -463,7 +464,15 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
     </>
   );
 
-  const handleExitGame = () => {
+  const handleExitGame = async () => {
+    if (gamePhase === "game_over" || gamePhase === "round_end") {
+      const result = await broadcastAction({ type: "RETURN_TO_LOBBY" });
+      if (result !== null) {
+        toast.message(t('game.returnedToLobby'));
+      }
+      return;
+    }
+
     leaveGame();
     toast.message(t('game.returnedToLobby'));
   };
@@ -554,11 +563,12 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
           {/* Right Side: Settings & Menu */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 bg-card/40 backdrop-blur-sm p-1 rounded-full border border-border/30">
             <LanguageSwitcher />
+            <SoundToggle />
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
             <Button
               variant="ghost"
               size="sm"
-              className="px-3 h-9 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="touch-target px-3 h-9 rounded-full text-destructive hover:text-destructive hover:bg-destructive/10"
               onClick={handleExitGame}
             >
               <LogOut className="h-4 w-4 mr-1.5" />
@@ -568,7 +578,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
             <Button
               variant="ghost"
               size="icon"
-              className="hidden lg:flex rounded-full h-9 w-9 hover:bg-primary/10 hover:text-primary transition-colors"
+              className="hidden lg:flex touch-target rounded-full h-9 w-9 hover:bg-primary/10 hover:text-primary transition-colors"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               title={isSidebarOpen ? t('game.hideSidebar') : t('game.showSidebar')}
             >
@@ -578,7 +588,7 @@ export const Gameboard: React.FC<GameboardProps> = ({ theme, toggleTheme }) => {
             <div className="lg:hidden">
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full h-9 w-9 hover:bg-primary/10 hover:text-primary transition-colors">
+                  <Button variant="ghost" size="icon" className="touch-target rounded-full h-9 w-9 hover:bg-primary/10 hover:text-primary transition-colors">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>

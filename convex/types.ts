@@ -126,4 +126,6 @@ export type GameAction =
   }
   | { type: "ACTION_TAKE_2_CHOOSE"; payload: { card: Card } }
   | { type: "CALL_POBUDKA" }
-  | { type: "START_NEW_ROUND" };
+  | { type: "START_NEW_ROUND" }
+  | { type: "RESTART_GAME" }
+  | { type: "RETURN_TO_LOBBY" };

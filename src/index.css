@@ -185,6 +185,13 @@ layer(base);
   }
 }
 
+@layer components {
+  .touch-target {
+    @apply min-w-[44px] min-h-[44px] sm:min-w-[48px] sm:min-h-[48px];
+    touch-action: manipulation;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;

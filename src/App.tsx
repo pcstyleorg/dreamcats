@@ -4,6 +4,9 @@ import { Toaster } from "@/components/ui/sonner"
 import { TutorialProvider } from './context/TutorialContext';
 import { ThemeToggle } from './components/ThemeToggle';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
+import { SoundToggle } from './components/SoundToggle';
+import { OfflineBanner } from './components/OfflineBanner';
+import { InstallPrompt } from './components/InstallPrompt';
 import { useUserPreferences } from './hooks/useUserPreferences';
 import { useSessionPersistence } from './hooks/useSessionPersistence';
 import './i18n/config';
@@ -222,9 +225,12 @@ function App() {
           <main className="font-sans bg-background text-foreground transition-colors relative flex flex-col w-full min-h-dvh">
             {/* Rejoin logic moved to LandingPage */}
             <ConvexSync />
+            <OfflineBanner />
+            <InstallPrompt />
             {!showGameboard && (
               <div className="fixed top-3 sm:top-4 right-3 sm:right-4 z-50 flex gap-2">
                 <LanguageSwitcher />
+                <SoundToggle />
                 <ThemeToggle theme={localTheme} onToggle={toggleTheme} />
               </div>
             )}
