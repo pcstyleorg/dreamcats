@@ -245,7 +245,16 @@
     "startNextRound": "Start Next Round",
     "gameOverTitle": "Game Over!",
     "winsTheGame": "{{player}} wins the game!",
-    "finalScores": "Final Scores"
+    "finalScores": "Final Scores",
+    "playAgain": "Play Again",
+    "newGame": "New Game"
+  },
+  "pwa": {
+    "installTitle": "Install Dreamcats",
+    "installBody": "Add the game to your home screen for faster access and offline support.",
+    "install": "Install",
+    "later": "Later",
+    "offline": "You're offline. Online games won't work, but Hotseat and Solo are still available."
   },
   "tutorial": {
     "welcomeTitle": "Welcome to Dreamcats!",

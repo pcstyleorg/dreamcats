@@ -113,7 +113,7 @@ export function useUserPreferences() {
   const displayName = safeLocalStorage.getItem("playerName") ?? "";
   const theme = (safeLocalStorage.getItem("theme") ?? "light") as "light" | "dark";
   const language = safeLocalStorage.getItem("i18nextLng") ?? "en";
-  const soundEnabled = safeLocalStorage.getItem("soundEnabled") !== "false"; // default true
+  const soundEnabled = safeLocalStorage.getItem("soundEnabled") === "true";
   const tutorialCompleted = safeLocalStorage.getItem(TUTORIAL_COMPLETED_KEY) === "true";
   const activeSession = getActiveSession();
 

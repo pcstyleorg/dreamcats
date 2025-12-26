@@ -1,6 +1,6 @@
 import i18n from "@/i18n/config";
 import { GameAction, GameState, Player, Card } from "@/types";
-import { shuffleDeck } from "@/lib/game-logic";
+import { createDeck, shuffleDeck } from "@/lib/game-logic";
 
 export type ReducerAction =
   | { type: "SET_STATE"; payload: GameState }
@@ -682,6 +682,110 @@ export const gameReducer = (state: GameState, action: ReducerAction): GameState 
             tempCards: undefined,
             swapState: undefined,
             lastMove: null,
+          };
+        }
+
+        case "RESTART_GAME": {
+          if (state.gamePhase !== "game_over") return state;
+
+          const deck = shuffleDeck(createDeck());
+          const requiredCards = state.players.length * 4 + 1;
+          if (deck.length < requiredCards) {
+            console.error(
+              `Not enough cards to deal. Need ${requiredCards}, have ${deck.length}`,
+            );
+            return state;
+          }
+
+          const nextStarterIndex =
+            state.players.length > 0
+              ? ((state as unknown as { startingPlayerIndex?: number })
+                  .startingPlayerIndex ?? 0) + 1
+              : 0;
+          const normalizedStarterIndex =
+            state.players.length > 0
+              ? nextStarterIndex % state.players.length
+              : 0;
+
+          const players = state.players.map((p) => ({
+            ...p,
+            score: 0,
+            hand: [] as Player["hand"],
+          }));
+
+          for (let i = 0; i < 4; i++) {
+            for (const player of players) {
+              const card = deck.shift();
+              if (card) {
+                player.hand.push({
+                  card,
+                  isFaceUp: false,
+                  hasBeenPeeked: false,
+                });
+              }
+            }
+          }
+
+          const discardPile = [deck.pop()!];
+
+          return {
+            ...state,
+            players,
+            drawPile: deck,
+            discardPile,
+            startingPlayerIndex: normalizedStarterIndex,
+            currentPlayerIndex: normalizedStarterIndex,
+            gamePhase: "peeking",
+            peekingState: {
+              playerIndex: normalizedStarterIndex,
+              peekedCount: 0,
+              startIndex: normalizedStarterIndex,
+            },
+            actionMessage: i18n.t("game.peekTwoCards", {
+              player: players[normalizedStarterIndex]?.name ?? "",
+            }),
+            drawnCard: null,
+            drawSource: null,
+            tempCards: undefined,
+            swapState: undefined,
+            lastMove: null,
+            lastCallerId: null,
+            roundWinnerName: null,
+            gameWinnerName: null,
+            lastRoundScores: undefined,
+            turnCount: 0,
+          };
+        }
+
+        case "RETURN_TO_LOBBY": {
+          if (state.gamePhase !== "game_over" && state.gamePhase !== "round_end") {
+            return state;
+          }
+
+          return {
+            ...state,
+            players: state.players.map((p) => ({
+              ...p,
+              hand: [],
+              score: 0,
+            })),
+            drawPile: [],
+            discardPile: [],
+            startingPlayerIndex: 0,
+            currentPlayerIndex: 0,
+            gamePhase: "lobby",
+            actionMessage: "",
+            peekingState: undefined,
+            drawnCard: null,
+            drawSource: null,
+            tempCards: undefined,
+            swapState: undefined,
+            lastMove: null,
+            lastCallerId: null,
+            roundWinnerName: null,
+            gameWinnerName: null,
+            lastRoundScores: undefined,
+            turnCount: 0,
           };
         }
 

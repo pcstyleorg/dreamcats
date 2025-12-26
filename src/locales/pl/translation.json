@@ -245,7 +245,16 @@
     "startNextRound": "Rozpocznij nastepna runde",
     "gameOverTitle": "Koniec gry!",
     "winsTheGame": "{{player}} wygrywa gre!",
-    "finalScores": "Wyniki koncowe"
+    "finalScores": "Wyniki koncowe",
+    "playAgain": "Zagraj ponownie",
+    "newGame": "Nowa gra"
+  },
+  "pwa": {
+    "installTitle": "Zainstaluj Dreamcats",
+    "installBody": "Dodaj grę do ekranu głównego, aby uruchamiać ją szybciej i korzystać offline.",
+    "install": "Zainstaluj",
+    "later": "Później",
+    "offline": "Jesteś offline. Gry online nie zadziałają, ale Hotseat i Solo są dostępne."
   },
   "tutorial": {
     "welcomeTitle": "Witaj w Dreamcats!",

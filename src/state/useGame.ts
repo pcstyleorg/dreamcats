@@ -570,6 +570,8 @@ export const useGame = () => {
         case "FINISH_PEEKING":
         case "ACTION_TAKE_2_CHOOSE":
         case "START_NEW_ROUND":
+        case "RESTART_GAME":
+        case "RETURN_TO_LOBBY":
           playSound("click");
           break;
       }
@@ -598,7 +600,11 @@ export const useGame = () => {
       if (game.gameMode === "solo") {
         let result: unknown = null;
 
-        if (action.type === "START_NEW_ROUND") {
+        if (
+          action.type === "START_NEW_ROUND" ||
+          action.type === "RESTART_GAME" ||
+          action.type === "RETURN_TO_LOBBY"
+        ) {
           clearAllBotMemory();
         }
 

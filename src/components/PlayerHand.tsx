@@ -7,6 +7,7 @@ import { useGame } from "@/state/useGame";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { useHaptic } from "@/hooks/useHaptic";
 import { Button } from "./ui/button";
 import { Wand2 } from "lucide-react";
 
@@ -266,6 +267,8 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     isCurrentPlayer &&
     (gameMode === "hotseat" || player.id === myPlayerId);
 
+  const { vibrate } = useHaptic();
+
   const handleCardClick = (cardIndex: number) => {
     // Block interaction with opponent cards during normal gameplay
     // Only allow if it's a special action that explicitly targets opponents
@@ -290,6 +293,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
       // Online: gate to the viewing player; hotseat allows any active peeker.
       if (gameMode === "online" && player.id !== myPlayerId) return;
 
+      vibrate(10);
       broadcastAction({
         type: "PEEK_CARD",
         payload: { playerId: player.id, cardIndex },
@@ -302,12 +306,14 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     if (gamePhase === "holding_card" && isCurrentPlayer) {
       // In online mode, also verify it's the local player's hand
       if (gameMode === "online" && player.id !== myPlayerId) return;
+      vibrate(10);
       broadcastAction({ type: "SWAP_HELD_CARD", payload: { cardIndex } });
       return;
     }
 
     // 'Peek 1' special action (can target any hand while it's my turn)
     if (gamePhase === "action_peek_1" && canActNow) {
+      vibrate(10);
       broadcastAction({
         type: "ACTION_PEEK_1_SELECT",
         payload: { playerId: player.id, cardIndex },
@@ -337,6 +343,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
         gamePhase === "action_swap_2_select_2") &&
       canActNow
     ) {
+      vibrate(10);
       broadcastAction({
         type: "ACTION_SWAP_2_SELECT",
         payload: { playerId: player.id, cardIndex },
@@ -540,13 +547,17 @@ const PlayerInlineActions: React.FC<{
   broadcastAction: (action: import('@/types').GameAction) => void;
   t: (key: string) => string;
 }> = ({ gamePhase, peekingState, drawnCard, drawSource, broadcastAction, t }) => {
+  const { vibrate } = useHaptic();
+
   const handleFinishPeeking = () => {
     if (peekingState?.peekedCount === 2) {
+      vibrate(10);
       broadcastAction({ type: "FINISH_PEEKING" });
     }
   };
 
   const handlePobudka = () => {
+    vibrate(10);
     broadcastAction({ type: "CALL_POBUDKA" });
   };
 
@@ -565,7 +576,7 @@ const PlayerInlineActions: React.FC<{
         onClick={handleFinishPeeking}
         disabled={peekingState.peekedCount !== 2}
         variant="secondary"
-        className="min-w-[120px] sm:min-w-[140px] h-10 sm:h-11 text-sm sm:text-base font-semibold shadow-xs hover:bg-secondary/80"
+        className="touch-target min-w-[120px] sm:min-w-[140px] h-10 sm:h-11 text-sm sm:text-base font-semibold shadow-xs hover:bg-secondary/80"
         size="sm"
       >
         {t('game.finishPeeking')}
@@ -579,7 +590,7 @@ const PlayerInlineActions: React.FC<{
       <Button
         onClick={handlePobudka}
         variant="destructive"
-        className="min-w-[100px] sm:min-w-[120px] h-10 sm:h-11 text-sm sm:text-base font-bold shadow-md rounded-full"
+        className="touch-target min-w-[100px] sm:min-w-[120px] h-10 sm:h-11 text-sm sm:text-base font-bold shadow-md rounded-full"
         size="sm"
       >
         {t('game.pobudka')}
@@ -593,17 +604,23 @@ const PlayerInlineActions: React.FC<{
       <div className="flex items-center justify-center gap-2 flex-wrap">
         <Button
           variant="outline"
-          onClick={() => broadcastAction({ type: "DISCARD_HELD_CARD" })}
+          onClick={() => {
+            vibrate(10);
+            broadcastAction({ type: "DISCARD_HELD_CARD" });
+          }}
           disabled={mustSwap}
-          className="min-w-[70px] sm:min-w-[90px] h-10 sm:h-11 text-xs sm:text-sm rounded-full border-border/70 bg-card/70 shadow-xs"
+          className="touch-target min-w-[70px] sm:min-w-[90px] h-10 sm:h-11 text-xs sm:text-sm rounded-full border-border/70 bg-card/70 shadow-xs"
           size="sm"
         >
           {t('game.discard')}
         </Button>
         <Button
-          onClick={() => broadcastAction({ type: "USE_SPECIAL_ACTION" })}
+          onClick={() => {
+            vibrate(10);
+            broadcastAction({ type: "USE_SPECIAL_ACTION" });
+          }}
           disabled={!canUseSpecial}
-          className="min-w-[70px] sm:min-w-[90px] h-10 sm:h-11 text-xs sm:text-sm rounded-full bg-linear-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-[hsl(var(--primary-foreground))] shadow-soft-lg disabled:opacity-60"
+          className="touch-target min-w-[70px] sm:min-w-[90px] h-10 sm:h-11 text-xs sm:text-sm rounded-full bg-linear-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-[hsl(var(--primary-foreground))] shadow-soft-lg disabled:opacity-60"
           size="sm"
         >
           <Wand2 className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />

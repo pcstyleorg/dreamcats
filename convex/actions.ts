@@ -62,6 +62,20 @@ export const performAction = mutation({
       });
     };
 
+    const updateRoomStatus = async (
+      status: "lobby" | "playing" | "round_end" | "game_over",
+    ) => {
+      const room = await ctx.db
+        .query("rooms")
+        .withIndex("by_roomId", (q) => q.eq("roomId", roomId))
+        .first();
+      if (!room) return;
+      await ctx.db.patch(room._id, {
+        status,
+        lastUpdated: Date.now(),
+      });
+    };
+
     const recordMatchIfNeeded = async (prev: GameState, next: GameState) => {
       if (prev.gamePhase === "game_over") return;
       if (next.gamePhase !== "game_over") return;
@@ -783,6 +797,99 @@ export const performAction = mutation({
               roundWinnerName: null,
               lastRoundScores: undefined,
           });
+          await updateRoomStatus("playing");
+          break;
+      }
+
+      case "RESTART_GAME": {
+          if (state.gamePhase !== "game_over") throw new Error("Invalid phase");
+
+          const players = state.players.map((p) => ({
+            ...p,
+            score: 0,
+            hand: [] as Player["hand"],
+          }));
+
+          if (players.length < 2) throw new Error("Need at least 2 players to start");
+
+          const deck = shuffleDeck(createDeck());
+          const requiredCards = players.length * 4 + 1;
+          if (deck.length < requiredCards) {
+              throw new Error(`Not enough cards to deal. Need ${requiredCards}, have ${deck.length}`);
+          }
+
+          for (let i = 0; i < 4; i++) {
+            for (const p of players) {
+              const card = deck.shift();
+              if (card) {
+                p.hand.push({ card, isFaceUp: false, hasBeenPeeked: false });
+              }
+            }
+          }
+
+          const discardPile = [deck.pop()!];
+
+          const previousStartIndex =
+            (state as unknown as { startingPlayerIndex?: number }).startingPlayerIndex ?? 0;
+          const nextStarterIndex =
+            players.length > 0 ? (previousStartIndex + 1) % players.length : 0;
+
+          await saveState({
+              ...state,
+              players,
+              drawPile: deck,
+              discardPile,
+              startingPlayerIndex: nextStarterIndex,
+              currentPlayerIndex: nextStarterIndex,
+              gamePhase: "peeking",
+              peekingState: { playerIndex: nextStarterIndex, peekedCount: 0, startIndex: nextStarterIndex },
+              actionMessage: `New game! ${players[nextStarterIndex].name} is peeking...`,
+              drawnCard: null,
+              drawSource: null,
+              tempCards: undefined,
+              swapState: undefined,
+              lastMove: null,
+              lastCallerId: null,
+              roundWinnerName: null,
+              gameWinnerName: null,
+              lastRoundScores: undefined,
+              turnCount: 0,
+          });
+          await updateRoomStatus("playing");
+          break;
+      }
+
+      case "RETURN_TO_LOBBY": {
+          if (state.gamePhase !== "game_over" && state.gamePhase !== "round_end") {
+            throw new Error("Invalid phase");
+          }
+
+          await saveState({
+            ...state,
+            players: state.players.map((p) => ({
+              ...p,
+              hand: [],
+              score: 0,
+            })),
+            drawPile: [],
+            discardPile: [],
+            startingPlayerIndex: 0,
+            currentPlayerIndex: 0,
+            gamePhase: "lobby",
+            actionMessage: "",
+            peekingState: undefined,
+            drawnCard: null,
+            drawSource: null,
+            tempCards: undefined,
+            swapState: undefined,
+            lastMove: null,
+            lastCallerId: null,
+            roundWinnerName: null,
+            gameWinnerName: null,
+            lastRoundScores: undefined,
+            turnCount: 0,
+          });
+          await updateRoomStatus("lobby");
           break;
       }
 

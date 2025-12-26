@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { Howl } from "howler";
 import { safeLocalStorage } from "@/lib/storage";
+import { useAppStore } from "@/state/store";
 
 export type SoundType =
   | "flip"
@@ -44,8 +45,10 @@ export const useSounds = () => {
   const soundsRef = useRef<Record<string, Howl>>({});
 
   const playSound = useCallback((sound: SoundType) => {
-    // check if sounds are enabled (default true)
-    const soundEnabled = safeLocalStorage.getItem("soundEnabled") !== "false";
+    // check if sounds are enabled (default false)
+    const soundEnabled =
+      useAppStore.getState().soundEnabled ||
+      safeLocalStorage.getItem("soundEnabled") === "true";
     if (!soundEnabled) return;
 
     try {

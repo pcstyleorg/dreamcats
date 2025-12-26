@@ -7,6 +7,7 @@ import { createGameSlice } from "./gameSlice";
 import { createUiSlice } from "./uiSlice";
 import { createNetSlice } from "./netSlice";
 import { AppState } from "./types";
+import { safeLocalStorage } from "@/lib/storage";
 
 /**
  * Zustand v5: Auto-generated selectors helper
@@ -35,6 +36,7 @@ const persistKeys = (state: AppState): Partial<AppState> => ({
   roomId: state.roomId,
   locale: state.locale,
   theme: state.theme,
+  soundEnabled: state.soundEnabled,
   reducedMotion: state.reducedMotion,
 });
 
@@ -55,7 +57,7 @@ const useAppStoreBase = createWithEqualityFn<AppState>()(
         {
           name: "dreamcats-app-store",
           partialize: (state) => persistKeys(state) as unknown as AppState,
-          version: 1,
+          version: 2,
           /**
            * Migration function for handling schema changes between versions.
            * Add migration logic here when bumping the version number.
@@ -63,9 +65,18 @@ const useAppStoreBase = createWithEqualityFn<AppState>()(
           migrate: (persistedState, version) => {
             const state = persistedState as Partial<AppState>;
             
-            if (version === 0) {
+            if (version < 1) {
               // Example: migrate from version 0 to 1
               // Add any field renames or transformations here
+            }
+
+            if (version < 2) {
+              const legacySound =
+                safeLocalStorage.getItem("soundEnabled") === "true";
+              return {
+                ...state,
+                soundEnabled: legacySound,
+              } as AppState;
             }
             
             return state as AppState;
