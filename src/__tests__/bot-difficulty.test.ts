@@ -9,11 +9,11 @@ const createTestState = (overrides: Partial<GameState>): GameState => ({
   ...overrides,
 });
 
-const createCard = (value: number, isSpecial = false, specialAction?: string): Card => ({
+const createCard = (value: number, isSpecial = false, specialAction?: Card["specialAction"]): Card => ({
   id: Math.floor(Math.random() * 10000),
   value,
   isSpecial,
-  specialAction: specialAction as any,
+  specialAction,
 });
 
 describe("Bot Difficulty Rebalance", () => {
@@ -21,7 +21,7 @@ describe("Bot Difficulty Rebalance", () => {
   const humanId = "human-1";
 
   describe("Easy Bot", () => {
-    it("is lenient with discard pile (threshold 4)", () => {
+    it("is lenient with discard pile (threshold 2)", () => {
       const state = createTestState({
         gameMode: "solo",
         botDifficulty: "easy",
@@ -31,49 +31,48 @@ describe("Bot Difficulty Rebalance", () => {
           { id: botId, name: "Bot", hand: [], score: 0 },
         ],
         currentPlayerIndex: 1,
-        discardPile: [createCard(4)], // High value but below easy threshold
+        discardPile: [createCard(2)], // At easy threshold of 2
       });
 
-      // Easy bots have takeDiscardThreshold: 4, so they might take it.
-      // However, it's still probabilistic (takeDiscardChance: 0.35).
-      // We'll mock Math.random to force a positive result.
+      // Easy bots have takeDiscardThreshold: 2, so they will consider taking it.
+      // With takeDiscardChance: 0.45, we mock Math.random to force a positive result.
       vi.spyOn(Math, 'random').mockReturnValue(0.1);
 
       expect(getBotAction(state, botId)?.type).toBe("DRAW_FROM_DISCARD");
-      
+
       vi.restoreAllMocks();
     });
 
     it.skip("has low chance of calling Pobudka (0.08)", () => {
-        // TODO: Need to mock BotMemory module to properly test Pobudka calling behavior
-        // getBotAction relies on internal memory state that needs proper setup
+      // TODO: Need to mock BotMemory module to properly test Pobudka calling behavior
+      // getBotAction relies on internal memory state that needs proper setup
     });
   });
 
   describe("Hard Bot", () => {
     it("is aggressive with special actions (chance 0.85)", () => {
-        vi.spyOn(Math, 'random').mockReturnValue(0.1);
-        const state = createTestState({
-            gameMode: "solo",
-            botDifficulty: "hard",
-            gamePhase: "holding_card",
-            drawSource: "deck",
-            drawnCard: createCard(5, true, "peek_1"),
-            players: [
-              { id: humanId, name: "Human", hand: [], score: 0 },
-              { id: botId, name: "Bot", hand: [], score: 0 },
-            ],
-            currentPlayerIndex: 1,
-          });
+      vi.spyOn(Math, 'random').mockReturnValue(0.1);
+      const state = createTestState({
+        gameMode: "solo",
+        botDifficulty: "hard",
+        gamePhase: "holding_card",
+        drawSource: "deck",
+        drawnCard: createCard(5, true, "peek_1"),
+        players: [
+          { id: humanId, name: "Human", hand: [], score: 0 },
+          { id: botId, name: "Bot", hand: [], score: 0 },
+        ],
+        currentPlayerIndex: 1,
+      });
 
-          const action = getBotAction(state, botId);
-          expect(action?.type).toBe("USE_SPECIAL_ACTION");
-          vi.restoreAllMocks();
+      const action = getBotAction(state, botId);
+      expect(action?.type).toBe("USE_SPECIAL_ACTION");
+      vi.restoreAllMocks();
     });
 
     it("is more likely to call Pobudka with higher scores (threshold 11)", () => {
-        // Hard bot is more confident
-        // This is a bit hard to test without controlling the bot memory
+      // Hard bot is more confident
+      // This is a bit hard to test without controlling the bot memory
     });
   });
 });

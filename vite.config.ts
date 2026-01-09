@@ -93,7 +93,7 @@ export default defineConfig({
       },
     }),
   ],
-  
+
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -109,6 +109,25 @@ export default defineConfig({
         assetFileNames: 'assets/[name].[hash][extname]',
         chunkFileNames: 'assets/[name].[hash].js',
         entryFileNames: 'assets/[name].[hash].js',
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'zustand'],
+          'vendor-ui': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-tooltip',
+            '@radix-ui/react-select',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-scroll-area',
+            'lucide-react',
+            'sonner',
+            'cmdk',
+          ],
+          'vendor-animation': ['gsap', '@gsap/react', 'framer-motion'],
+          'vendor-charts': ['recharts', 'date-fns'],
+          'vendor-convex': ['convex'],
+        },
       },
     },
   },
