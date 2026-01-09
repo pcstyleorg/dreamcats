@@ -36,7 +36,7 @@ function App() {
   // DEBUG: Capture navigation events on production
   useEffect(() => {
     if (import.meta.env.PROD) {
-      const logEvent = (type: string, data?: any) => {
+      const logEvent = (type: string, data?: unknown) => {
         console.log(`[NAV-DEBUG ${new Date().toISOString()}] ${type}`, data);
       };
 
@@ -58,12 +58,12 @@ function App() {
       const originalPushState = history.pushState;
       const originalReplaceState = history.replaceState;
 
-      history.pushState = function(...args) {
+      history.pushState = function (...args) {
         logEvent("history.pushState", { url: args[2], state: args[0] });
         return originalPushState.apply(this, args);
       };
 
-      history.replaceState = function(...args) {
+      history.replaceState = function (...args) {
         logEvent("history.replaceState", { url: args[2], state: args[0] });
         return originalReplaceState.apply(this, args);
       };
@@ -148,7 +148,7 @@ function App() {
         gamePhase: state.gamePhase
       });
     }
-  }, [hasEntered]);
+  }, [hasEntered, showGameboard, showLanding, showLobby, state.gamePhase]);
 
   // Track render state
   useEffect(() => {
