@@ -9,7 +9,6 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: [
-        "favico.png",
         "favicon.png",
         "assets/icon-192.png",
         "assets/icon-512.png",

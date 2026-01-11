@@ -6,6 +6,10 @@ import './i18n/config';
 import { ConvexClientProvider } from './ConvexProvider.tsx';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { preloadCardImages } from './lib/cardAssets';
+
+// preload card images early for instant card flips
+preloadCardImages();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
