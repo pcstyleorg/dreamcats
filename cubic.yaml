@@ -1,27 +1,33 @@
+# yaml-language-server: $schema=https://cubic.dev/schema/cubic-repository-config.schema.json
+
 version: 1
+
 reviews:
   enabled: true
   sensitivity: high
   incremental_commits: true
   check_drafts: false
-  architecture_diagrams: true
-  show_ai_feedback_buttons: true
+  architecture_diagrams: false
   resolve_threads_when_addressed: true
-  custom_instructions: "The Portfolio is the flagship. Prioritize visual perfection, 'WOW' factor motion, and premium accessibility."
+  custom_instructions: |
+    Micro-service focus: High performance, lightweight footprints, and Edge compatibility.
+
   ignore:
     files:
       - "**/node_modules/**"
       - "**/dist/**"
       - "**/*.lock*"
+
   custom_rules:
-    - name: "Visuals: Pixel Perfection"
-      description: "Every pixel counts. Flag any misalignment, broken glassmorphism, or suboptimal color choices."
-    - name: "UX: Immersive Motion"
-      description: "Animations must feel liquid and futuristic. Enforce use of @pcstyle/motion's premium presets."
-    - name: "SEO: Metadata"
-      description: "Ensure every page has optimized OG imagery and descriptive metadata."
+    - name: "EDGE_COMPATIBILITY"
+      description: "Flag any Node.js APIs inappropriate for Vercel Edge Runtime. Prioritize performance and minimal bundle size."
+    - name: "BRAND_AESTHETICS"
+      description: "Any UI components must follow the Cybernetic Minimalist protocol: Black/Pink high-contrast design."
+
 pr_descriptions:
   generate: true
-  instructions: "Summaries should read like a changelog for a high-end digital artifact."
+  instructions: |
+    Focus on performance optimization and routing updates.
+
 issues:
   fix_with_cubic_buttons: true
