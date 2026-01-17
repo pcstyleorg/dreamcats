@@ -1,0 +1,27 @@
+version: 1
+reviews:
+  enabled: true
+  sensitivity: high
+  incremental_commits: true
+  check_drafts: false
+  architecture_diagrams: true
+  show_ai_feedback_buttons: true
+  resolve_threads_when_addressed: true
+  custom_instructions: "The Portfolio is the flagship. Prioritize visual perfection, 'WOW' factor motion, and premium accessibility."
+  ignore:
+    files:
+      - "**/node_modules/**"
+      - "**/dist/**"
+      - "**/*.lock*"
+  custom_rules:
+    - name: "Visuals: Pixel Perfection"
+      description: "Every pixel counts. Flag any misalignment, broken glassmorphism, or suboptimal color choices."
+    - name: "UX: Immersive Motion"
+      description: "Animations must feel liquid and futuristic. Enforce use of @pcstyle/motion's premium presets."
+    - name: "SEO: Metadata"
+      description: "Ensure every page has optimized OG imagery and descriptive metadata."
+pr_descriptions:
+  generate: true
+  instructions: "Summaries should read like a changelog for a high-end digital artifact."
+issues:
+  fix_with_cubic_buttons: true
