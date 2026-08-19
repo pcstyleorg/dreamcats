@@ -21,10 +21,10 @@ export const dreamScore = (dream: (DreamSlot | { card: Card })[]): number => {
 
 /**
  * Round scoring:
- * - lowest raw score(s) add 0;
- * - everyone else adds their raw score;
- * - a caller who is not among the lowest adds raw + penalty (no penalty on a
- *   tie for lowest, because then they ARE among the lowest).
+ * - everyone adds their raw score, including the lowest (round winner);
+ * - a caller who is not among the lowest additionally adds the wrong-call
+ *   penalty (no penalty on a tie for lowest, because then they ARE among
+ *   the lowest).
  */
 export const scoreRound = (
   raws: number[],
@@ -38,7 +38,7 @@ export const scoreRound = (
     const penalty = isWrongCaller ? wrongCallPenalty : 0;
     return {
       raw,
-      added: wasLowest ? 0 : raw + penalty,
+      added: raw + penalty,
       wasLowest,
       penalty,
     };

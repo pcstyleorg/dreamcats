@@ -97,21 +97,22 @@ describe("hourglass parity scoring", () => {
 });
 
 describe("round scoring", () => {
-  it("lowest player adds 0; others add their raw score", () => {
+  it("everyone adds their raw score, including the lowest", () => {
     const results = scoreRound([4, 10, 7], null, 5);
-    expect(results.map((r) => r.added)).toEqual([0, 10, 7]);
+    expect(results.map((r) => r.added)).toEqual([4, 10, 7]);
+    expect(results[0].wasLowest).toBe(true);
   });
 
   it("wrong caller adds raw + 5", () => {
     const results = scoreRound([8, 3], 0, 5);
     expect(results[0]).toMatchObject({ added: 13, penalty: 5, wasLowest: false });
-    expect(results[1].added).toBe(0);
+    expect(results[1].added).toBe(3);
   });
 
-  it("caller tied for lowest gets no penalty and scores 0", () => {
+  it("caller tied for lowest gets no penalty and adds their raw score", () => {
     const results = scoreRound([3, 3, 9], 0, 5);
-    expect(results[0]).toMatchObject({ added: 0, penalty: 0, wasLowest: true });
-    expect(results[1].added).toBe(0);
+    expect(results[0]).toMatchObject({ added: 3, penalty: 0, wasLowest: true });
+    expect(results[1].added).toBe(3);
     expect(results[2].added).toBe(9);
   });
 
@@ -297,24 +298,24 @@ describe("special: swap_2", () => {
 });
 
 describe("POBUDKA and round end", () => {
-  it("caller with lowest dream scores 0, others add raw", () => {
+  it("caller with lowest dream adds their raw score, others add raw", () => {
     let s = readyGame();
     s.players[0].dream = slots(num(700, 0), num(701, 0), num(702, 1), num(703, 0));
     s.players[1].dream = slots(num(704, 9), num(705, 9), num(706, 9), num(707, 9));
     s = applyEvent(s, { type: "callPobudka" });
     expect(s.phase).toBe("roundEnd");
-    expect(s.players[0].totalScore).toBe(0);
+    expect(s.players[0].totalScore).toBe(1);
     expect(s.players[1].totalScore).toBe(36);
-    expect(s.roundResults?.[0]).toMatchObject({ raw: 1, added: 0, wasLowest: true });
+    expect(s.roundResults?.[0]).toMatchObject({ raw: 1, added: 1, wasLowest: true });
   });
 
-  it("wrong caller pays the penalty; true lowest still scores 0", () => {
+  it("wrong caller pays the penalty; true lowest adds only their raw score", () => {
     let s = readyGame();
     s.players[0].dream = slots(num(700, 9), num(701, 9), num(702, 0), num(703, 0));
     s.players[1].dream = slots(num(704, 1), num(705, 0), num(706, 0), num(707, 0));
     s = applyEvent(s, { type: "callPobudka" });
     expect(s.players[0].totalScore).toBe(18 + 5);
-    expect(s.players[1].totalScore).toBe(0);
+    expect(s.players[1].totalScore).toBe(1);
   });
 
   it("nextRound redeals and passes the start left of the round ender", () => {

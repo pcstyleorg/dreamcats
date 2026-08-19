@@ -83,7 +83,7 @@ export type LastAction =
 export interface RoundResult {
   /** Raw cats counted in the dream. */
   raw: number;
-  /** Score actually added (0 for lowest, raw+penalty for a wrong caller). */
+  /** Score actually added (raw for everyone, raw+penalty for a wrong caller). */
   added: number;
   wasLowest: boolean;
   penalty: number;
