@@ -155,7 +155,7 @@ export const TableApp: React.FC = () => {
                         aria-label={`${n} opponent${n === 1 ? "" : "s"}`}
                         className={
                           n === botCount
-                            ? "h-8 w-8 rounded-full bg-rose-400 text-sm font-bold text-rose-950 shadow-md shadow-rose-950/40"
+                            ? "h-8 w-8 rounded-full bg-pink-300 text-sm font-bold text-pink-950 shadow-md shadow-pink-950/40"
                             : "h-8 w-8 rounded-full bg-indigo-900/70 text-sm text-indigo-200 ring-1 ring-indigo-300/20 hover:bg-indigo-800/70"
                         }
                       >
@@ -166,7 +166,7 @@ export const TableApp: React.FC = () => {
                 </div>
                 <button
                   onClick={() => startSolo({ playerName, botCount })}
-                  className="w-full rounded-full bg-gradient-to-b from-rose-400 to-rose-500 py-3 text-base font-bold text-rose-950 shadow-lg shadow-rose-950/50 transition hover:from-rose-300 hover:to-rose-400 active:scale-[0.98]"
+                  className="w-full rounded-full bg-gradient-to-b from-pink-300 to-pink-400 py-3 text-base font-bold text-pink-950 shadow-lg shadow-pink-950/40 transition hover:from-pink-200 hover:to-pink-300 active:scale-[0.98]"
                 >
                   Start dreaming
                 </button>
