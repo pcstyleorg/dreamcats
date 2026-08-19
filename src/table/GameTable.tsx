@@ -286,7 +286,7 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
             ) : (
               <div className="aspect-[5/7] w-full rounded-lg border border-dashed border-slate-600" />
             )}
-            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-slate-400">
+            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] text-slate-400">
               {state.drawPile.length} left
             </span>
           </div>
@@ -329,7 +329,7 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
             ) : (
               <div className="aspect-[5/7] w-full rounded-lg border border-dashed border-slate-600" />
             )}
-            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] text-slate-400">
+            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] text-slate-400">
               discard
             </span>
           </div>
