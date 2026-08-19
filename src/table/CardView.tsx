@@ -62,6 +62,8 @@ export interface CardViewProps {
   selected?: boolean;
   /** Small dot: the human has seen this card. */
   seen?: boolean;
+  /** Seconds to delay the face-up flip — used for the POBUDKA reveal wave. */
+  flipDelay?: number;
 }
 
 /**
@@ -79,6 +81,7 @@ export const CardView: React.FC<CardViewProps> = ({
   highlight = false,
   selected = false,
   seen = false,
+  flipDelay = 0,
 }) => (
   <motion.div
     layoutId={`card-${card.id}`}
@@ -99,16 +102,24 @@ export const CardView: React.FC<CardViewProps> = ({
       className="absolute inset-0 rounded-[inherit] shadow-lg shadow-black/40 [transform-style:preserve-3d]"
       animate={{ rotateY: faceUp ? 0 : 180 }}
       initial={false}
-      transition={{ duration: 0.5, ease: [0.35, 0, 0.25, 1] }}
+      transition={{ duration: 0.5, ease: [0.35, 0, 0.25, 1], delay: flipDelay }}
     >
       <div className="absolute inset-0 overflow-hidden rounded-[inherit] [backface-visibility:hidden]">
         {card.kind === "number" ? (
-          <img
-            src={numberAsset(card.value)}
-            alt={`${card.value} cats`}
-            draggable={false}
-            className="h-full w-full object-cover"
-          />
+          <>
+            <img
+              src={numberAsset(card.value)}
+              alt={`${card.value} cats`}
+              draggable={false}
+              className="h-full w-full object-cover"
+            />
+            <span className="absolute left-[6%] top-[3%] min-w-[1.6em] rounded-md bg-slate-950/70 px-[0.28em] py-[0.05em] text-center text-[0.85em] font-bold leading-snug text-white shadow-sm shadow-black/40 ring-1 ring-white/25">
+              {card.value}
+            </span>
+            <span className="absolute bottom-[3%] right-[6%] min-w-[1.6em] rounded-md bg-slate-950/70 px-[0.28em] py-[0.05em] text-center text-[0.85em] font-bold leading-snug text-white shadow-sm shadow-black/40 ring-1 ring-white/25">
+              {card.value}
+            </span>
+          </>
         ) : (
           <DesignedFace card={card} />
         )}

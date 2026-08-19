@@ -1,13 +1,41 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
+import { Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { EngineState, GameEvent } from "../../convex/engine";
+import { EngineState, GameEvent, LastAction } from "../../convex/engine";
 import { backAsset } from "./assets";
 import { CardView } from "./CardView";
+import { buzz, play, setMuted, useMuted } from "./sound";
 import { LocalGame, useLocalGame } from "./store";
 
 const REVEAL_MS = 2600;
+
+const soundFor = (action: LastAction): Parameters<typeof play>[0] | null => {
+  switch (action.type) {
+    case "roundStarted":
+      return "shuffle";
+    case "drewDeck":
+    case "drewDiscard":
+      return "draw";
+    case "peeked":
+    case "swapped":
+    case "discarded":
+    case "choose1Picked":
+    case "take2Kept":
+      return "flip";
+    case "activated":
+      return "click";
+    case "swap2Done":
+      return "shuffle";
+    case "pobudka":
+      return "pobudka";
+    case "roundEnded":
+      return null; // the reveal wave plays its own flips
+    default:
+      return null;
+  }
+};
 
 const promptFor = (s: EngineState, myTurn: boolean): string => {
   switch (s.phase) {
@@ -93,9 +121,28 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
       : null;
   const holdInitialPeeks = isRoundStart && revealActive;
 
+  // Sound + haptics driven by engine actions, so bot moves are audible too.
+  const muted = useMuted();
+  const playedKeyRef = useRef("");
+  useEffect(() => {
+    if (playedKeyRef.current === actionKey) return;
+    playedKeyRef.current = actionKey;
+    if (!action) return;
+    const sound = soundFor(action);
+    if (sound) play(sound);
+    if (action.type === "pobudka") buzz([40, 60, 40]);
+  }, [action, actionKey]);
+  const gameOverSoundRef = useRef(false);
+  useEffect(() => {
+    if (state.phase !== "gameOver" || gameOverSoundRef.current) return;
+    gameOverSoundRef.current = true;
+    play(state.winners?.includes(0) ? "win" : "lose");
+  }, [state.phase, state.winners]);
+
   const dispatch = (event: GameEvent) => {
     const error = game.dispatch(event);
     if (error) toast.error(error);
+    else buzz(10);
   };
 
   const phase = state.phase;
@@ -160,9 +207,18 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
           <span className="font-semibold tracking-wide">
             Round {state.round} · to {state.config.targetScore}
           </span>
-          <a href="/" className="rounded px-2 py-1 text-slate-400 hover:text-slate-200">
-            Exit
-          </a>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setMuted(!muted)}
+              aria-label={muted ? "Unmute sounds" : "Mute sounds"}
+              className="rounded p-1.5 text-slate-400 hover:text-slate-200"
+            >
+              {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </button>
+            <a href="/" className="rounded px-2 py-1 text-slate-400 hover:text-slate-200">
+              Exit
+            </a>
+          </div>
         </div>
 
         {/* Opponents */}
@@ -193,6 +249,7 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
                       key={slot.card.id}
                       card={slot.card}
                       faceUp={slotFaceUp(player, i)}
+                      flipDelay={roundOver ? (player * 4 + i) * 0.09 : 0}
                       className="w-10 text-[10px] sm:w-12"
                       interactive={anySlotTargeting}
                       highlight={anySlotTargeting}
@@ -290,6 +347,7 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
               key={slot.card.id}
               card={slot.card}
               faceUp={slotFaceUp(0, i)}
+              flipDelay={roundOver ? i * 0.09 : 0}
               className="w-full"
               interactive={ownSlotActive && (phase !== "peeking" || !me.peekedSlots.includes(i))}
               highlight={ownSlotActive && (phase !== "peeking" || !me.peekedSlots.includes(i))}
@@ -390,7 +448,7 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
               initial={{ y: 240, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 240, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 260, damping: 28 }}
+              transition={{ type: "spring", stiffness: 260, damping: 28, delay: 1.2 }}
               className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-2xl border border-slate-700/60 bg-slate-900/95 p-5 shadow-2xl backdrop-blur"
             >
               <h2 className="mb-3 text-center text-lg font-bold">

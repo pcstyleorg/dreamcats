@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { MotionConfig } from "framer-motion";
 import { Toaster } from "@/components/ui/sonner";
 import { getGameBackgroundAsset } from "@/lib/cardAssets";
 import { GameTable } from "./GameTable";
@@ -19,6 +20,7 @@ export const TableApp: React.FC = () => {
   };
 
   return (
+    <MotionConfig reducedMotion="user">
     <div
       className="min-h-dvh text-slate-100"
       style={{ background: getGameBackgroundAsset() }}
@@ -63,12 +65,13 @@ export const TableApp: React.FC = () => {
           >
             Start dreaming
           </button>
-          <a href="/" className="text-xs text-slate-400 hover:text-slate-200">
-            back to the classic game
+          <a href="/?classic" className="text-xs text-slate-400 hover:text-slate-200">
+            classic multiplayer (old rules)
           </a>
         </div>
       )}
       <Toaster position="top-center" />
     </div>
+    </MotionConfig>
   );
 };

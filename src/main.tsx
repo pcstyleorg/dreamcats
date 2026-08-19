@@ -12,13 +12,15 @@ import { TableApp } from './table/TableApp';
 // preload card images early for instant card flips
 preloadCardImages();
 
-// Rebuilt new-edition table (local play) lives behind ?newtable while the
-// ground-up rebuild is in progress.
-const useNewTable = new URLSearchParams(window.location.search).has('newtable');
+// The rebuilt new-edition table is the default experience. The classic
+// multiplayer app (old rules) remains reachable via ?classic until its
+// backend is ported to the new engine. ?newtable is kept as an alias.
+const params = new URLSearchParams(window.location.search);
+const useClassic = params.has('classic');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {useNewTable ? (
+    {!useClassic ? (
       <TableApp />
     ) : (
       <ConvexClientProvider>
