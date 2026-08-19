@@ -21,7 +21,11 @@ const useClassic = params.has('classic');
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     {!useClassic ? (
-      <TableApp />
+      <ConvexClientProvider>
+        <TableApp />
+        <Analytics />
+        <SpeedInsights />
+      </ConvexClientProvider>
     ) : (
       <ConvexClientProvider>
         <App />

@@ -7,7 +7,7 @@ import { EngineState, GameEvent, LastAction } from "../../convex/engine";
 import { backAsset } from "./assets";
 import { CardView } from "./CardView";
 import { buzz, play, setMuted, useMuted } from "./sound";
-import { LocalGame, useLocalGame } from "./store";
+import { TableGame, useGameState } from "./store";
 
 const REVEAL_MS = 2600;
 
@@ -86,12 +86,21 @@ const promptFor = (s: EngineState, myTurn: boolean): string => {
 };
 
 export interface GameTableProps {
-  game: LocalGame;
+  game: TableGame;
   onRestart: () => void;
+  /** Label for the game-over button (local: "Play again"). */
+  restartLabel?: string;
+  /** Called by the Exit control; local play links home by default. */
+  onExit?: () => void;
 }
 
-export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
-  const state = useLocalGame(game);
+export const GameTable: React.FC<GameTableProps> = ({
+  game,
+  onRestart,
+  restartLabel = "Play again",
+  onExit,
+}) => {
+  const state = useGameState(game);
 
   useEffect(() => {
     game.resume();
@@ -140,9 +149,10 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
   }, [state.phase, state.winners]);
 
   const dispatch = (event: GameEvent) => {
-    const error = game.dispatch(event);
-    if (error) toast.error(error);
-    else buzz(10);
+    buzz(10);
+    Promise.resolve(game.dispatch(event)).then((error) => {
+      if (error) toast.error(error);
+    });
   };
 
   const phase = state.phase;
@@ -201,23 +211,35 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
 
   return (
     <LayoutGroup>
-      <div className="mx-auto flex h-dvh max-w-md flex-col gap-2 p-3 text-slate-100">
+      <div className="mx-auto flex h-dvh max-w-md flex-col gap-2 p-3 pt-[max(0.75rem,env(safe-area-inset-top))] text-amber-50">
         {/* HUD */}
-        <div className="flex items-center justify-between text-xs text-slate-300">
-          <span className="font-semibold tracking-wide">
+        <div className="flex items-center justify-between text-xs text-indigo-200/90">
+          <span className="rounded-full bg-indigo-950/50 px-3 py-1 font-semibold tracking-wide ring-1 ring-indigo-300/15">
             Round {state.round} · to {state.config.targetScore}
           </span>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setMuted(!muted)}
               aria-label={muted ? "Unmute sounds" : "Mute sounds"}
-              className="rounded p-1.5 text-slate-400 hover:text-slate-200"
+              className="rounded-full p-1.5 text-indigo-300/80 hover:bg-indigo-950/50 hover:text-amber-50"
             >
               {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </button>
-            <a href="/" className="rounded px-2 py-1 text-slate-400 hover:text-slate-200">
-              Exit
-            </a>
+            {onExit ? (
+              <button
+                onClick={onExit}
+                className="rounded-full px-2 py-1 text-indigo-300/80 hover:bg-indigo-950/50 hover:text-amber-50"
+              >
+                Exit
+              </button>
+            ) : (
+              <a
+                href="/"
+                className="rounded-full px-2 py-1 text-indigo-300/80 hover:bg-indigo-950/50 hover:text-amber-50"
+              >
+                Exit
+              </a>
+            )}
           </div>
         </div>
 
@@ -230,8 +252,10 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
               <div key={p.id} className="flex flex-col items-center gap-1">
                 <span
                   className={cn(
-                    "flex items-center gap-1.5 text-xs",
-                    isTheir ? "text-amber-300" : "text-slate-300",
+                    "flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs ring-1",
+                    isTheir
+                      ? "bg-amber-300/15 text-amber-200 ring-amber-300/30"
+                      : "bg-indigo-950/40 text-indigo-200/90 ring-indigo-300/10",
                   )}
                 >
                   {isTheir && (
@@ -254,6 +278,7 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
                       interactive={anySlotTargeting}
                       highlight={anySlotTargeting}
                       selected={isSelected(player, i)}
+                      label={`${p.name}'s card ${i + 1}`}
                       onClick={() => onSlotClick(player, i)}
                     />
                   ))}
@@ -267,7 +292,7 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
         <div className="flex flex-1 items-center justify-center gap-6">
           {/* Draw pile */}
           <div className="relative w-16 sm:w-20">
-            <div className="absolute inset-0 translate-x-1 translate-y-1 rounded-lg bg-slate-950/70" />
+            <div className="absolute inset-0 translate-x-1 translate-y-1 rounded-lg bg-indigo-950/80" />
             <img
               src={backAsset}
               alt=""
@@ -281,12 +306,13 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
                 className="w-full"
                 interactive={canDraw}
                 highlight={canDraw}
+                label="draw pile"
                 onClick={() => dispatch({ type: "drawDeck" })}
               />
             ) : (
-              <div className="aspect-[5/7] w-full rounded-lg border border-dashed border-slate-600" />
+              <div className="aspect-[5/7] w-full rounded-lg border border-dashed border-indigo-400/40" />
             )}
-            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] text-slate-400">
+            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-indigo-950/50 px-2 py-px text-[10px] text-indigo-200/80">
               {state.drawPile.length} left
             </span>
           </div>
@@ -302,7 +328,7 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
                 ))}
               </div>
             ) : (
-              <div className="aspect-[5/7] w-full rounded-lg border border-dashed border-slate-700/70" />
+              <div className="aspect-[5/7] w-full rounded-lg border border-dashed border-indigo-500/30" />
             )}
           </div>
 
@@ -321,22 +347,26 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
                       style={{ rotate: `${((card.id * 37) % 13) - 6}deg` }}
                       interactive={top && canDraw}
                       highlight={top && canDraw}
+                      label={top ? "discard pile" : undefined}
                       onClick={top ? () => dispatch({ type: "drawDiscard" }) : undefined}
                     />
                   );
                 })}
               </div>
             ) : (
-              <div className="aspect-[5/7] w-full rounded-lg border border-dashed border-slate-600" />
+              <div className="aspect-[5/7] w-full rounded-lg border border-dashed border-indigo-400/40" />
             )}
-            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] text-slate-400">
+            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-indigo-950/50 px-2 py-px text-[10px] text-indigo-200/80">
               discard
             </span>
           </div>
         </div>
 
         {/* Prompt */}
-        <p className="min-h-5 text-center text-sm text-slate-200">
+        <p
+          aria-live="polite"
+          className="mx-auto min-h-7 rounded-full bg-indigo-950/50 px-4 py-1 text-center text-sm text-amber-50/90 ring-1 ring-indigo-300/10 empty:bg-transparent empty:ring-0"
+        >
           {promptFor(state, myTurn)}
         </p>
 
@@ -353,18 +383,21 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
               highlight={ownSlotActive && (phase !== "peeking" || !me.peekedSlots.includes(i))}
               selected={isSelected(0, i)}
               seen={slot.knownTo.includes(0) && !slotFaceUp(0, i)}
+              label={`your card ${i + 1}`}
               onClick={() => onSlotClick(0, i)}
             />
           ))}
         </div>
 
         {/* Action bar */}
-        <div className="flex h-14 items-center justify-center gap-3">
-          <span className="text-xs text-slate-400">You · {me.totalScore}</span>
+        <div className="flex h-14 items-center justify-center gap-3 pb-[env(safe-area-inset-bottom)]">
+          <span className="rounded-full bg-indigo-950/40 px-2.5 py-0.5 text-xs text-indigo-200/90 ring-1 ring-indigo-300/10">
+            You · {me.totalScore}
+          </span>
           {canDraw && (
             <button
               onClick={() => dispatch({ type: "callPobudka" })}
-              className="rounded-full bg-rose-500/90 px-5 py-2 text-sm font-bold tracking-wide text-white shadow-lg shadow-rose-900/40 transition hover:bg-rose-400 active:scale-95"
+              className="rounded-full bg-gradient-to-b from-rose-400 to-rose-500 px-5 py-2 text-sm font-bold tracking-wide text-rose-950 shadow-lg shadow-rose-950/50 transition hover:from-rose-300 hover:to-rose-400 active:scale-95"
             >
               POBUDKA!
             </button>
@@ -373,14 +406,14 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
             <>
               <button
                 onClick={() => dispatch({ type: "discardHeld" })}
-                className="rounded-full bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-600 active:scale-95"
+                className="rounded-full bg-indigo-900/70 px-4 py-2 text-sm font-semibold text-indigo-100 ring-1 ring-indigo-300/20 transition hover:bg-indigo-800/70 active:scale-95"
               >
                 Discard
               </button>
               {state.held?.kind === "special" && (
                 <button
                   onClick={() => dispatch({ type: "activateSpecial" })}
-                  className="rounded-full bg-fuchsia-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-fuchsia-500 active:scale-95"
+                  className="rounded-full bg-gradient-to-b from-fuchsia-400 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-fuchsia-950 shadow-md shadow-fuchsia-950/50 transition hover:from-fuchsia-300 hover:to-fuchsia-400 active:scale-95"
                 >
                   Use power
                 </button>
@@ -396,7 +429,7 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 flex items-center justify-center gap-4 bg-slate-950/70 backdrop-blur-sm"
+              className="fixed inset-0 z-40 flex items-center justify-center gap-4 bg-[#0c0a1e]/75 backdrop-blur-sm"
             >
               {state.take2Cards.map((card, i) => (
                 <CardView
@@ -420,9 +453,9 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 overflow-y-auto bg-slate-950/80 p-6 backdrop-blur-sm"
+              className="fixed inset-0 z-40 overflow-y-auto bg-[#0c0a1e]/85 p-6 backdrop-blur-sm"
             >
-              <p className="mb-4 text-center text-sm text-slate-200">
+              <p className="mb-4 text-center text-sm text-amber-50/90">
                 Choose one card to swap into your dream
               </p>
               <div className="mx-auto grid max-w-sm grid-cols-4 gap-3">
@@ -449,9 +482,9 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 240, opacity: 0 }}
               transition={{ type: "spring", stiffness: 260, damping: 28, delay: 1.2 }}
-              className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-2xl border border-slate-700/60 bg-slate-900/95 p-5 shadow-2xl backdrop-blur"
+              className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-3xl border border-indigo-300/20 bg-[#161033]/95 p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-2xl shadow-indigo-950 backdrop-blur"
             >
-              <h2 className="mb-3 text-center text-lg font-bold">
+              <h2 className="font-heading mb-3 text-center text-xl text-amber-50">
                 {phase === "gameOver"
                   ? state.winners?.includes(0)
                     ? "You win the game!"
@@ -467,8 +500,10 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
                     <div
                       key={p.id}
                       className={cn(
-                        "flex items-center justify-between rounded-lg px-3 py-1.5 text-sm",
-                        r.wasLowest ? "bg-emerald-500/15 text-emerald-200" : "bg-slate-800/60",
+                        "flex items-center justify-between rounded-xl px-3 py-1.5 text-sm",
+                        r.wasLowest
+                          ? "bg-emerald-400/15 text-emerald-200 ring-1 ring-emerald-300/20"
+                          : "bg-indigo-900/50 text-indigo-100 ring-1 ring-indigo-300/10",
                       )}
                     >
                       <span>
@@ -490,9 +525,9 @@ export const GameTable: React.FC<GameTableProps> = ({ game, onRestart }) => {
                 onClick={() =>
                   phase === "gameOver" ? onRestart() : dispatch({ type: "nextRound" })
                 }
-                className="w-full rounded-full bg-indigo-500 py-2.5 text-sm font-bold text-white transition hover:bg-indigo-400 active:scale-[0.98]"
+                className="w-full rounded-full bg-gradient-to-b from-indigo-400 to-indigo-500 py-2.5 text-sm font-bold text-indigo-950 shadow-md shadow-indigo-950/50 transition hover:from-indigo-300 hover:to-indigo-400 active:scale-[0.98]"
               >
-                {phase === "gameOver" ? "Play again" : "Next round"}
+                {phase === "gameOver" ? restartLabel : "Next round"}
               </button>
             </motion.div>
           )}

@@ -15,6 +15,21 @@ import { chooseBotEvent } from "./bot";
 
 export const BOT_NAMES = ["Miso", "Yuki", "Mochi"] as const;
 
+/**
+ * What GameTable needs from a game session. The local game resolves events
+ * synchronously; the online game returns a promise from the server mutation.
+ * State is always presented with the viewer as player 0.
+ */
+export interface TableGame {
+  getState(): EngineState;
+  subscribe(listener: () => void): () => void;
+  dispatch(event: GameEvent): string | null | Promise<string | null>;
+  /** Starts background work (bot timers). Call on mount. */
+  resume(): void;
+  /** Stops background work. Call on unmount. */
+  pause(): void;
+}
+
 export interface LocalGameOptions {
   playerName: string;
   botCount: 1 | 2 | 3;
@@ -24,7 +39,7 @@ export interface LocalGameOptions {
 const BOT_PEEK_DELAY = 350;
 const BOT_MOVE_DELAY = 1000;
 
-export class LocalGame {
+export class LocalGame implements TableGame {
   readonly humanIndex = 0;
   private state: EngineState;
   private listeners = new Set<() => void>();
@@ -123,5 +138,7 @@ export class LocalGame {
   }
 }
 
-export const useLocalGame = (game: LocalGame): EngineState =>
+// Implementations must expose subscribe/getState as stable bound functions
+// (arrow properties) so the store does not resubscribe on every render.
+export const useGameState = (game: TableGame): EngineState =>
   useSyncExternalStore(game.subscribe, game.getState, game.getState);

@@ -6,6 +6,18 @@ export default defineSchema({
   // Convex Auth tables (users, sessions, accounts, etc.)
   ...authTables,
 
+  // New-edition online rooms. The authoritative EngineState lives here as a
+  // JSON string; queries redact it per viewer before it leaves the server.
+  engineRooms: defineTable({
+    code: v.string(), // short human-shareable join code
+    hostId: v.string(), // playerId of the creator
+    status: v.string(), // "lobby" | "playing"
+    players: v.array(v.object({ playerId: v.string(), name: v.string() })),
+    state: v.optional(v.string()), // serialized EngineState once playing
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_code", ["code"]),
+
   rooms: defineTable({
     roomId: v.string(), // human code
     hostId: v.string(),
