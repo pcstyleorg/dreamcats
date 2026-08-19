@@ -1,116 +1,101 @@
-# **Game Specification: Dreamcats**
+# Game Specification: Dreamcats (New Edition)
 
-Inspired by classic memory card games.
+Based on the new edition of SEN. Theme: players journey through a dream world,
+collecting lands. Cats are bad — the goal is a dream with as few cats as possible.
 
-## **1\. Game Overview & Objective**
+## 1. Overview
 
-- **Theme:** Players travel to a dream world. Some lands are fairytales, others are dark nightmares full of cats.
-- **Goal:** Create a "Dream" (4 cards) with the lowest possible value (fewest cats).
-- **Players:** 2 to 5 players.
-- **Winning Condition:** The game ends when a player reaches 100 points. The player with the _lowest_ score wins.
+- **Players:** 2–4
+- **Goal:** End each round with the fewest cats in your 4-card Dream.
+- **Game end:** When any player's total reaches **100 cats** (configurable: 70/150 or a fixed number of rounds), the player with the *lowest* total wins. Ties share the win.
 
-## **2\. Components & Card Distribution (54 Cards Total)**
+## 2. Components (56 cards)
 
-The deck consists of "Lands" with values representing the number of cats.
+| Card                       | Copies | Value (cats) | Notes                                    |
+| :------------------------- | :----- | :----------- | :--------------------------------------- |
+| Numbers **0–7**            | 4 each | face value   | 8 types × 4 = 32 cards                   |
+| **9**                      | 6      | 9            | High-value cat cards                     |
+| **Hourglass** (Klepsydra)  | 5      | 9 or 0       | Parity scoring, see §6. Not a special.   |
+| **Choose 1** (Wybierz 1)   | 4      | 6            | Special                                  |
+| **Take 2** (Weź 2)         | 3      | 5            | Special                                  |
+| **Peek 1** (Podejrzyj 1)   | 3      | 3            | Special                                  |
+| **Swap 2** (Zamień 2)      | 3      | 7            | Special                                  |
 
-| Card Value/Name            | Count    | Description / Notes                                     |
-| :------------------------- | :------- | :------------------------------------------------------ |
-| **0 \- 8**                 | 4 each   | Standard number cards. (9 types × 4 copies \= 36 cards) |
-| **9**                      | 9 copies | High value "Cat" cards. Common bad cards.               |
-| **Special: "Weź 2"**       | 3 copies | "Take 2" \- Draw 2 cards from deck.                     |
-| **Special: "Podejrzyj 1"** | 3 copies | "Peek 1" \- Look at one card.                           |
-| **Special: "Zamień 2"**    | 3 copies | "Swap 2" \- Swap two cards.                             |
+## 3. Setup
 
-**Total:** 36 (0-8) \+ 9 (9s) \+ 9 (Specials) \= 54 cards.
+1. Shuffle all 56 cards. Deal each player **4 cards face-down** — their Dream.
+2. Remaining cards form the face-down **Draw Pile**; flip its top card to start the **Discard Pile**.
+3. Before play, each player secretly peeks at **exactly 2** of their own 4 cards, then returns them face-down.
+4. The player with the strangest dream last night (or the oldest) starts.
 
-## **3\. Game Setup**
+## 4. Turn: one of three actions
 
-1. **The Dream:** Each player is dealt **4 cards face-down**.
-2. **Initial Peek:** Players may look at **exactly 2** of their own face-down cards to memorize them. They cannot look at the other 2\.
-3. **Draw Piles:**
-   - **Stos Zakryty (Draw Pile):** Remaining cards face-down in the center.
-   - **Stos Odkryty (Discard Pile):** Top card of the draw pile is flipped to start this pile.
+### A. Take from the Discard Pile
+Take the top face-up card and **must** swap it into your Dream. The replaced card goes face-up onto the Discard Pile.
 
-## **4\. Gameplay Loop (Turn Logic)**
+### B. Take from the Draw Pile
+Look at the drawn card privately, then choose:
+- **B1 Swap** it with one of your Dream cards (old card → Discard Pile), or
+- **B2 Discard** it face-up onto the Discard Pile, or
+- **B3 Activate** its special power (only if it's a special card): discard it, then resolve the power. Optional — a special may always be used as B1/B2 instead.
 
-The player with the "strangest dream last night" (or oldest) starts. Play moves clockwise.
+Special powers activate **only** when the card came from the Draw Pile. From the Discard Pile a special is just a number card.
 
-### **On a Player's Turn:**
+### C. Call "POBUDKA!" (Wake Up)
+Only at the **start** of your turn, replacing any other action. The round ends immediately. See §7.
 
-The player must perform **ONE** of two main actions (A or B):
+## 5. Special powers
 
-#### **Action A: Draw from Discard Pile (Stos Odkryty)**
+- **Choose 1:** Search the Discard Pile (without reordering it), pick any card, show it, and swap it with a card in your own Dream. The replaced card goes on top of the Discard Pile.
+- **Take 2:** Draw 2 cards from the Draw Pile. Keep one, discard the other, then use the kept card as a normal drawn card (swap / discard / activate if special — chaining allowed).
+- **Peek 1:** Look at any single card in any player's Dream (including your own), then return it face-down.
+- **Swap 2:** Swap any two cards between any Dreams without looking at them. One may be your own.
 
-1. Take the top visible card from the Discard Pile.
-2. **Mandatory Swap:** Exchange it with _one_ of the 4 cards in your own Dream (face-down).
-3. The replaced card is placed face-up on the Discard Pile.
+## 6. Hourglasses
 
-#### **Action B: Draw from Draw Pile (Stos Zakryty)**
+Not special cards — they can be swapped in from either pile. At scoring time, count your hourglasses:
+- **Odd count** (1, 3, 5): each hourglass is worth **9 cats**.
+- **Even count** (2, 4): each is worth **0 cats**.
 
-1. Draw the top hidden card.
-2. The player looks at it (privately) and chooses one option:
-   - **B1: Swap:** Swap it with one of their own face-down cards. Discard the old card.
-   - **B2: Discard:** Place the drawn card on the Discard Pile (if they don't want it).
-   - **B3: Use Special Power:** If the card is a **Special Card**, they may discard it immediately to activate its effect (see Section 5).
+## 7. Round end and scoring
 
-## **5\. Special Cards (Krainy Specjalne)**
+A round ends when:
+1. The **Draw Pile is exhausted**, or
+2. A player calls **POBUDKA!** at the start of their turn.
 
-Special powers can **ONLY** be activated if the card was drawn from the **Draw Pile** (Hidden) and immediately discarded. If a special card is picked up from the Discard Pile, it acts as a normal number card (usually value is irrelevant/treated as number, but typically these have high values like 5, 6, 7 in corner).
+All players reveal their Dreams and count cats:
 
-- **Weź 2 (Take 2):**
-  - Draw 2 cards from the Draw Pile.
-  - Look at them. Choose **one** to keep.
-  - Discard the other one.
-  - With the kept card, perform a normal action (Swap it into your dream OR Discard it OR Use it if it's another special card).
-- **Podejrzyj 1 (Peek 1):**
-  - Look at **one** card in **any** player's dream (your own or an opponent's).
-  - Return it to its place face-down.
-- **Zamień 2 (Swap 2):**
-  - Swap the positions of **any two** cards on the table.
-  - Combinations: Own Card ↔ Own Card, Own ↔ Opponent, Opponent A ↔ Opponent B.
-  - **Constraint:** You **cannot** look at the cards being swapped.
+- The player(s) with the **fewest cats score 0** for the round.
+- Everyone else adds their sum to their total.
+- If the POBUDKA caller does **not** have (or tie for) the fewest cats, they add their sum **plus a 5-cat penalty** (house option: 15).
+- On a tie for fewest, the caller takes no penalty.
 
-## **6\. End of Round: "POBUDKA\!" (Wake Up)**
+The next round is started by the player to the left of whoever ended the previous round.
 
-A round ends when a player believes they have the lowest score.
+## 8. Optional variants
 
-1. **Trigger:** At the _start_ of their turn (instead of drawing), a player calls **"POBUDKA\!"**.
-2. **Immediate End:** The round ends. No more turns are played.
-3. **Reveal:** All players flip their 4 cards face-up.
-4. **Scoring Logic:**
-   - Sum the values of the 4 cards.
-   - **The Caller's Risk:**
-     - If the Caller has the **strictly lowest** score (or ties for lowest): They score their sum (0 penalty).
-     - If the Caller does **NOT** have the lowest score: They score their sum **plus 5 penalty points**.
-   - Other players just score their sum.
+- **"Cats aren't so scary":** the player with the most 9-value cards (including odd-count hourglasses) doesn't add those cards to their score. On a tie, nobody gets the reward.
+- **"Go all in!":** a player whose Dream is *only* 9-value cards scores 0 and everyone else scores a flat 50. Two such players → normal scoring.
+- **"I know what I have":** instead of a normal action, declare two equal-value Dream cards; if right, discard both and blind-draw one (dream shrinks); if wrong, blind-draw one extra (dream grows).
 
-## **7\. Game End Condition**
+## 9. Terminology
 
-- Scores are recorded after every round.
-- The game ends when a player's total score reaches or exceeds **100**.
-- **Winner:** The player with the lowest total score.
+| Polish        | English      |
+| :------------ | :----------- |
+| Sen           | Dream        |
+| Kruki         | Cats         |
+| Stos zakryty  | Draw Pile    |
+| Stos odkryty  | Discard Pile |
+| Klepsydra     | Hourglass    |
+| Wybierz 1     | Choose 1     |
+| Weź 2         | Take 2       |
+| Podejrzyj 1   | Peek 1       |
+| Zamień 2      | Swap 2       |
+| Pobudka!      | Wake up!     |
 
-## **8\. Visual & Aesthetic Notes**
+## 10. Feel and vibe
 
-- **Style:** Dreamy, surreal, slightly dark but whimsical.
-- **Motifs:** Cats, Frogs, Cherry Blossom Trees, Lanterns, Pagodas.
-- **Back of Cards:** Delicate cherry blossom branches with small silhouettes of cats (dreamy spring aesthetic).
-- **UI Layout:**
-  - Player zones (Bottom \= Human, Top/Sides \= AI/Opponents).
-  - Opponent cards always face-down.
-  - Clearly distinct piles in the center.
-
-## **9\. Terminology (Polish \-\> English mapping)**
-
-- _Marzenie_ \-\> Dream (The player's hand)
-- _Kruki_ \-\> Cats (Points/Bad values)
-- _Stos Zakryty_ \-\> Draw Pile (Hidden)
-- _Stos Odkryty_ \-\> Discard Pile (Visible)
-- _Pobudka_ \-\> Wake Up (End round call)
-
-## **10\. Feel and Vibe**
-
-- **Atmosphere:** Soft, surreal, and slightly tense—between dream and wakefulness.
-- **Look & Color:** Pastel cherry blossoms and lantern glow against deep twilight blues and purples, with watercolor and ink-wash inspired art.
-- **Emotion:** Whimsical melancholy—cats as quiet anxiety, frogs and blossoms as gentle comfort.
-- **Audio (if digital):** Sparse koto, chimes, and distant bells for a calm, mysterious soundscape.
+- **Atmosphere:** soft, surreal, slightly tense — between dream and wakefulness.
+- **Look:** pastel cherry blossoms and lantern glow against deep twilight blues and purples; watercolor and ink-wash inspired art. Cats as quiet anxiety, frogs and blossoms as comfort.
+- **Interaction:** UNO-mobile-grade card feel — cards physically fly between piles and Dream slots, spring physics, 3D flips on reveal, drag-to-swap.
+- **Audio:** sparse koto, chimes, distant bells.
