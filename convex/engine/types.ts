@@ -63,6 +63,7 @@ export interface GameConfig {
 /** What just happened — enough for UI animation & log lines. */
 export type LastAction =
   | { type: "peeked"; player: number; slot: number; targetPlayer: number }
+  | { type: "roundStarted" }
   | { type: "drewDeck"; player: number }
   | { type: "drewDiscard"; player: number; card: Card }
   | { type: "swapped"; player: number; slot: number; discarded: Card }

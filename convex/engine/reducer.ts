@@ -197,6 +197,7 @@ export const applyEvent = (
       };
       if (state.players.every((p) => p.peekedSlots.length >= INITIAL_PEEKS)) {
         state.phase = "awaitTurn";
+        state.lastAction = { type: "roundStarted" };
       }
       return state;
     }
